@@ -21,6 +21,8 @@ DIR_BASE = Path(__file__).resolve().parent
 # heredaban las demás disciplinas (DIAGNOSTICO_SIMULADORES_2026-10, S1).
 PROCEDENCIA_POR_DEFECTO = ("conocimiento macroeconómico general (manuales estándar de macro intermedia); "
                            "NO verificado contra edición específica")
+# Área del currículo (vocabulario cerrado de docencia/config/areas.yml): decide el pub que la publica (catalogo.json).
+AREA = "macroeconomia"
 DIR_MODELOS = DIR_BASE / "modelos"
 DIR_SALIDAS = DIR_BASE / "salidas"   # reportes MD + figuras generadas (regenerable, no se versiona)
 

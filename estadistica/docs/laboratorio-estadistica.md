@@ -1,5 +1,6 @@
 ---
 tipo: doc
+genero: explicacion
 titulo: "Laboratorio histórico y computacional de Estadística (`estadistica/`)"
 estado: activo
 ---
@@ -60,7 +61,7 @@ Cada disciplina reusa el motor de la raíz: su `main.py` añade la raíz al
 
 | Renderizador | Rol | Motor |
 |---|---|---|
-| **matplotlib** | app interactiva (sliders) + figuras de reporte | `docencia/simuladores/graficos.py` |
+| **matplotlib** | app interactiva (sliders) + figuras de reporte | `simuladores/graficos.py` |
 | **Manim** | animaciones de "ver el método en movimiento" | `estadistica/animaciones/` (env conda aparte) |
 
 Un mismo tema puede tener figura estática (reporte), exploración interactiva
@@ -100,7 +101,7 @@ trazabilidad antes de dar un modelo por bueno; `salidas/` regenerable.
 **La cita es una aserción (E0, 2026-10-01).** Cada tema declara en `Ficha.fuentes` una o
 más `base.Fuente(calibre_id, pagina, pagina_pdf, pasaje, afirma)`: el libro por su id de
 Calibre, la página impresa que se cita, la hoja del PDF y un pasaje literal breve (≤ 15
-palabras) de esa hoja. `docencia/simuladores/fuentes.py` pide el texto de la hoja al resolutor
+palabras) de esa hoja. `simuladores/fuentes.py` pide el texto de la hoja al resolutor
 (`core/py-common/biblioteca.py`) y comprueba que el pasaje esté ahí y que el folio impreso
 se vea en cabecera o pie (si no se ve, es aviso). `python3 main.py fuentes [<tema>]` lo
 detalla; `verificar` cuenta los temas con fuentes verificadas y, con
@@ -157,8 +158,8 @@ duplicará `pipeline/` (hará fichas sobre los métodos ya implementados allí).
 
 - **Hito 0 (2026-08-20): capa de animación Manim VALIDADA.** Entorno conda
   `manim-datafw` (Manim 0.20.1) sobre ffmpeg 8 + TeX Live 2025. Primera escena:
-  `animaciones/e67_tcl.py` (Teorema Central del Límite). Utilidades compartidas
-  en `animaciones/_comun.py`. ✔
+  `estadistica/animaciones/e67_tcl.py` (Teorema Central del Límite). Utilidades compartidas
+  en `estadistica/animaciones/_comun.py`. ✔
 - **Hito 1 (2026-08-20): scaffolding + primeros modelos.** `config.py` (paletas,
   rutas, secciones) y `main.py` (CLI `verificar`/`reporte`/`listar`/`ficha`/…,
   descubrimiento con id genérico `eNN`) reusan el motor de la raíz. Primeros dos
@@ -180,7 +181,7 @@ duplicará `pipeline/` (hará fichas sobre los métodos ya implementados allí).
     (n−1) demostrada por simulación (s²ₙ subestima, s²ₙ₋₁ acierta σ²).
   - **e32 medidas robustas y detección de atípicos**: punto de ruptura (media/σ
     0% vs mediana/MAD 50%); MAD; z modificado para detectar atípicos. El demo
-    `demos/robustez_interactiva.py` es su vista interactiva.
+    `estadistica/demos/robustez_interactiva.py` es su vista interactiva.
   Total acumulado: **5 modelos, 25 verificaciones**; `python3 main.py verificar`
   al 100%. ✔
 - **Hito 3 (2026-08-20): la app interactiva, compartida.** `app.py` se promovió

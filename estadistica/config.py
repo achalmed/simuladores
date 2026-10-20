@@ -70,6 +70,8 @@ USAR_TEX_COMPLETO = False
 # Procedencia: cada tema cita su fuente en Ficha.fuentes (base.Fuente: calibre_id, página impresa,
 # hoja del PDF y pasaje) y `main.py verificar` la comprueba contra la edición (fuentes.py).
 PROCEDENCIA_POR_DEFECTO = "sin procedencia declarada"
+# Área del currículo (vocabulario cerrado de docencia/config/areas.yml): decide el pub que la publica (catalogo.json).
+AREA = "estadistica-econometria"
 # Con True, un tema sin fuentes verificadas hace fallar `verificar` (se activa al cerrar E2).
 EXIGIR_FUENTES = False
 

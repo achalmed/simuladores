@@ -1,5 +1,6 @@
 ---
 tipo: doc
+genero: explicacion
 titulo: "Laboratorio de Macroeconomía Computacional (`simuladores/`)"
 estado: activo
 ---
@@ -304,7 +305,7 @@ estable (id del modelo).
 
 ### Nivel 11 — Escenarios aplicados (síntesis) ✔ completo
 
-Motor compartido `nivel_11/_episodio.py` (AD-AS dinámico de m52 con secuencias
+Motor compartido `macro/modelos/nivel_11/_episodio.py` (AD-AS dinámico de m52 con secuencias
 de shocks). Cada modelo es un EPISODIO que combina mecanismos previos.
 
 | id | escenario | núcleo verificado |
@@ -374,7 +375,7 @@ Secuencia troncal (un modelo "ancla" por etapa, el resto del nivel después):
   Total acumulado: 19 modelos, 68 verificaciones.
 - **Hito 4 (2026-08-19): nivel 4 completo — el aparato AD-AS.** La AD se
   DERIVA del IS-LM (verificado: cada punto de m20 reproduce m10); solver
-  cuadrático compartido en `modelos/nivel_04/_adas.py`; neutralidad del dinero
+  cuadrático compartido en `macro/modelos/nivel_04/_adas.py`; neutralidad del dinero
   exacta a largo plazo (m22) y NO neutralidad a corto (m23) como teoremas
   contrastados; m25 es la "película" (Pe_{t+1}=P_t → trayectoria a la LRAS).
   Total acumulado: 25 modelos, 92 verificaciones. ✔
@@ -391,7 +392,7 @@ Secuencia troncal (un modelo "ancla" por etapa, el resto del nivel después):
   en las anclas de cada nivel (m03, m04, m10, m12, m14, m23) y grupos de
   parámetros en m10/m23. La profundización del resto es incremental (§2). ✔
 - **Hito 6 (2026-08-19): nivel 5 completo — crecimiento económico.** Solow con
-  motor común (`nivel_05/_solow.py`), transición con semivida verificada,
+  motor común (`macro/modelos/nivel_05/_solow.py`), transición con semivida verificada,
   regla de oro con ineficiencia dinámica demostrada en toda la senda,
   progreso técnico con BGP exacta, convergencia absoluta/condicional, trampa
   de pobreza con histéresis y big push, AK como anti-Solow y MRW reconciliando
@@ -448,7 +449,7 @@ Secuencia troncal (un modelo "ancla" por etapa, el resto del nivel después):
   descargaron 6 series macro (PBI, IPC, tasa, tipo de cambio; 2004-2024) vía
   `datafw/connectors/bcrp` y se destiló un **snapshot anual embebido**
   (`_series_bcrp.py`) para que los modelos sean auto-contenidos (`data/` está
-  en `.gitignore`); los datos mensuales de `data/raw/` sirven como resolución
+  en `.gitignore`); los datos mensuales de `datafw/data/raw/` sirven como resolución
   fina cuando están presentes (`_datos_bcrp.py`). m97-m102 leen la serie,
   calculan hechos estilizados y **verifican contra el dato real** (no contra
   una calibración didáctica). Dos modelos enseñan honestidad econométrica: m100
@@ -528,7 +529,7 @@ macroeconómico. **Decisión tomada (2026-08-20)**:
 
 - `simuladores/` es el **paraguas** del laboratorio; el motor
   (`base/graficos/reporte/laboratorio`) vive en la raíz y cada disciplina es una
-  **subcarpeta hermana** con su `config/main/app/modelos` propios:
+  **subcarpeta hermana** con su `config.py`, `main.py` y `modelos/` propios:
   `simuladores/macro/` (esta), `simuladores/estadistica/` (en curso, ids `eNN`),
   y futuras `econometria/`/`micro/`/`mate/`. El `main.py` de cada disciplina
   añade la raíz al `sys.path` (motor) y su carpeta primero (config/modelos) — el

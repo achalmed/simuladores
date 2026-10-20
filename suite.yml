@@ -1,0 +1,26 @@
+# simuladores/suite.yml — suite simuladores: el laboratorio computacional (macro, estadística…) como modelos ejecutables con ficha, escenarios y verificaciones, y su catálogo para los consumidores.
+# Contrato: core/suite.schema.yml (v2); core/suites.py validar lo comprueba y generar escribe los índices y README.
+esquema_version: 2
+id: simuladores
+objetivo: publicacion
+resumen: 'Laboratorio computacional: cada teoría o método como modelo ejecutable (ficha pedagógica, escenarios, verificaciones numéricas) que consumen docencia, divulgacion y los pubs por catalogo.json.'
+estado: activo
+creado: 2026-08-15
+escribe_en: [archivos]
+simula_por_defecto: false
+comandos:
+  - main.py catalogo [--aplicar | --verificar]
+  - main.py verificar
+  - macro/main.py [app | listar | ficha <m> | simular <m> | comparar <m> | sensibilidad <m> <p> | reporte <m> | verificar]
+  - estadistica/main.py [app | listar | fuentes | ficha <e> | simular <e> | reporte <e> | verificar]
+interfaz: cli+gui
+entrada: 'los modelos de <disciplina>/modelos/nivel_NN/; datos reales de datafw por DATAFW_DIR (nivel 12 de macro)'
+depende_de:
+  - python3 con numpy, matplotlib y yaml (el de anaconda base; el del sistema no trae matplotlib)
+  - manim (conda manim-datafw; solo estadistica/animaciones)
+  - core/env.py (DATAFW_DIR)
+  - core/py-common/biblioteca.py (fuentes.py comprueba las citas contra Calibre)
+lee_de: [core, datafw, biblioteca]
+entorno: conda:base
+pruebas: 'python3 main.py verificar && python3 main.py catalogo --verificar'
+nota: 'Repo propio desde 2026-10-20 (antes docencia/simuladores, con su historia). catalogo simula por defecto (imprime) y escribe catalogo.json solo con --aplicar; reporte escribe en <disciplina>/salidas/ (regenerable, fuera de git) sin pedir --aplicar. La app (sin argumentos) abre la GUI matplotlib.'

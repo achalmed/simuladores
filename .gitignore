@@ -1,0 +1,9 @@
+# simuladores/.gitignore — lo regenerable no se versiona (salidas de cada disciplina, cachés de Python).
+__pycache__/
+*.pyc
+**/salidas/
+*.pdf
+# LaTeX auxiliar (figuras con USAR_TEX_COMPLETO) y Manim
+*.aux
+*.log
+media/
