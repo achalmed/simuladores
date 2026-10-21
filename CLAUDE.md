@@ -20,7 +20,7 @@ desde la fase 4 de la plataforma educativa, los pubs (`catalogo.json`).
   antes a ese consumidor.
 - **`catalogo.json` es GENERADO** (`python3 main.py catalogo --aplicar`) y es el contrato de los pubs: tras añadir o
   cambiar un modelo se regenera, y `main.py catalogo --verificar` debe dar 0. Si cambia un campo, sube `ESQUEMA` en
-  `main.py`.
+  `main.py`. Igual **`navegador.json`** (`main.py web --aplicar`, para Pyodide: solo numpy, stdlib, `modelos.*`).
 - **Cada disciplina declara su `AREA`** en su `config.py` con el vocabulario cerrado de `docencia/config/areas.yml`
   (decide el pub que publica sus modelos); nunca en el motor.
 - **Nada de rutas a otros repos**: `core/` se localiza subiendo carpetas (`_datos_bcrp.py`, `fuentes.py`) y desde ahí
@@ -92,7 +92,7 @@ ya sirve a esta disciplina. DOS renderizadores, un modelo: matplotlib (app + rep
 
 ```bash
 cd ~/Documents/simuladores
-python3 main.py verificar && python3 main.py catalogo --verificar   # disciplinas al 100 % y catalogo.json al día
+python3 main.py verificar && python3 main.py catalogo --verificar && python3 main.py web --verificar   # al 100 % y contratos al día
 python3 -m py_compile *.py */main.py */config.py
 cd ~/Documents && python3 core/archivos.py validar simuladores --linea-base "$LINEA_BASE_VALIDADOR"
 cd ~/Documents/divulgacion && python3 main.py doctor   # «simuladores (N modelos en uso)» en verde

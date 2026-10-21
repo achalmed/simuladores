@@ -3,7 +3,7 @@
 esquema_version: 2
 id: simuladores
 objetivo: publicacion
-resumen: 'Laboratorio computacional: cada teoría o método como modelo ejecutable (ficha pedagógica, escenarios, verificaciones numéricas) que consumen docencia, divulgacion y los pubs por catalogo.json.'
+resumen: 'Laboratorio computacional: cada teoría o método como modelo ejecutable (ficha pedagógica, escenarios, verificaciones numéricas) que consumen docencia, divulgacion y los pubs por catalogo.json y, en el navegador (Pyodide), por navegador.json.'
 estado: activo
 creado: 2026-08-15
 escribe_en: [archivos]
@@ -11,6 +11,7 @@ simula_por_defecto: false
 comandos:
   - main.py catalogo [--aplicar | --verificar]
   - main.py verificar
+  - main.py web [--aplicar | --verificar]
   - macro/main.py [app | listar | ficha <m> | simular <m> | comparar <m> | sensibilidad <m> <p> | reporte <m> | verificar]
   - estadistica/main.py [app | listar | fuentes | ficha <e> | simular <e> | reporte <e> | verificar]
 interfaz: cli+gui
@@ -22,5 +23,5 @@ depende_de:
   - core/py-common/biblioteca.py (fuentes.py comprueba las citas contra Calibre)
 lee_de: [core, datafw, biblioteca]
 entorno: conda:base
-pruebas: 'python3 main.py verificar && python3 main.py catalogo --verificar'
-nota: 'Repo propio desde 2026-10-20 (antes docencia/simuladores, con su historia). catalogo simula por defecto (imprime) y escribe catalogo.json solo con --aplicar; reporte escribe en <disciplina>/salidas/ (regenerable, fuera de git) sin pedir --aplicar. La app (sin argumentos) abre la GUI matplotlib.'
+pruebas: 'python3 main.py verificar && python3 main.py catalogo --verificar && python3 main.py web --verificar'
+nota: 'Repo propio desde 2026-10-20 (antes docencia/simuladores, con su historia). catalogo simula por defecto (imprime) y escribe catalogo.json solo con --aplicar; reporte escribe en <disciplina>/salidas/ (regenerable, fuera de git) sin pedir --aplicar. La app (sin argumentos) abre la GUI matplotlib. web simula por defecto y escribe navegador.json (los modelos que corren en el navegador con Pyodide) solo con --aplicar.'
