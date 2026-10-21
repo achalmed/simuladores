@@ -5,7 +5,7 @@
   "estadistica",
   "macro"
  ],
- "total": 138,
+ "total": 139,
  "modelos": [
   {
    "id": "e02",
@@ -1517,6 +1517,107 @@
    ]
   },
   {
+   "id": "e67",
+   "disciplina": "estadistica",
+   "ref": "estadistica/e67",
+   "titulo": "El teorema central del límite",
+   "area": "estadistica-econometria",
+   "nivel": 5,
+   "seccion": "V · Teoremas fundamentales",
+   "archivo": "estadistica/modelos/nivel_05/e67_teorema_central_limite.py",
+   "parametros": [
+    {
+     "nombre": "n",
+     "etiqueta": "Tamaño de cada muestra n",
+     "valor": 5,
+     "minimo": 1,
+     "maximo": 100,
+     "paso": 1,
+     "unidad": "",
+     "grupo": "muestreo",
+     "definicion": "cuántas observaciones promedia cada muestra; con n = 1, X̄ es la población misma"
+    },
+    {
+     "nombre": "k",
+     "etiqueta": "Forma de la población k",
+     "valor": 1.0,
+     "minimo": 0.2,
+     "maximo": 10,
+     "paso": 0.1,
+     "unidad": "",
+     "grupo": "población",
+     "definicion": "gamma de media 1: k = 1 es la exponencial; k pequeño, muy sesgada; k grande, casi simétrica"
+    },
+    {
+     "nombre": "reps",
+     "etiqueta": "Muestras simuladas",
+     "valor": 4000,
+     "minimo": 500,
+     "maximo": 8000,
+     "paso": 500,
+     "unidad": "",
+     "grupo": "simulación",
+     "definicion": "cuántas medias se simulan para dibujar su distribución (más, histograma más liso)"
+    }
+   ],
+   "escenarios": [
+    {
+     "nombre": "poblacion",
+     "descripcion": "n = 1: la media de una sola observación es la población"
+    },
+    {
+     "nombre": "n_30",
+     "descripcion": "n = 30: la «regla de 30» con una población exponencial"
+    },
+    {
+     "nombre": "muy_sesgada",
+     "descripcion": "población muy sesgada (k = 0,2) con n = 30"
+    },
+    {
+     "nombre": "casi_simetrica",
+     "descripcion": "población casi simétrica (k = 10) con n = 5"
+    }
+   ],
+   "verificaciones": 5,
+   "ficha": {
+    "pregunta": "Si la población no es normal, ¿por qué la media de una muestra sí termina pareciéndose a una normal, y cuán grande tiene que ser la muestra para que eso sea verdad?",
+    "autores": "De Moivre (1733), Laplace (1810), Lyapunov (1901), Lindeberg (1922) — menciones. Conocimiento estadístico general.",
+    "intuicion": "Al promediar, los valores extremos de un lado se compensan con los del otro: la media de muchas observaciones casi nunca es extrema aunque cada observación pueda serlo. Esa compensación borra poco a poco la forma de la población —su asimetría se divide por √n— y lo que queda es la campana. Por eso una encuestadora puede dar un margen de error con la normal sin conocer la distribución del ingreso: lo que se comporta como normal es el promedio de la muestra. Pero el teorema no regala nada: con una población muy sesgada la media tarda en normalizarse, y la famosa «regla de n ≥ 30» puede quedarse corta.",
+    "supuestos": [
+     "Observaciones independientes e idénticamente distribuidas (muestreo aleatorio con reposición o población grande).",
+     "La población tiene varianza finita: sin ella (Cauchy, colas muy pesadas) el teorema no se cumple.",
+     "El resultado es asintótico: dice a dónde va la distribución de X̄ cuando n crece, no cuán cerca está con un n dado.",
+     "La población del modelo es una gamma de media 1 y varianza 1/k: la forma k controla su asimetría (2/√k)."
+    ],
+    "ecuaciones": [
+     {
+      "nombre": "momentos de la media",
+      "latex": "E[\\bar X] = \\mu, \\quad \\operatorname{Var}(\\bar X) = \\frac{\\sigma^2}{n}"
+     },
+     {
+      "nombre": "teorema central del límite",
+      "latex": "\\frac{\\bar X - \\mu}{\\sigma/\\sqrt{n}} \\xrightarrow{d} N(0, 1)"
+     },
+     {
+      "nombre": "velocidad de convergencia",
+      "latex": "\\text{asimetría}(\\bar X) = \\frac{2}{\\sqrt{k\\,n}}"
+     }
+    ],
+    "procedencia": "sin procedencia declarada",
+    "fuentes": []
+   },
+   "cursos": [
+    {
+     "curso": "estadistica",
+     "tema": "6.3"
+    },
+    {
+     "curso": "estadistica-para-economistas",
+     "tema": "4.3"
+    }
+   ]
+  },
+  {
    "id": "m01",
    "disciplina": "macro",
    "ref": "macro/m01",
@@ -2705,7 +2806,12 @@
     "procedencia": "conocimiento macroeconómico general (manuales estándar de macro intermedia); NO verificado contra edición específica",
     "fuentes": []
    },
-   "cursos": []
+   "cursos": [
+    {
+     "curso": "macroeconomia-i",
+     "tema": "3.4"
+    }
+   ]
   },
   {
    "id": "m11",

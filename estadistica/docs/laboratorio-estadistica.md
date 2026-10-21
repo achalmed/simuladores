@@ -133,7 +133,7 @@ sección II.
 | II | Estadística descriptiva | 17-33 | mover un dato extremo y ver cambiar media/mediana/varianza (robustez) |
 | III | Probabilidad | 34-48 | monedas/dados/cartas; demostrar $P(A\mid B)=P(A\cap B)/P(B)$ |
 | IV | Distribuciones de probabilidad | 49-63 | mover $\mu,\sigma,\lambda,\alpha,\beta$ y ver la distribución en vivo |
-| V | Teoremas fundamentales | 64-71 | **TCL** (✔ animación e67); LGN; convergencias |
+| V | Teoremas fundamentales | 64-71 | **TCL** (✔ modelo e67 y su animación); LGN; convergencias |
 | VI | Muestreo | 72-81 | población → métodos de muestreo → sesgo y error muestral |
 | VII | Inferencia estadística | 82-96 | propiedades de estimadores; IC y su cobertura real |
 | VIII | Pruebas de hipótesis | 97-112 | ¿qué es de verdad un valor-p? (miles de experimentos bajo $H_0$) |

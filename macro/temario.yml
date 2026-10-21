@@ -1,0 +1,12 @@
+# macro/temario.yml — temas de curso.yml que ilustran los modelos de macro (mismo formato que estadistica/temario.yml).
+# PARCIAL (2026-10-21): macro aún no tiene un mapa completo de temas; aquí solo se declaran las asociaciones que ningún
+# curso.yml declara todavía con un recurso {tipo: simulador}. `main.py catalogo` las lleva al campo `cursos` de
+# catalogo.json y la vitrina de los pubs las une a las de los curso.yml. Cuando docencia enlace el recurso en su
+# curso.yml (`docencia/scripts/enlazar.py simuladores`), la entrada de aquí puede quedarse: ambas fuentes coinciden.
+tipo: temario_laboratorio
+disciplina: macro
+secciones:
+  - nivel: 2
+    nombre: "Mercado de bienes e IS-LM"
+    temas:
+      - {id: m10, titulo: "Modelo IS-LM", estado: hecho, modelo: m10_islm, cursos: [{curso: macroeconomia-i, tema: '3.4'}]}

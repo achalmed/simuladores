@@ -92,7 +92,7 @@ secciones:
       - {id: e64, titulo: "Ley de los grandes números", estado: anclado, ancla: "e02, e17, e34"}
       - {id: e65, titulo: "Desigualdades de Markov y Chebyshev", estado: propuesto}
       - {id: e66, titulo: "Convergencia en probabilidad y en distribución", estado: propuesto}
-      - {id: e67, titulo: "Teorema central del límite", estado: anclado, ancla: "animaciones/e67_tcl.py", cursos: [{curso: estadistica, tema: '6.3'}, {curso: estadistica-para-economistas, tema: '4.3'}]}
+      - {id: e67, titulo: "Teorema central del límite", estado: hecho, modelo: e67_teorema_central_limite, cursos: [{curso: estadistica, tema: '6.3'}, {curso: estadistica-para-economistas, tema: '4.3'}]}
       - {id: e68, titulo: "Falacia del jugador y regresión a la media", estado: anclado, ancla: "e34"}
       - {id: e69, titulo: "Aproximación normal a la binomial (corrección por continuidad)", estado: propuesto}
       - {id: e70, titulo: "Aproximación de Poisson a la binomial", estado: propuesto}
