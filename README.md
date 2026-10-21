@@ -104,6 +104,9 @@ copiar el motor**: se importa de la raíz. `main.py catalogo` la descubre sola.
 
 ## Límite honesto
 
+- Licencia: el código y las fichas de los modelos son MPL-2.0 (`LICENSE`), como el código del resto del ecosistema;
+  repositorio público desde el 2026-10-20 (decisión del autor).
+
 - Es un laboratorio pedagógico: los modelos reproducen teoremas y escenarios de manual, no pronósticos. Los que usan
   datos reales (el nivel 12 de macro, con series del BCRP) los leen de `datafw` por nombre; el laboratorio no adquiere datos.
 - «Página verificada» significa que el pasaje citado está en esa hoja del PDF del `calibre_id`: lo comprueba
