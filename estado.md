@@ -18,7 +18,7 @@ nada en curso
 
 ## Por hacer
 
-- 2026-10-20 · dueño: director · macro no declara en qué temas de curso vive cada modelo (estadística sí, en `temario.yml`; macro solo m10 desde el 2026-10-21): la vitrina une los recursos `{tipo: simulador}` de los `curso.yml`, pero `catalogo.json` sigue con `cursos: []` en casi todo macro. Que docencia enlace m10 en `macroeconomia-i` 3.4 (`enlazar.py simuladores`).
+- 2026-10-20 · dueño: director · macro no declara en qué temas de curso vive cada modelo (estadística sí, en `temario.yml`; macro solo m10 desde el 2026-10-21): la vitrina une los recursos `{tipo: simulador}` de los `curso.yml`, pero `catalogo.json` sigue con `cursos: []` en casi todo macro. (m10 ya enlazado en `macroeconomia-i` 3.4 el 2026-10-21.)
 - 2026-10-21 · dueño: director · e67 sin `Ficha.fuentes` verificadas (como el resto de estadística; `EXIGIR_FUENTES` sigue en False): citar el TCL contra una edición de Calibre.
 - 2026-10-21 · dueño: director · e26 (rango) tarda unos 0,4–0,6 s de CPU por cálculo y queda fuera del navegador: abaratar su simulación si se quiere en la vitrina.
 - 2026-10-04 · dueño: campaña SIMULADORES · `macro/modelos/`: tres pendientes sin fecha (aviso A13). Viene de `docencia/estado.md`.
