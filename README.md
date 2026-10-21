@@ -4,6 +4,38 @@ estado: activo
 ---
 # simuladores/ — el laboratorio computacional (multi-disciplina)
 
+<!-- suite:inicio -->
+**Suite `simuladores`** · objetivo *publicacion* · estado *activo* · python · interfaz cli+gui
+
+Laboratorio computacional: cada teoría o método como modelo ejecutable (ficha pedagógica, escenarios, verificaciones numéricas) que consumen docencia, divulgacion y los pubs por catalogo.json.
+
+- Escribe en: archivos · simula por defecto: no
+- Entrada: los modelos de <disciplina>/modelos/nivel_NN/; datos reales de datafw por DATAFW_DIR (nivel 12 de macro)
+- Depende de: python3 con numpy, matplotlib y yaml (el de anaconda base; el del sistema no trae matplotlib), manim (conda manim-datafw; solo estadistica/animaciones), core/env.py (DATAFW_DIR), core/py-common/biblioteca.py (fuentes.py comprueba las citas contra Calibre)
+- Nota: Repo propio desde 2026-10-20 (antes docencia/simuladores, con su historia). catalogo simula por defecto (imprime) y escribe catalogo.json solo con --aplicar; reporte escribe en <disciplina>/salidas/ (regenerable, fuera de git) sin pedir --aplicar. La app (sin argumentos) abre la GUI matplotlib.
+
+Comandos:
+
+```bash
+main.py catalogo [--aplicar | --verificar]
+main.py verificar
+macro/main.py [app | listar | ficha <m> | simular <m> | comparar <m> | sensibilidad <m> <p> | reporte <m> | verificar]
+estadistica/main.py [app | listar | fuentes | ficha <e> | simular <e> | reporte <e> | verificar]
+```
+
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-20); no se edita a mano.</sub>
+<!-- suite:fin -->
+
+<!-- suites:inicio -->
+Suites de esta carpeta (1); índice global en `meta/INDICE_SCRIPTS.md`. Patrón: M main · C config · L lib.
+
+| Suite | Carpeta | Objetivo | Escribe en | Simula | Timer | Estado | Patrón |
+|---|---|---|---|---|---|---|---|
+| `simuladores` | [simuladores](./) | publicacion | archivos | no |  | activo | `M··` |
+
+<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-10-20); no se edita a mano.</sub>
+<!-- suites:fin -->
+
 Laboratorio histórico y computacional de economía y sus herramientas: cada teoría o método reconstruido como
 **modelo ejecutable** con ficha pedagógica (contexto histórico → derivación → intuición → limitaciones), simulación de
 escenarios y **verificación numérica de sus teoremas**. Repo propio desde el 2026-10-20 (antes `docencia/simuladores`,

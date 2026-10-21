@@ -17,12 +17,10 @@ nada en curso
 
 ## Por hacer
 
-- 2026-10-20 · director · alta en `meta/workspace.yml` (bloque del informe de la fase 3) y derivados (`workspace.py grafo|claude|readme|respaldos --aplicar`, `core/suites.py generar --aplicar`); hasta entonces `core/suites.py` no ve este `suite.yml` ni el respaldo lo toma por `repos.txt`.
-- 2026-10-20 · director · `meta/doctor/config.py`: evidencia del proyecto `simuladores` (`SIMULADORES_DIR`, `simuladores/macro/`, `simuladores/estadistica/`) y quitar `docencia/simuladores/` de la de `docencia`.
-- 2026-10-20 · el autor · remoto (o decisión escrita de no tenerlo); sin él, el primer respaldo es el bundle mensual.
-- 2026-10-20 · director · macro no declara en qué temas de curso vive cada modelo (estadística sí, en `temario.yml`): sin eso, `catalogo.json` da `cursos: []` en macro. Fuente: los recursos `{tipo: simulador}` de los `curso.yml`.
-- 2026-10-04 · campaña SIMULADORES · `macro/modelos/`: tres pendientes sin fecha (aviso A13). Viene de `docencia/estado.md`.
-- 2026-10-04 · campaña SIMULADORES · la excepción de guía anidada de `CLAUDE.md` (docencia, DOC10) se extinguió con el repo propio: cerrar su mención en `DIAGNOSTICO_SIMULADORES_2026-10`. Viene de `docencia/estado.md`.
+- 2026-10-20 · dueño: autor · remoto (o decisión escrita de no tenerlo); sin él, el primer respaldo es el bundle mensual.
+- 2026-10-20 · dueño: director · macro no declara en qué temas de curso vive cada modelo (estadística sí, en `temario.yml`): sin eso, `catalogo.json` da `cursos: []` en macro. Fuente: los recursos `{tipo: simulador}` de los `curso.yml`.
+- 2026-10-04 · dueño: campaña SIMULADORES · `macro/modelos/`: tres pendientes sin fecha (aviso A13). Viene de `docencia/estado.md`.
+- 2026-10-04 · dueño: campaña SIMULADORES · la excepción de guía anidada de `CLAUDE.md` (docencia, DOC10) se extinguió con el repo propio: cerrar su mención en `DIAGNOSTICO_SIMULADORES_2026-10`. Viene de `docencia/estado.md`.
 
 ## Futuro
 

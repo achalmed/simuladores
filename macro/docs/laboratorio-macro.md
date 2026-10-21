@@ -534,8 +534,8 @@ macroeconómico. **Decisión tomada (2026-08-20)**:
   y futuras `econometria/`/`micro/`/`mate/`. El `main.py` de cada disciplina
   añade la raíz al `sys.path` (motor) y su carpeta primero (config/modelos) — el
   motor se comparte sin copiarlo. Correr: `cd simuladores/<disciplina> && python3 main.py`.
-- Cada disciplina tendrá su documento de diseño gemelo
-  (`docs/LABORATORIO_MICRO.md`, …) con su propio currículo.
+- Cada disciplina tiene su documento de diseño gemelo, con su propio currículo, en su carpeta
+  `docs/` (como `estadistica/docs/laboratorio-estadistica.md`); micro y las demás lo tendrán al nacer.
 - La econometría del laboratorio se apoyará en lo ya construido en
   `pipeline/` (diagnóstico, MCO, panel): los "modelos" econométricos del
   laboratorio serán fichas pedagógicas SOBRE los métodos ya implementados y
