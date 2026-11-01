@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-10-21
+actualizado: 2026-10-31
 ---
 # estado.md — simuladores
 
@@ -9,6 +9,7 @@ actualizado: 2026-10-21
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-10-31 | **Simuladores Studio**: la ventana del laboratorio en la familia de los studios (`gui-comun`, acento lima), con los 139 modelos por disciplina, su ficha, ecuaciones, escenarios, verificaciones y el gráfico en vivo; acceso directo en el menú con `install.sh` | `studio/`; `python3 -m pytest -q tests` |
 | 2026-10-21 | Adaptador web (fase 3): `navegador.py` y `main.py web` → `navegador.json` (120 de 139 modelos corren en el navegador con Pyodide; fuera, el nivel 12 de macro, que lee datafw, y e26, lento); modelo e67 del TCL (5 verificaciones; las 684 previas, idénticas); `macro/temario.yml` parcial (m10 → macroeconomia-i 3.4); los pilotos IS-LM y TCL corren y redibujan en `web/_aula` | `README.md` §En el navegador · `web/_aula/docs/decisiones.md` §1.20 |
 | 2026-10-20 | repo propio fuera de `docencia/simuladores`, con su historia (63 commits por `git subtree split`); `SIMULADORES_DIR` en `core/env`; `main.py catalogo` y `catalogo.json` (138 modelos: 115 de macro, 23 de estadística) | `git log`; etiqueta `antes-simuladores-2026-10-20` en `docencia`, `core` y `divulgacion`; `$RESPALDOS_DIR/renombres/2026-10-20-docencia-simuladores-a-simuladores/` |
 

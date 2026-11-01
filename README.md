@@ -24,17 +24,18 @@ macro/main.py [app | listar | ficha <m> | simular <m> | comparar <m> | sensibili
 estadistica/main.py [app | listar | fuentes | ficha <e> | simular <e> | reporte <e> | verificar]
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-21); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-31); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 <!-- suites:inicio -->
-Suites de esta carpeta (1); índice global en `meta/INDICE_SCRIPTS.md`. Patrón: M main · C config · L lib.
+Suites de esta carpeta (2); índice global en `meta/INDICE_SCRIPTS.md`. Patrón: M main · C config · L lib.
 
 | Suite | Carpeta | Objetivo | Escribe en | Simula | Timer | Estado | Patrón |
 |---|---|---|---|---|---|---|---|
+| `simuladores_studio` | [simuladores/studio](studio/) | publicacion | ninguno | no |  | activo | `M··` |
 | `simuladores` | [simuladores](./) | publicacion | archivos | no |  | activo | `M··` |
 
-<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-10-21); no se edita a mano.</sub>
+<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-10-31); no se edita a mano.</sub>
 <!-- suites:fin -->
 
 Laboratorio histórico y computacional de economía y sus herramientas: cada teoría o método reconstruido como
@@ -50,6 +51,8 @@ disciplina) vive en la raíz, con la aplicación (`app.py`); cada disciplina es 
 
 ```bash
 cd ~/Documents/simuladores
+python3 studio/main.py                     # Simuladores Studio: cada modelo con su ficha y su gráfico en vivo (studio/README.md)
+./install.sh                               # su acceso directo en el menú de aplicaciones (-n simula)
 python3 main.py verificar                  # verificar de todas las disciplinas (salida 0 solo si todas pasan)
 python3 main.py catalogo                   # el catálogo de modelos por stdout (simula: no escribe)
 python3 main.py catalogo --aplicar         # escribe catalogo.json, el contrato que leen los pubs
@@ -95,6 +98,7 @@ La página `/laboratorio/<id>/` de cada pub ejecuta el MISMO modelo en el navega
 
 ```
 simuladores/
+├── studio/ · tests/ · install.sh   Simuladores Studio (la ventana), sus pruebas y su acceso directo del menú
 ├── main.py         el laboratorio entero: catalogo (catalogo.json) y verificar de todas las disciplinas
 ├── base.py         MOTOR: dataclasses (Modelo/Ficha/Escenario/Verificacion), cálculo y verificación
 ├── graficos.py     render matplotlib con anti-solape y dibujo progresivo

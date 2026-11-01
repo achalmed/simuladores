@@ -1,0 +1,19 @@
+# studio/suite.yml — suite simuladores_studio: Aplicación de escritorio (PySide6) del laboratorio: los modelos por disciplina con su ficha, ecuaciones, escenarios, verificaciones y el gráfico en vivo.
+# Contrato: core/suite.schema.yml; core/suites.py validar lo comprueba y generar escribe los índices y README.
+id: simuladores_studio
+objetivo: publicacion
+resumen: 'Aplicación de escritorio (PySide6) del laboratorio: los modelos por disciplina con su ficha, ecuaciones, escenarios, verificaciones y el gráfico en vivo.'
+escribe_en:
+- ninguno
+simula_por_defecto: false
+pruebas: python3 -m pytest -q tests   # desde la raíz del repo: el laboratorio cambia de disciplina, cada modelo carga, la ventana abre y dibuja
+comandos:
+- main.py
+- main.py --smoke
+- main.py --instalar-lanzador [-n]
+estado: activo
+interfaz: gui
+depende_de:
+- PySide6
+- matplotlib
+- numpy
