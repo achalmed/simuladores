@@ -27,7 +27,7 @@ def datos_lanzador() -> dict:
     from sim_app.ventana import ACENTO, LOGO
     return dict(app_id=APP_ID, nombre="Simuladores Studio", comentario="Laboratorio computacional: modelos de economía "
                 "y estadística que se derivan, simulan y ven", orden=[sys.executable, str(_AQUI / "main.py")],
-                logo_svg=LOGO, acento=ACENTO, categorias="Education;Science;Economy;Math;",
+                logo_svg=LOGO, acento=ACENTO, categorias="Education;Economy;Math;",
                 palabras="macroeconomía;estadística;simulador;modelo;IS-LM;laboratorio;")
 
 
