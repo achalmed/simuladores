@@ -1,173 +1,217 @@
-// Main.qml — Simuladores Studio: los modelos del laboratorio en un espacio de trabajo al estilo Dolphin/Kate sobre
-// GuiComun.VentanaStudio. Navegación (Disciplinas · Verificación) · centro (la tabla de modelos) · detalles (el modelo:
-// Ficha, Escenario, Resultados con el gráfico, Verificaciones, Registro, Operación) · panel inferior (la salida del
-// motor) · barra de estado. Ninguna llamada al motor ni al disco aquí: todo lo hacen los controladores de Python (studio.*).
+// Main.qml — Simuladores Studio (reingeniería del 2026-11-02, docs/reingenieria.md): un laboratorio de simulación sobre
+// GuiComun.VentanaBase, al modo de MATLAB, RStudio y JupyterLab. Arriba, el modelo con su estado de validez, las
+// acciones del experimento y las vistas. A la izquierda, el catálogo de modelos por disciplina (F9). En el centro, el
+// espacio de simulación: Simulación (o Evolución temporal), Comparación, Sensibilidad, Ficha, Verificaciones y
+// Laboratorio. A la derecha, los parámetros con sus deslizadores. Abajo, la barra de estado. Ninguna llamada al motor
+// ni al disco aquí: todo lo hacen los controladores de Python (studio.*).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import QtCore
 import GuiComun
 import "componentes"
 
-VentanaStudio {
+VentanaBase {
     id: ventana
 
     readonly property var espacio: studio.espacio
     readonly property var registro: studio.acciones
     readonly property var modelos: studio.modelos
     readonly property var ops: studio.operaciones
+    readonly property var validez: modelos.validez
+    property int vista: 0
+    property bool mostrarCatalogo: true
+    readonly property var vistas: [modelos.temporal ? "Evolución temporal" : "Simulación", "Comparación", "Sensibilidad", "Ficha", "Verificaciones", "Laboratorio"]
 
-    title: (modelos.hayActual ? modelos.id + " · " + modelos.titulo : espacio.textoDisciplina) + " — Simuladores Studio"
+    title: (modelos.hayActual ? modelos.id + " · " + modelos.titulo : "Laboratorio") + " — Simuladores Studio"
     acciones: registro
     tareas: studio.tareas
     consola: studio.consola
     descripcion: descripcionStudio
     autor: "Edison Achalma (@achalmed)"
-    resumen: espacio.resumen
-    contexto: espacio.contexto
-    claveAjustes: "ventana"
+    claveAjustes: "ventana-3"
+    width: 1400
+    height: 880
 
     function accion(nombre) { return registro.accion(nombre) }
-    function irAPestana(i) { ventana.mostrarDetalles = true; detalles.pestanaActual = i }
-    function religarNavegacion() { navegacion.actual = Qt.binding(() => espacio.nombreNavegacion) }
+    function irAVista(i) { ventana.vista = Math.max(0, Math.min(ventana.vistas.length - 1, i)) }
+
+    Settings {
+        category: "espacio"
+        property alias vista: ventana.vista
+        property alias catalogo: ventana.mostrarCatalogo
+    }
 
     Connections {
         target: studio.interfaz
         function onPedir(nombre, datos) {
             switch (nombre) {
-            case "filtrar": filtro.forceActiveFocus(); filtro.selectAll(); break
-            case "seleccionar_todo": tabla.seleccionarTodo(); break
-            case "seleccionar_fila": if (datos.fila >= 0) tabla.seleccionarFila(datos.fila, true); break
+            case "buscar": ventana.mostrarCatalogo = true; catalogo.enfocar(); break
+            case "catalogo": ventana.mostrarCatalogo = !ventana.mostrarCatalogo; break
             case "aplicar": dialogoAplicar.abrir(); break
             case "venv": dialogoVenv.open(); break
-            case "pestana": irAPestana(datos.indice); break
+            case "vista": irAVista(datos.indice); break
+            case "salida": irAVista(5); laboratorio.pestana = 2; break
             case "paleta": ventana.paleta.abrir(datos.texto || ""); break
             case "aviso": ventana.mensajes.mostrar(datos.texto, datos.tipo || "informacion"); break
             }
         }
     }
-    Connections { target: espacio; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } function onFiltroCambiado() { religarNavegacion() } }
+    Connections { target: espacio; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
     Connections {
         target: modelos
         function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) }
-        function onSeleccionar(fila) { if (fila >= 0) tabla.seleccionarFila(fila, true); irAPestana(0) }
         function onActualCambiado() { modelos.fijarColorTexto(Kirigami.Theme.textColor.toString()) }
     }
     Connections {
         target: ops
         function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) }
         function onTerminada(id, aplicar, codigo) {
-            if (id === "correr") irAPestana(2)
-            else if (id === "verificar") irAPestana(3)
-            else if (!aplicar && (id === "datos" || id === "guardar_escenario")) irAPestana(5)
+            if (id === "correr") irAVista(0)
+            else if (id === "verificar") irAVista(4)
+            else if (!(aplicar && (id === "datos" || id === "guardar_escenario"))) { irAVista(5); laboratorio.pestana = 0 }
         }
     }
     Component.onCompleted: modelos.fijarColorTexto(Kirigami.Theme.textColor.toString())
 
-    // ------------------------------------------------------------------ barra: la operación y el filtro
-    herramientasExtra: [
-        QQC2.ComboBox {
-            id: selectorOperacion
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 15
-            model: ops.lista
-            textRole: "titulo"
-            currentIndex: ops.indiceActual
-            onActivated: index => ops.fijarPorIndice(index)
-            Accessible.name: "Operación"
-            QQC2.ToolTip.text: ops.descripcion
-            QQC2.ToolTip.visible: hovered && ops.descripcion !== ""
-            Connections { target: ops; function onCambiado() { selectorOperacion.currentIndex = ops.indiceActual } }
-        },
-        Kirigami.SearchField {
-            id: filtro
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 11
-            placeholderText: "Filtrar (Ctrl+F)"
-            onTextChanged: modelos.modelo.filtrar(text)
-            Keys.onEscapePressed: { text = ""; tabla.forceActiveFocus() }
-            Accessible.name: "Filtrar"
+    // ------------------------------------------------------------------ la cabecera: el modelo, su validez y las vistas
+    header: QQC2.ToolBar {
+        position: QQC2.ToolBar.Header
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+                BotonAccion { accion: ventana.accion("ver.catalogo"); conTexto: false }
+                Kirigami.Icon {
+                    source: modelos.hayActual ? "office-chart-line" : "applications-science"
+                    implicitWidth: Kirigami.Units.iconSizes.medium
+                    implicitHeight: implicitWidth
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Kirigami.Heading {
+                        Layout.fillWidth: true
+                        level: 3
+                        text: modelos.hayActual ? modelos.id + " · " + modelos.titulo : "Laboratorio de simulación"
+                        elide: Text.ElideRight
+                    }
+                    QQC2.Label {
+                        Layout.fillWidth: true
+                        text: modelos.hayActual ? modelos.textoDisciplina + (modelos.seccion ? " · " + modelos.seccion : "") + (modelos.pregunta ? " · " + modelos.pregunta : "")
+                                                : "Elige un modelo del catálogo: su simulación, su ficha y sus verificaciones"
+                        color: Kirigami.Theme.disabledTextColor
+                        elide: Text.ElideRight
+                    }
+                }
+                // el estado de validez (L8)
+                QQC2.Control {
+                    id: chip
+                    visible: modelos.hayActual && modelos.cargado
+                    readonly property string nivel: validez.valido === true ? "positivo" : (validez.nivel || "neutro")
+                    padding: Kirigami.Units.smallSpacing
+                    leftPadding: Kirigami.Units.largeSpacing
+                    rightPadding: Kirigami.Units.largeSpacing
+                    background: Rectangle {
+                        radius: height / 2
+                        color: chip.nivel === "positivo" ? Kirigami.Theme.positiveBackgroundColor
+                               : (chip.nivel === "negativo" ? Kirigami.Theme.negativeBackgroundColor : Kirigami.Theme.neutralBackgroundColor)
+                    }
+                    contentItem: RowLayout {
+                        spacing: Kirigami.Units.smallSpacing
+                        Kirigami.Icon {
+                            source: chip.nivel === "positivo" ? "data-success" : (chip.nivel === "negativo" ? "data-error" : "data-warning")
+                            implicitWidth: Kirigami.Units.iconSizes.small
+                            implicitHeight: implicitWidth
+                        }
+                        QQC2.Label {
+                            text: validez.valido === true ? "VÁLIDO · " + modelos.textoEstado.toLowerCase() : (validez.titulo || modelos.textoEstado || "sin corrida")
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                    QQC2.ToolTip.text: (validez.texto || "") + (modelos.hayActual ? "\n" + modelos.resumenVerificacion : "")
+                    QQC2.ToolTip.visible: zonaChip.hovered
+                    HoverHandler { id: zonaChip }
+                    Accessible.name: "Validez: " + (validez.titulo || (validez.valido ? "válido" : "")) + ". " + (validez.texto || "")
+                }
+                Kirigami.Separator { Layout.fillHeight: true; Layout.margins: Kirigami.Units.smallSpacing }
+                BotonAccion { accion: ventana.accion("modelo.correr") }
+                BotonAccion { accion: ventana.accion("modelo.verificar") }
+                BotonAccion { accion: ventana.accion("ver.figura"); conTexto: false }
+                BotonAccion { accion: ventana.accion("archivo.abrir"); conTexto: false }
+                BotonAccion { accion: ventana.accion("ventana.paleta"); conTexto: false }
+            }
+            QQC2.TabBar {
+                id: pestanas
+                Layout.fillWidth: true
+                currentIndex: ventana.vista
+                onCurrentIndexChanged: ventana.vista = currentIndex
+                Repeater {                  // las seis vistas son fijas: el modelo del Repeater es una lista constante de índices
+                    model: 6
+                    delegate: QQC2.TabButton {
+                        required property int index
+                        text: ventana.vistas[index] + (index === 4 && modelos.nFallos > 0 ? " (" + modelos.nFallos + " ✘)" : "")
+                        icon.name: ["office-chart-line", "view-split-left-right", "office-chart-line-stacked", "text-x-generic", "checkmark", "utilities-terminal"][index]
+                        width: implicitWidth
+                        QQC2.ToolTip.text: "Ctrl+" + (index + 1)
+                        QQC2.ToolTip.visible: hovered
+                    }
+                }
+            }
         }
-    ]
-
-    // ------------------------------------------------------------------ navegación
-    navegacion: PanelNavegacion {
-        id: navegacion
-        secciones: [
-            { titulo: "Disciplinas", filas: modelos.filasDisciplinas },
-            { titulo: "Verificación", filas: modelos.filasEstados }
-        ]
-        onElegida: nombre => {
-            if (nombre.startsWith("estado.")) espacio.fijarEstado(nombre.substring(7))
-            else { espacio.fijarEstado(""); espacio.fijarDisciplina(nombre.length > 10 ? nombre.substring(11) : "") }
-            religarNavegacion()
-        }
-        Component.onCompleted: religarNavegacion()
     }
 
-    // ------------------------------------------------------------------ centro
-    centro: TablaDatos {
-        id: tabla
-        modelo: modelos.modelo
-        claveAjustes: "modelos"
-        umbralEstrecho: Kirigami.Units.gridUnit * 48
-        mensajeVacio: modelos.total === 0 ? "Ningún modelo: falta catalogo.json en la raíz del laboratorio (python3 main.py catalogo --aplicar)"
-                                          : "Ningún modelo cumple el filtro «" + espacio.textoFiltro + "»"
-        iconoVacio: "office-chart-line"
-        columnas: [
-            { ancho: 4, mono: true },
-            { ancho: 0, minimo: 14, conIcono: true },
-            { ancho: 12, secundaria: true, estrecho: true },
-            { ancho: 5, alinear: "derecha", secundaria: true, estrecho: true },
-            { ancho: 5, alinear: "derecha", secundaria: true, estrecho: true },
-            { ancho: 6, alinear: "derecha", secundaria: true, estrecho: true },
-            { ancho: 8, semantica: true },
-            { ancho: 9, secundaria: true, estrecho: true }
-        ]
-        onOrdenar: (columna, descendente) => modelos.modelo.ordenar(columna, descendente)
-        onFilaActualCambiada: fila => modelos.fijarFila(fila)
-        onActivada: fila => { modelos.fijarFila(fila); ventana.accion("archivo.abrir").disparar() }
-        menuContextual: MenuAcciones {
-            acciones: ventana.registro
-            conAtajos: false
-            elementos: [
-                { tipo: "accion", nombre: "modelo.correr" }, { tipo: "accion", nombre: "modelo.verificar" }, { tipo: "accion", nombre: "modelo.restablecer" },
-                { tipo: "separador" },
-                { tipo: "accion", nombre: "op.simular" }, { tipo: "accion", nombre: "op.aplicar" },
-                { tipo: "separador" },
-                { tipo: "accion", nombre: "modelo.ficha" }, { tipo: "accion", nombre: "modelo.escenario" }, { tipo: "accion", nombre: "modelo.resultados" }, { tipo: "accion", nombre: "modelo.verificaciones" },
-                { tipo: "separador" },
-                { tipo: "accion", nombre: "archivo.abrir" }, { tipo: "accion", nombre: "archivo.carpeta" }, { tipo: "accion", nombre: "archivo.copiar" }
-            ]
+    // ------------------------------------------------------------------ catálogo · espacio de simulación · parámetros
+    RowLayout {
+        anchors.fill: parent
+        spacing: 0
+        CatalogoModelos {
+            id: catalogo
+            visible: ventana.mostrarCatalogo
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 17
+            Layout.fillHeight: true
+        }
+        Kirigami.Separator { Layout.fillHeight: true; visible: catalogo.visible }
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            StackLayout {
+                anchors.fill: parent
+                visible: modelos.hayActual || ventana.vista === 5
+                currentIndex: ventana.vista
+                EspacioSimulacion {}
+                Comparacion {}
+                Sensibilidad {}
+                Ficha {}
+                Verificaciones {}
+                Laboratorio { id: laboratorio }
+            }
+            Kirigami.PlaceholderMessage {
+                anchors.centerIn: parent
+                width: parent.width - Kirigami.Units.gridUnit * 6
+                visible: !modelos.hayActual && ventana.vista !== 5
+                icon.name: "office-chart-line"
+                text: "Elige un modelo del catálogo"
+                explanation: modelos.resumen + "\n\nSu simulación se redibuja al mover los parámetros; un resultado solo se da por válido si sus verificaciones pasan."
+            }
+        }
+        Kirigami.Separator { Layout.fillHeight: true; visible: parametros.visible }
+        PanelParametros {
+            id: parametros
+            visible: modelos.cargado && ventana.vista <= 2
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            Layout.fillHeight: true
         }
     }
 
-    // ------------------------------------------------------------------ detalles
-    detalles: PanelDetalles {
-        id: detalles
-        anchoPreferido: Kirigami.Units.gridUnit * 30
-        anchoMinimo: Kirigami.Units.gridUnit * 20
-        titulo: modelos.hayActual ? modelos.id + " · " + modelos.titulo : ""
-        subtitulo: modelos.hayActual ? modelos.textoDisciplina + (modelos.seccion ? " · " + modelos.seccion : "") + " · " + modelos.textoEstado : ""
-        icono: modelos.hayActual ? "office-chart-line" : ""
-        mensajeVacio: "Elige un modelo en la tabla: su ficha, su escenario, su corrida con el gráfico y sus verificaciones"
-        iconoVacio: "office-chart-line"
-        accionesCabecera: [ventana.accion("modelo.correr"), ventana.accion("modelo.verificar"), ventana.accion("archivo.abrir")]
-        pestanas: [
-            { titulo: "Ficha" },
-            { titulo: "Escenario", contador: modelos.parametros.length },
-            { titulo: "Resultados", contador: modelos.nResultados },
-            { titulo: "Verificaciones", contador: modelos.nVerificaciones },
-            { titulo: "Registro" },
-            { titulo: "Operación" }
-        ]
-        Ficha {}
-        Escenario {}
-        Resultados {}
-        Verificaciones {}
-        Registro {}
-        Operacion {}
+    footer: BarraEstado {
+        resumen: espacio.resumen
+        contexto: espacio.contexto
+        tareas: studio.tareas
+        onProgresoPulsado: { irAVista(5); laboratorio.pestana = 2 }
     }
-
-    inferior: PanelInferior { consola: studio.consola }
 
     // ------------------------------------------------------------------ diálogos
     Kirigami.PromptDialog {
@@ -177,7 +221,7 @@ VentanaStudio {
         standardButtons: Kirigami.Dialog.Cancel
         customFooterActions: [Kirigami.Action { text: "Aplicar"; icon.name: "dialog-ok-apply"; enabled: ops.puedeAplicar; onTriggered: { ops.aplicar(); dialogoAplicar.close() } }]
         function abrir() {
-            if (!ops.puedeAplicar) { ventana.mensajes.mostrar(ops.motivoNoAplicar, "aviso"); irAPestana(5); return }
+            if (!ops.puedeAplicar) { ventana.mensajes.mostrar(ops.motivoNoAplicar, "aviso"); irAVista(5); laboratorio.pestana = 0; return }
             open()
         }
     }

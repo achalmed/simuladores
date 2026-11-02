@@ -5,7 +5,8 @@ Nunca los modelos reales ni `catalogo.json` del repo. En una carpeta temporal co
 `navegador.py`, `graficos.py`, `laboratorio.py`, `reporte.py`, `fuentes.py`, `app.py`, `main.py`) y crea una disciplina
 `demo` con su `config.py` (que no importa matplotlib: correr y verificar funcionan con el Python del sistema), un
 `main.py` (el de macro, copiado: sus CLI necesitan matplotlib) y dos modelos: `d01`, un mercado lineal (dos rectas y
-su equilibrio) que pasa sus verificaciones, y `d02`, un flujo en barras con una verificación que falla a propósito.
+su equilibrio) que pasa sus verificaciones, `d02`, un flujo en barras con una verificación que falla a propósito, y `d03`, un modelo dinámico (la evolución temporal del
+capital hacia su estado estacionario, con x = el tiempo) que pasa.
 `catalogo.json` se genera con el `main.py` real. Devuelve las variables de entorno con las que el studio ve la muestra
 (`SIMULADORES_STUDIO_RAIZ`) y un HOME temporal (ninguna ruta de la máquina en pantalla).
 
@@ -162,6 +163,76 @@ MODELO = Modelo(
 '''
 
 
+D03 = '''"""demo/modelos/nivel_03/d03_capital_dinamico.py — la acumulación de capital en el tiempo (nivel 3): el modelo dinámico de la muestra."""
+import numpy as np
+
+from base import Ecuacion, Escenario, Ficha, Modelo, Parametro, Verificacion
+import config
+
+_P0 = {"s": 0.25, "delta": 0.08, "A": 1.0, "alfa": 0.33, "K0": 1.0, "T": 60.0}
+
+
+def _estacionario(p):
+    return (p["s"] * p["A"] / p["delta"]) ** (1 / (1 - p["alfa"]))
+
+
+def _trayectoria(p):
+    T = int(p["T"])
+    k = np.empty(T + 1)
+    k[0] = p["K0"]
+    for t in range(T):
+        k[t + 1] = k[t] + p["s"] * p["A"] * k[t] ** p["alfa"] - p["delta"] * k[t]
+    return np.arange(T + 1), k
+
+
+def _curvas(p):
+    t, k = _trayectoria(p)
+    ke = _estacionario(p)
+    return {"lineas": {"capital $K_t$": (t, k, config.AZUL2), "estado estacionario $K^*$": (t, np.full_like(k, ke), config.DORADO)},
+            "puntos": [(int(t[-1]), float(k[-1]), "$K_T$")], "anotacion": f"$K^* = {ke:.2f}$"}
+
+
+def _resultados(p):
+    t, k = _trayectoria(p)
+    ke = _estacionario(p)
+    mitad = next((int(i) for i, v in zip(t, k) if abs(v - ke) <= abs(k[0] - ke) / 2), int(t[-1]))
+    return {"K* (estacionario)": ke, "K_T (al final)": float(k[-1]), "periodos hasta la mitad del camino": mitad}
+
+
+def _v_estacionario():
+    ke = _estacionario(_P0)
+    resto = _P0["s"] * _P0["A"] * ke ** _P0["alfa"] - _P0["delta"] * ke
+    return abs(resto) < 1e-9, f"en K* la inversión iguala a la depreciación (resto={resto:.1e})"
+
+
+def _v_converge():
+    p = dict(_P0, T=400.0)
+    t, k = _trayectoria(p)
+    ke = _estacionario(p)
+    return abs(k[-1] - ke) / ke < 1e-3, f"K_400 = {k[-1]:.4f} frente a K* = {ke:.4f}"
+
+
+MODELO = Modelo(
+    id="d03", nivel=3, nombre="Capital en el tiempo", xlabel="Tiempo ($t$, periodos)", ylabel="Capital por trabajador ($K$)",
+    parametros=[Parametro("s", _P0["s"], 0.05, 0.6, 0.01, "Tasa de ahorro s", "conducta", "fracción del producto que se ahorra"),
+                Parametro("delta", _P0["delta"], 0.01, 0.2, 0.01, "Depreciación δ", "tecnología", "fracción del capital que se gasta cada periodo"),
+                Parametro("A", _P0["A"], 0.5, 2.0, 0.05, "Productividad A", "tecnología"),
+                Parametro("alfa", _P0["alfa"], 0.2, 0.6, 0.01, "Elasticidad del capital α", "tecnología"),
+                Parametro("K0", _P0["K0"], 0.1, 20, 0.1, "Capital inicial K₀", "condición inicial"),
+                Parametro("T", _P0["T"], 10, 150, 5, "Horizonte T", "simulación", "", "periodos")],
+    curvas=_curvas, resultados=_resultados,
+    ficha=Ficha(pregunta="¿Hacia dónde va el capital y qué tan rápido llega?", contexto="La ecuación de acumulación de Solow (1956), como muestra dinámica.",
+                autores="Solow (1956), Swan (1956).", supuestos=["Rendimientos decrecientes del capital.", "Ahorro y depreciación constantes."],
+                ecuaciones=[Ecuacion("K_{t+1} = K_t + s\\\\,A\\\\,K_t^{\\\\alpha} - \\\\delta\\\\,K_t", "acumulación", "el capital crece con la inversión y se gasta con la depreciación"),
+                            Ecuacion("K^* = (s A / \\\\delta)^{1/(1-\\\\alpha)}", "estado estacionario", "donde la inversión iguala a la depreciación")],
+                intuicion="Con poco capital, cada unidad rinde mucho y el capital crece rápido; cerca de K* la inversión apenas cubre la depreciación.",
+                limitaciones=["Sin progreso técnico: el crecimiento se detiene en K*."], evolucion="El modelo de Solow completo."),
+    escenarios=[Escenario("mas_ahorro", "la tasa de ahorro sube de 0,25 a 0,35", {"s": 0.35}, "K* sube y el capital crece más tiempo.", cadena=["↑s", "↑inversión", "↑K*"])],
+    verificaciones=[Verificacion("K* anula el cambio", _v_estacionario), Verificacion("la trayectoria converge a K*", _v_converge)],
+)
+'''
+
+
 @dataclass
 class Muestra:
     raiz: Path
@@ -179,6 +250,7 @@ def crear(raiz: Path) -> Muestra:
     demo = raiz / "demo"
     (demo / "modelos" / "nivel_01").mkdir(parents=True)
     (demo / "modelos" / "nivel_02").mkdir(parents=True)
+    (demo / "modelos" / "nivel_03").mkdir(parents=True)
     (demo / "docs").mkdir()
     (demo / "docs" / "laboratorio-demo.md").write_text("# Laboratorio de muestra\n\nDos modelos de juguete para las pruebas y las capturas del studio.\n", encoding="utf-8")
     (demo / "config.py").write_text(CONFIG, encoding="utf-8")
@@ -186,8 +258,10 @@ def crear(raiz: Path) -> Muestra:
     (demo / "modelos" / "__init__.py").write_text('"""demo/modelos — los modelos de muestra, un paquete por nivel."""\n', encoding="utf-8")
     (demo / "modelos" / "nivel_01" / "__init__.py").write_text("", encoding="utf-8")
     (demo / "modelos" / "nivel_02" / "__init__.py").write_text("", encoding="utf-8")
+    (demo / "modelos" / "nivel_03" / "__init__.py").write_text("", encoding="utf-8")
     (demo / "modelos" / "nivel_01" / "d01_mercado_lineal.py").write_text(D01, encoding="utf-8")
     (demo / "modelos" / "nivel_02" / "d02_flujo_barras.py").write_text(D02, encoding="utf-8")
+    (demo / "modelos" / "nivel_03" / "d03_capital_dinamico.py").write_text(D03, encoding="utf-8")
     hogar = raiz / "hogar"
     for sub in (".config", ".cache", ".local/share", ".local/state"):
         (hogar / sub).mkdir(parents=True, exist_ok=True)

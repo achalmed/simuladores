@@ -1,10 +1,9 @@
 """studio/sim_app/servicios/corridas.py — correr un escenario y preparar lo que la ventana dibuja (sin Qt).
 
 `correr` llama a `navegador.calcular` (lo mismo que ejecuta el navegador de los pubs): los valores pedidos ajustados al
-rango de cada parámetro, las curvas serializadas y los resultados. `para_grafico` convierte las curvas al contrato de
-`GuiComun.Grafico`: QuickCharts posiciona cada valor por su índice, así que las líneas se remuestrean sobre una rejilla
-común de x (interpolación lineal) y una línea con x o y constante pasa a ser una marca. `comparar` enfrenta las
-magnitudes del escenario con las de la base. `csv_series` y `json_corrida` son lo que se exporta."""
+rango de cada parámetro, las curvas serializadas y los resultados. `comparar` enfrenta las magnitudes del escenario con
+las de la base. `csv_series` y `json_corrida` son lo que se exporta. Lo que el gráfico dibuja lo prepara
+`servicios.simulacion` (cada línea con su x real; la reingeniería retiró el remuestreo para QuickCharts)."""
 from __future__ import annotations
 
 import csv
@@ -13,8 +12,6 @@ import json
 import math
 import re
 
-PUNTOS_REJILLA = 200
-ETIQUETAS_EJE = 5
 
 
 def correr(navegador, modelo, valores: dict | None) -> dict:
@@ -55,87 +52,6 @@ def _etiqueta_numero(v: float) -> str:
     else:
         texto = f"{v:.3g}"
     return texto.replace(",", " ")
-
-
-def _interpolar(xs: list[float], ys: list[float], rejilla: list[float]) -> list[float]:
-    """Interpolación lineal de (xs, ys) sobre la rejilla; fuera del dominio de la serie repite el borde."""
-    pares = sorted((x, y) for x, y in zip(xs, ys) if x is not None and y is not None)
-    if not pares:
-        return [0.0] * len(rejilla)
-    salida = []
-    j = 0
-    for x in rejilla:
-        while j + 1 < len(pares) and pares[j + 1][0] <= x:
-            j += 1
-        x0, y0 = pares[j]
-        if j + 1 < len(pares) and pares[j + 1][0] > x0 and x > x0:
-            x1, y1 = pares[j + 1]
-            salida.append(y0 + (y1 - y0) * (x - x0) / (x1 - x0))
-        else:
-            salida.append(y0)
-    return salida
-
-
-def para_grafico(curvas: dict, xlabel: str = "", ylabel: str = "", puntos_rejilla: int = PUNTOS_REJILLA) -> dict:
-    """Las propiedades de `GuiComun.Grafico` a partir de las curvas serializadas (`navegador.serializar`)."""
-    salida = {"series": [], "etiquetasX": [], "xMinimo": 0.0, "xMaximo": 1.0, "yMinimo": 0.0, "yMaximo": 1.0,
-              "barras": {}, "puntos": [], "equilibrio": None, "marcas": [], "etiquetaX": sin_mathtext(xlabel),
-              "etiquetaY": sin_mathtext(ylabel), "anotacion": sin_mathtext(curvas.get("anotacion", "")).replace("\\n", " · ")}
-    ys_todas: list[float] = []
-    barras = curvas.get("barras")
-    if barras:
-        valores = [_numero(v) or 0.0 for v in barras.get("valores", [])]
-        salida["barras"] = {"categorias": [sin_mathtext(c) for c in barras.get("categorias", [])], "valores": valores}
-        ys_todas += valores + [0.0]
-        salida["etiquetaX"] = ""
-    lineas, marcas = [], []
-    for linea in curvas.get("lineas") or []:
-        xs = [_numero(v) for v in linea.get("x", [])]
-        ys = [_numero(v) for v in linea.get("y", [])]
-        validos = [(x, y) for x, y in zip(xs, ys) if x is not None and y is not None]
-        if not validos:
-            continue
-        xv, yv = [p[0] for p in validos], [p[1] for p in validos]
-        nombre = sin_mathtext(linea.get("etiqueta", ""))
-        if max(xv) - min(xv) < 1e-12:                       # x constante: una línea vertical
-            marcas.append({"x": xv[0], "etiqueta": nombre})
-            ys_todas += yv
-            continue
-        if max(yv) - min(yv) < 1e-12 and len(yv) > 1:       # y constante: una línea horizontal
-            marcas.append({"y": yv[0], "etiqueta": nombre})
-            ys_todas += yv
-            lineas.append((nombre, xv, yv, True))
-            continue
-        lineas.append((nombre, xv, yv, False))
-        ys_todas += yv
-    xs_lineas = [x for _n, xv, _y, _h in lineas for x in (min(xv), max(xv))] + [m["x"] for m in marcas if "x" in m]
-    for p in curvas.get("puntos") or []:
-        x, y = _numero(p.get("x")), _numero(p.get("y"))
-        if x is not None and y is not None:
-            salida["puntos"].append({"x": x, "y": y, "etiqueta": sin_mathtext(p.get("etiqueta", ""))})
-            xs_lineas.append(x)
-            ys_todas.append(y)
-    eq = curvas.get("equilibrio")
-    if eq and _numero(eq.get("x")) is not None and _numero(eq.get("y")) is not None:
-        salida["equilibrio"] = {"x": float(eq["x"]), "y": float(eq["y"]), "etiqueta": "E"}
-        xs_lineas.append(float(eq["x"]))
-        ys_todas.append(float(eq["y"]))
-    if xs_lineas:
-        x0, x1 = min(xs_lineas), max(xs_lineas)
-        if x1 - x0 < 1e-12:
-            x0, x1 = x0 - 1, x1 + 1
-        rejilla = [x0 + i * (x1 - x0) / (puntos_rejilla - 1) for i in range(puntos_rejilla)]
-        salida["series"] = [{"nombre": n, "y": _interpolar(xv, yv, rejilla)} for n, xv, yv, horizontal in lineas if not horizontal]
-        salida["xMinimo"], salida["xMaximo"] = x0, x1
-        salida["etiquetasX"] = [_etiqueta_numero(x0 + i * (x1 - x0) / (ETIQUETAS_EJE - 1)) for i in range(ETIQUETAS_EJE)]
-    if ys_todas:
-        y0, y1 = min(ys_todas), max(ys_todas)
-        if y1 - y0 < 1e-12:
-            y0, y1 = y0 - 1, y1 + 1
-        margen = (y1 - y0) * 0.05
-        salida["yMinimo"], salida["yMaximo"] = (0.0 if barras and y0 >= 0 else y0 - margen), y1 + margen
-    salida["marcas"] = marcas
-    return salida
 
 
 def comparar(base: list, escenario: list) -> list[dict]:

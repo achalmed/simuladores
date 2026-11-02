@@ -46,19 +46,24 @@ class Operaciones(QObject):
     def _op(self) -> ops.Operacion | None:
         return ops.operacion(self._actual)
 
-    @Property("QVariantList", constant=True)
+    def visibles(self) -> list[ops.Operacion]:
+        """Las operaciones que la disciplina actual admite (L10: «Comprobar las citas» solo donde hay `main.py fuentes`)."""
+        return [o for o in ops.OPERACIONES if ops.disponible(o, self.modelos.raiz, self._disciplina())]
+
+    @Property("QVariantList", notify=cambiado)
     def lista(self) -> list:
         grupos = dict(ops.GRUPOS)
-        return [{"id": o.id, "titulo": o.titulo, "descripcion": o.descripcion, "grupo": grupos[o.grupo], "icono": o.icono} for o in ops.OPERACIONES]
+        return [{"id": o.id, "titulo": o.titulo, "descripcion": o.descripcion, "grupo": grupos[o.grupo], "icono": o.icono} for o in self.visibles()]
 
     @Property(int, notify=cambiado)
     def indiceActual(self) -> int:
-        return next((i for i, o in enumerate(ops.OPERACIONES) if o.id == self._actual), -1)
+        return next((i for i, o in enumerate(self.visibles()) if o.id == self._actual), -1)
 
     @Slot(int)
     def fijarPorIndice(self, i: int) -> None:
-        if 0 <= i < len(ops.OPERACIONES):
-            self.fijar(ops.OPERACIONES[i].id)
+        visibles = self.visibles()
+        if 0 <= i < len(visibles):
+            self.fijar(visibles[i].id)
 
     @Slot(str)
     def fijar(self, id_: str) -> None:
@@ -220,15 +225,15 @@ class Operaciones(QObject):
         if self.tareas.activa:
             return "Hay una operación en curso (Esc la cancela)."
         if o.sobre_modelo and not self.modelos.hayActual:
-            return "Elige primero un modelo en la tabla."
+            return "Elige primero un modelo en el catálogo."
         if o.sobre_modelo and o.en_proceso and not self.modelos.cargado:
             return "El modelo no se pudo importar: " + self.modelos.motivoNoCargado
         if o.sobre_disciplina and not self._disciplina():
-            return "Elige una disciplina en la navegación o un modelo en la tabla."
-        if o.id == "fuentes" and self._disciplina() and not (self.modelos.raiz / self._disciplina() / "docs").is_dir() and self._disciplina() != "estadistica":
-            pass
+            return "Elige una disciplina o un modelo en el catálogo."
+        if not ops.disponible(o, self.modelos.raiz, self._disciplina()):
+            return f"La disciplina «{self._disciplina()}» no tiene «main.py {o.requiere}»."
         if o.entrada == "parametro" and not self._valor_de(o).strip():
-            return "Elige el parámetro (pestaña Operación)."
+            return "Elige el parámetro (Laboratorio › Operación)."
         if o.id in ("datos",) and not self.modelos.hayCorrida:
             return "No hay corrida: corre primero el escenario."
         if not o.en_proceso and not rutas.hay_venv() and not rutas.hay_matplotlib():
@@ -270,12 +275,10 @@ class Operaciones(QObject):
         if o is None or not self.puedeSimular:
             self.aviso.emit(self.motivoNoSimular, "aviso")
             return False
-        inicio = time.monotonic()
         if o.en_proceso == "correr":
             ok = self.modelos.correr()
             if ok:
                 self._escribir(o.id, False, self.modelos.registro)
-                self.aviso.emit(f"{self.modelos.id} · {self.modelos.escenario} corrido en {(time.monotonic() - inicio) * 1000:.0f} ms: Resultados.", "informacion")
             self.corridaCambiada.emit()
             self.terminada.emit(o.id, False, 0 if ok else 1)
             return ok
@@ -292,7 +295,7 @@ class Operaciones(QObject):
             self._escribir(o.id, False, f"# {time.strftime('%Y-%m-%d %H:%M:%S')} · plan · {o.titulo}\n\n{texto}\n")
             for linea in texto.splitlines():
                 self.consola.escribir(linea, "info")
-            self.aviso.emit(f"Plan de «{o.titulo}» en la pestaña Operación: revísalo y aplica con Ctrl+Intro.", "informacion")
+            self.aviso.emit(f"Plan de «{o.titulo}» en Laboratorio › Operación: revísalo y aplica con Ctrl+Intro.", "informacion")
             self.corridaCambiada.emit()
             return True
         return self._lanzar(o, o.simular(self.contexto()), aplicar=False)
@@ -359,7 +362,7 @@ class Operaciones(QObject):
             self.aviso.emit(f"{titulo} {que} en {segundos:.1f} s" + (": revisa la salida y aplica con Ctrl+Intro." if not aplicar and o and o.escribe else "."),
                             "positivo" if aplicar else "informacion")
         else:
-            self.aviso.emit(f"{titulo} terminó con código {codigo} ({segundos:.1f} s): revisa la salida (F4).", "error")
+            self.aviso.emit(f"{titulo} terminó con código {codigo} ({segundos:.1f} s): revisa la salida (F8).", "error")
         if id_ == "verificar_disciplina" and disciplina:
             archivos = {self.modelos._filas[r]["id"]: self.modelos.raiz / self.modelos._filas[r]["archivo"] for r in self.modelos._filas if r.startswith(disciplina + "/")}
             estados = self.modelos.estados.desde_salida_cli(disciplina, cuerpo, archivos)

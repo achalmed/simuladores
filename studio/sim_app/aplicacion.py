@@ -1,11 +1,12 @@
 """studio/sim_app/aplicacion.py — arma Simuladores Studio: la aplicación (gui_comun.nucleo), los controladores, el
-registro de acciones (menú, barra, menú contextual, paleta, atajos) y carga `qml/Main.qml`.
+registro de acciones (menú, paleta, atajos) y carga `qml/Main.qml` (VentanaBase, reingeniería del 2026-11-02).
 
-Toda operación existe una sola vez, aquí, en `Acciones`. Las operaciones del catálogo son acciones `op.<id>` que
-eligen la operación actual; correrla es siempre F5 (Correr el escenario y Verificar el modelo calculan en proceso con
-el motor; lo demás es la CLI del laboratorio o el plan de lo que se escribiría) o Ctrl+Intro (Aplicar, tras confirmar
-en QML con la orden exacta y lo que toca). Lo que necesita un diálogo lo pide a QML por `Interfaz.pedir`. Python no
-construye interfaz; la ventana no edita ningún modelo.
+Toda operación existe una sola vez, aquí, en `Acciones`, con su estado (lectura, simulación, escritura, instalación).
+El experimento: F5 corre el escenario, Ctrl+T verifica, Ctrl+Mayús+R vuelve a la base y mover un parámetro recalcula
+en vivo; Ctrl+1–6 las vistas del espacio de simulación, F9 el catálogo, Ctrl+F buscar un modelo. Las demás operaciones
+del catálogo (`op.<id>`) se eligen en la vista Laboratorio y Ctrl+Intro las aplica tras confirmar con la orden exacta.
+Abrir el modelo y mostrarlo en Dolphin son de `escritorio` de la base. Lo que necesita un diálogo o una vista lo pide a
+QML por `Interfaz.pedir`. Python no construye interfaz; la ventana no edita ningún modelo.
 """
 from __future__ import annotations
 
@@ -35,12 +36,14 @@ RECURSOS_DIR = APP_DIR / "recursos"
 REPO = rutas.REPO
 APP_ID = "simuladores-studio"
 NOMBRE = APP_NAME
-DESCRIPCION = ("El laboratorio computacional en una ventana de trabajo: los modelos de cada disciplina (macroeconomía, estadística) con su "
-               "estado de verificación, su ficha pedagógica, sus parámetros y escenarios, la corrida con sus curvas y sus magnitudes frente a "
-               "la base, y sus verificaciones numéricas contra la fuente citada. F5 corre el escenario o verifica el modelo con el motor y solo "
-               "escribe la caché del studio; Ctrl+Intro exporta figuras y datos, guarda un escenario propio o regenera el catálogo tras "
-               "confirmar con la orden exacta. El rigor es del motor: la ventana no edita ningún modelo.")
+DESCRIPCION = ("Un laboratorio de simulación: los modelos de cada disciplina (macroeconomía, estadística) en un espacio de trabajo con "
+               "el gráfico que se redibuja al mover los parámetros, el escenario frente a la base, la sensibilidad de un parámetro, los "
+               "resultados numéricos, la ficha pedagógica y las verificaciones del motor. Un resultado solo se presenta como válido si "
+               "las verificaciones del modelo pasan. La ventana no edita ningún modelo: el rigor es del motor.")
 ACENTO = "lima"
+VISTAS = (("simulacion", "&Simulación", "office-chart-line"), ("comparacion", "&Comparación", "view-split-left-right"),
+          ("sensibilidad", "Se&nsibilidad", "office-chart-line-stacked"), ("ficha", "&Ficha", "text-x-generic"),
+          ("verificaciones", "&Verificaciones", "checkmark"), ("laboratorio", "&Laboratorio", "utilities-terminal"))
 
 
 def datos_lanzador() -> dict:
@@ -67,82 +70,90 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
     modelos = Modelos(espacio, consola, cache=cache, datos=datos, raiz=raiz)
     operaciones = Operaciones(espacio, modelos, ajustes, consola, tareas, cache=cache)
     acciones = Acciones()
-    acciones.estandar(NOMBRE)
+    acciones.estandar(NOMBRE, paneles=False)
     pedir = lambda que, **datos_: (lambda *_: interfaz.pedir.emit(que, datos_))
     disciplinas = [d["nombre"] for d in modelos.disciplinas]
+    escritorio = app.escritorio
 
     # --- Archivo
-    acciones.registrar("archivo.abrir", "&Abrir el archivo del modelo", "document-open", None, "Archivo", habilitada=False,
-                       al_disparar=lambda *_: espacio.abrir(modelos.archivo), descripcion="El .py del modelo con la aplicación del sistema (el editor); también Intro en la tabla")
-    acciones.registrar("archivo.carpeta", "Abrir su &carpeta", "system-file-manager", "Ctrl+Shift+O", "Archivo", habilitada=False,
-                       al_disparar=lambda *_: espacio.abrirDolphin(modelos.archivo or modelos.carpetaDisciplina), descripcion="La carpeta del modelo en Dolphin")
+    acciones.registrar("archivo.abrir", "&Abrir el archivo del modelo", "document-open", None, "Archivo", habilitada=False, operacion="lectura",
+                       al_disparar=lambda *_: escritorio.abrirConAplicacion(modelos.archivo), descripcion="El .py del modelo con la aplicación del sistema (el editor)")
+    acciones.registrar("archivo.carpeta", "Mostrar en &Dolphin", "system-file-manager", "Ctrl+Shift+O", "Archivo", habilitada=False, operacion="lectura",
+                       al_disparar=lambda *_: escritorio.mostrarEnDolphin(modelos.archivo or modelos.carpetaDisciplina), descripcion="El archivo del modelo señalado en su carpeta")
     acciones.registrar("archivo.terminal", "Abrir &terminal en la disciplina", "utilities-terminal", "Shift+F4", "Archivo",
                        al_disparar=lambda *_: espacio.abrirTerminal(modelos.carpetaDisciplina), descripcion="Una terminal en la carpeta de la disciplina (main.py …)")
     acciones.registrar("archivo.copiar", "Copiar la &referencia", "edit-copy", "Ctrl+Shift+C", "Archivo", habilitada=False,
                        al_disparar=lambda *_: espacio.copiar(modelos.ref), descripcion="«disciplina/id», como la citan divulgacion y los cursos")
-    acciones.registrar("archivo.catalogo", "Abrir &catalogo.json", "application-json", None, "Archivo",
-                       al_disparar=lambda *_: espacio.abrir(str(modelos.raiz / "catalogo.json")))
+    acciones.registrar("archivo.catalogo", "Abrir &catalogo.json", "application-json", None, "Archivo", operacion="lectura",
+                       al_disparar=lambda *_: escritorio.abrirConAplicacion(str(modelos.raiz / "catalogo.json")))
     # --- Editar
-    acciones.registrar("editar.filtrar", "&Filtrar", "edit-find", StandardKey.Find, "Editar", al_disparar=pedir("filtrar"))
-    acciones.registrar("editar.todo", "Seleccionar &todo", "edit-select-all", StandardKey.SelectAll, "Editar", al_disparar=pedir("seleccionar_todo"))
-    # --- Ver
-    acciones.registrar("ver.disciplina", "&Todas las disciplinas", "view-list-tree", "Ctrl+0", "Ver › Disciplina", marcable=True,
+    acciones.registrar("editar.buscar", "&Buscar un modelo", "edit-find", StandardKey.Find, "Editar", al_disparar=pedir("buscar"),
+                       descripcion="El campo de búsqueda del catálogo")
+    # --- Ver: el catálogo, las vistas del espacio de simulación, la disciplina y el estado
+    acciones.registrar("ver.catalogo", "Mostrar u ocultar el &catálogo", "sidebar-show-symbolic", "F9", "Ver", al_disparar=pedir("catalogo"))
+    for i, (nombre, texto, icono) in enumerate(VISTAS):
+        acciones.registrar(f"ver.vista.{nombre}", texto, icono, f"Ctrl+{i + 1}", "Ver › Vista", al_disparar=pedir("vista", indice=i))
+    acciones.registrar("ver.disciplina", "&Todas las disciplinas", "view-list-tree", None, "Ver › Disciplina", marcable=True,
                        al_disparar=lambda *_: (espacio.fijarEstado(""), espacio.fijarDisciplina("")))
     for i, d in enumerate(disciplinas, start=1):
-        acciones.registrar(f"ver.disciplina.{d}", f"&{i} {lab.nombre_de(d)}", lab.icono_de(d), f"Ctrl+{i}" if i <= 9 else None, "Ver › Disciplina", marcable=True,
+        acciones.registrar(f"ver.disciplina.{d}", f"&{i} {lab.nombre_de(d)}", lab.icono_de(d), None, "Ver › Disciplina", marcable=True,
                            al_disparar=lambda *_, n=d: (espacio.fijarEstado(""), espacio.fijarDisciplina(n)))
     acciones.registrar("ver.estado", "Todos los &estados", "", None, "Ver › Estado", marcable=True, al_disparar=lambda *_: espacio.fijarEstado(""))
     for e, t in (("verificado", "&Verificados"), ("diferencias", "Con &diferencias"), ("sin_verificar", "&Sin verificar")):
         acciones.registrar(f"ver.estado.{e}", t, "", None, "Ver › Estado", marcable=True, al_disparar=lambda *_, n=e: espacio.fijarEstado(n))
-    acciones.registrar("ver.releer", "&Releer el catálogo", "view-refresh", "F6", "Ver", al_disparar=lambda *_: modelos.recargar(),
+    acciones.registrar("ver.releer", "&Releer el catálogo", "view-refresh", "F6", "Ver", al_disparar=lambda *_: modelos.recargar(), operacion="lectura",
                        descripcion="Vuelve a leer catalogo.json y los estados de verificación")
     acciones.registrar("ver.figura", "Ver la &figura académica", "office-chart-area", "Ctrl+G", "Ver", marcable=True, marcada=ajustes.figuraAcademica,
                        al_disparar=lambda *_, m=None: figura_academica(), descripcion="La figura de matplotlib (fondo blanco, la paleta del laboratorio) en vez del gráfico en vivo")
+    acciones.registrar("ver.salida", "La &salida del motor", "utilities-terminal", "F8", "Ver", al_disparar=pedir("salida"))
     # --- Modelo · Disciplina · Laboratorio: elegir cada operación
     for o in ops.OPERACIONES:
-        acciones.registrar(f"op.{o.id}", o.titulo, o.icono, None, dict(ops.GRUPOS)[o.grupo], al_disparar=lambda *_, i=o.id: operaciones.fijar(i), descripcion=o.descripcion)
-    acciones.registrar("op.simular", "&Correr", "media-playback-start", StandardKey.Refresh, "Modelo", al_disparar=operaciones.simular,
-                       descripcion="Corre la operación elegida: el motor en proceso, la CLI del laboratorio o el plan de lo que se escribiría; la salida queda en el panel inferior")
-    acciones.registrar("op.aplicar", "&Aplicar…", "dialog-ok-apply", "Ctrl+Return", "Modelo", habilitada=False, al_disparar=pedir("aplicar"),
-                       descripcion="Muestra la orden exacta y lo que toca; si confirmas, escribe de verdad")
+        acciones.registrar(f"op.{o.id}", o.titulo, o.icono, None, dict(ops.GRUPOS)[o.grupo], al_disparar=lambda *_, i=o.id: (operaciones.fijar(i), interfaz.pedir.emit("vista", {"indice": 5})),
+                           descripcion=o.descripcion)
+    acciones.registrar("op.simular", "&Correr la operación", "media-playback-start", None, "Modelo", al_disparar=operaciones.simular, operacion="simulacion",
+                       descripcion="Corre la operación elegida en Laboratorio: el motor en proceso, la CLI del laboratorio o el plan de lo que se escribiría")
+    acciones.registrar("op.aplicar", "&Aplicar…", "dialog-ok-apply", "Ctrl+Return", "Modelo", habilitada=False, al_disparar=pedir("aplicar"), operacion="escritura",
+                       consecuencias=lambda: operaciones.textoConfirmacion, descripcion="Muestra la orden exacta y lo que toca; si confirmas, escribe de verdad")
     acciones.registrar("op.cancelar", "Ca&ncelar la operación", "process-stop", None, "Modelo", habilitada=False, al_disparar=operaciones.cancelar)
-    acciones.registrar("modelo.correr", "Correr el escenario &ahora", "media-playback-start", "Ctrl+R", "Modelo", habilitada=False,
-                       al_disparar=lambda *_: (operaciones.fijar("correr"), operaciones.simular()), descripcion="Elige «Correr el escenario» y lo corre")
-    acciones.registrar("modelo.verificar", "&Verificar ahora", "checkmark", "Ctrl+T", "Modelo", habilitada=False,
-                       al_disparar=lambda *_: (operaciones.fijar("verificar"), operaciones.simular()), descripcion="Elige «Verificar el modelo» y lo verifica")
-    acciones.registrar("modelo.restablecer", "&Restablecer los parámetros", "edit-undo", "Ctrl+Shift+R", "Modelo", habilitada=False, al_disparar=lambda *_: modelos.restablecer(),
-                       descripcion="Vuelve a los valores por defecto del modelo (la base)")
+    acciones.registrar("modelo.correr", "&Correr", "media-playback-start", StandardKey.Refresh, "Modelo", habilitada=False, operacion="simulacion",
+                       al_disparar=lambda *_: (operaciones.fijar("correr"), operaciones.simular()),
+                       descripcion="Calcula el escenario con el motor; en vivo, mover un parámetro ya lo hace")
+    acciones.registrar("modelo.verificar", "&Verificar", "checkmark", "Ctrl+T", "Modelo", habilitada=False, operacion="simulacion",
+                       al_disparar=lambda *_: (operaciones.fijar("verificar"), operaciones.simular()),
+                       descripcion="Corre las verificaciones del modelo: solo un modelo verificado da resultados válidos")
+    acciones.registrar("modelo.restablecer", "&Restablecer", "edit-undo", "Ctrl+Shift+R", "Modelo", habilitada=False, al_disparar=lambda *_: modelos.restablecer(),
+                       descripcion="Vuelve a la base: los valores por defecto del modelo")
+    acciones.registrar("modelo.vivo", "Recalcular en &vivo", "media-playlist-repeat", None, "Modelo", marcable=True, marcada=modelos.vivo,
+                       al_disparar=lambda *_: setattr(modelos, "vivo", acciones.accion("modelo.vivo").marcada),
+                       descripcion="Mover un parámetro recalcula el escenario (se apaga solo para un modelo que tarda más de 400 ms)")
     acciones.registrar("modelo.recorrido", "Recorrido &guiado…", "media-playlist-play", None, "Modelo", al_disparar=lambda *_: recorrido(),
                        descripcion="La app pedagógica paso a paso de la disciplina (main.py app), en su propia ventana")
-    for i, (nombre, texto) in enumerate((("ficha", "Ver la &ficha"), ("escenario", "Ver el &escenario"), ("resultados", "Ver los &resultados"),
-                                         ("verificaciones", "Ver las verificaci&ones"))):
-        acciones.registrar(f"modelo.{nombre}", texto, "", None, "Modelo", al_disparar=pedir("pestana", indice=i))
     # --- Herramientas
-    acciones.registrar("herr.lanzador", "Instalar el acceso &directo", "application-x-executable", None, "Herramientas", al_disparar=lambda *_: instalar_lanzador())
+    acciones.registrar("herr.lanzador", "Instalar el acceso &directo", "application-x-executable", None, "Herramientas", al_disparar=lambda *_: instalar_lanzador(),
+                       operacion="instalacion", consecuencias="Escribe el lanzador .desktop y el icono de Simuladores Studio en el menú de aplicaciones de tu usuario (install.sh).")
     acciones.registrar("herr.venv", "El &entorno del studio…", "python", None, "Herramientas", al_disparar=pedir("venv"),
                        descripcion="Qué intérprete corre las CLI y la figura académica, y cómo crear el .venv (matplotlib)")
     # --- Ayuda
-    acciones.registrar("ayuda.manual", "&Manual de Simuladores Studio", "help-contents", StandardKey.HelpContents, "Ayuda",
-                       al_disparar=lambda *_: subprocess.Popen(["xdg-open", str(REPO / "studio" / "README.md")]))
-    acciones.registrar("ayuda.disciplina", "&Diseño de la disciplina", "help-hint", None, "Ayuda", al_disparar=lambda *_: abrir_diseno(),
+    acciones.registrar("ayuda.manual", "&Manual de Simuladores Studio", "help-contents", StandardKey.HelpContents, "Ayuda", operacion="lectura",
+                       al_disparar=lambda *_: escritorio.abrirConAplicacion(str(REPO / "studio" / "README.md")))
+    acciones.registrar("ayuda.disciplina", "&Diseño de la disciplina", "help-hint", None, "Ayuda", al_disparar=lambda *_: abrir_diseno(), operacion="lectura",
                        descripcion="El documento de diseño de la disciplina del modelo (docs/laboratorio-<disciplina>.md)")
 
     acciones.definir_menus([
         ("&Archivo", ["archivo.abrir", "archivo.carpeta", "archivo.terminal", "archivo.copiar", "|", "archivo.catalogo", "|", "app.salir"]),
-        ("&Editar", ["editar.filtrar", "editar.todo"]),
-        ("&Ver", ["ventana.navegacion", "ventana.detalles", "ventana.inferior", "|",
+        ("&Editar", ["editar.buscar"]),
+        ("&Ver", ["ver.catalogo", "|"] + [f"ver.vista.{n}" for n, _t, _i in VISTAS] + ["ver.salida", "|",
                   ("&Disciplina", ["ver.disciplina"] + [f"ver.disciplina.{d}" for d in disciplinas]),
                   ("&Estado", ["ver.estado", "ver.estado.verificado", "ver.estado.diferencias", "ver.estado.sin_verificar"]), "|",
                   "ver.figura", "ver.releer", "|", "ventana.pantalla_completa"]),
-        ("&Modelo", ["op.simular", "op.aplicar", "op.cancelar", "|", "modelo.correr", "modelo.verificar", "modelo.restablecer", "|"]
-                    + [f"op.{o.id}" for o in ops.de_grupo("modelo")] + ["|", "modelo.ficha", "modelo.escenario", "modelo.resultados", "modelo.verificaciones", "|", "modelo.recorrido"]),
+        ("&Modelo", ["modelo.correr", "modelo.verificar", "modelo.restablecer", "modelo.vivo", "|"]
+                    + [f"op.{o.id}" for o in ops.de_grupo("modelo")] + ["|", "modelo.recorrido"]),
         ("&Disciplina", [f"op.{o.id}" for o in ops.de_grupo("disciplina")]),
-        ("&Laboratorio", [f"op.{o.id}" for o in ops.de_grupo("laboratorio")]),
+        ("&Laboratorio", [f"op.{o.id}" for o in ops.de_grupo("laboratorio")] + ["|", "op.simular", "op.aplicar", "op.cancelar"]),
         ("&Herramientas", ["herr.lanzador", "herr.venv", "|", "ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.manual", "ayuda.disciplina", "app.acerca"]),
     ])
-    acciones.definir_barra(["op.simular", "op.aplicar", "|", "modelo.verificar", "modelo.restablecer"])
     acciones.anadir_fuente(espacio.entradas_paleta)
     acciones.anadir_fuente(operaciones.entradas_paleta)
     acciones.anadir_fuente(modelos.entradas_paleta)
@@ -163,7 +174,7 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
         d = modelos.disciplina or espacio.disciplina
         docs = Path(modelos.raiz) / d / "docs" if d else None
         archivo = next(iter(sorted(docs.glob("laboratorio-*.md"))), None) if docs and docs.is_dir() else None
-        subprocess.Popen(["xdg-open", str(archivo if archivo else REPO / "README.md")])
+        escritorio.abrirConAplicacion(str(archivo if archivo else REPO / "README.md"))
 
     def figura_academica() -> None:
         ajustes.figuraAcademica = acciones.accion("ver.figura").marcada
@@ -185,11 +196,13 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
         for nombre in ("archivo.abrir", "archivo.carpeta", "archivo.copiar"):
             acciones.habilitar(nombre, hay)
         acciones.habilitar("modelo.correr", hay and modelos.cargado and not activa)
+        acciones.marcar("modelo.vivo", modelos.vivo)
+        disciplina = operaciones._disciplina()
+        for o in ops.OPERACIONES:
+            acciones.accion(f"op.{o.id}").visible = ops.disponible(o, modelos.raiz, disciplina)
         acciones.habilitar("modelo.verificar", hay and modelos.cargado and not activa)
         acciones.habilitar("modelo.restablecer", hay and modelos.cargado)
         acciones.habilitar("ver.figura", modelos.hayMatplotlib)
-        a = acciones.accion("op.simular")
-        a.texto = f"&{operaciones.verbo}"
         acciones.habilitar("op.simular", operaciones.puedeSimular)
         b = acciones.accion("op.aplicar")
         b.visible = operaciones.escribe
@@ -216,6 +229,7 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
     modelos.actualCambiado.connect(lambda: (disponibilidad(), barra_estado(), figura_si_toca()))
     modelos.valoresCambiados.connect(lambda: (disponibilidad(), barra_estado()))
     modelos.corridaCambiada.connect(lambda: (disponibilidad(), figura_si_toca()))
+    modelos.vivoCambiado.connect(disponibilidad)
     operaciones.cambiado.connect(lambda: (disponibilidad(), barra_estado()))
     tareas.cambiada.connect(disponibilidad)
     filtro_cambiado()

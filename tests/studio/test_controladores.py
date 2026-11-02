@@ -36,6 +36,7 @@ def piezas(app, muestra_sesion, ajustes_temporales):
     espacio = Espacio(consola, ajustes)
     cache = ajustes_temporales / "cache" / "studio"
     modelos = Modelos(espacio, consola, cache=cache, datos=ajustes_temporales / "datos", raiz=muestra_sesion.raiz)
+    modelos.verificar_al_abrir = False                  # las pruebas de abajo verifican a mano; el automático, en test_abrir_verifica_y_corre
     operaciones = Operaciones(espacio, modelos, ajustes, consola, tareas, cache=cache)
     yield dict(consola=consola, tareas=tareas, espacio=espacio, modelos=modelos, operaciones=operaciones, ajustes=ajustes, muestra=muestra_sesion, cache=cache)
     _esperar(app, tareas, 10)
@@ -46,7 +47,7 @@ def test_espacio_filtros_y_navegacion(piezas):
     e, m = piezas["espacio"], piezas["modelos"]
     assert e.disciplina == "" and e.estado == "" and e.nombreNavegacion == "disciplina"
     e.fijarDisciplina("demo")
-    assert e.textoDisciplina == "Demostración" and e.nombreNavegacion == "disciplina.demo" and m.modelo.filas == 2
+    assert e.textoDisciplina == "Demostración" and e.nombreNavegacion == "disciplina.demo" and m.modelo.filas == 3 and m.visibles == 3
     e.fijarEstado("verificado")
     assert e.nombreNavegacion == "estado.verificado" and m.modelo.filas == 0 and e.textoFiltro == "Demostración · verificado"
     e.fijarEstado("")
@@ -58,8 +59,8 @@ def test_espacio_filtros_y_navegacion(piezas):
 @requiere_binding
 def test_modelos_tabla_y_actual(piezas):
     m = piezas["modelos"]
-    assert m.total == 2 and m.resumen == "2 modelos · 1 disciplina · 0 verificados · 0 con diferencias · 2 sin verificar"
-    assert [f["texto"] for f in m.filasDisciplinas] == ["Todas", "Demostración"] and m.filasEstados[2]["contador"] == 2
+    assert m.total == 3 and m.resumen == "3 modelos · 1 disciplina · 0 verificados · 0 con diferencias · 3 sin verificar"
+    assert [f["texto"] for f in m.filasDisciplinas] == ["Todas", "Demostración"] and m.filasEstados[2]["contador"] == 3
     assert not m.hayActual
     assert m.irA("demo/d01") and m.hayActual and m.cargado and m.id == "d01" and m.textoDisciplina == "Demostración"
     assert m.archivoCorto == "demo/modelos/nivel_01/d01_mercado_lineal.py" and Path(m.archivo).is_file()
@@ -70,7 +71,7 @@ def test_modelos_tabla_y_actual(piezas):
     assert m.fijarFila(1) is None and m.id == "d02"
     assert not m.irA("demo/d99")
     nombres = [x["texto"] for x in m.entradas_paleta("")]
-    assert nombres == ["d01 · Mercado lineal", "d02 · Flujo en barras"]
+    assert nombres == ["d01 · Mercado lineal", "d02 · Flujo en barras", "d03 · Capital en el tiempo"]
 
 
 @requiere_binding
@@ -89,7 +90,7 @@ def test_modelos_escenario_corrida_y_verificacion(piezas):
     m.aplicarEscenarioPorIndice(1)
     assert m.correr() and m.hayCorrida and m.nResultados == 3
     g = m.grafico
-    assert len(g["series"]) == 2 and g["equilibrio"]["x"] == pytest.approx(27.5) and g["etiquetaX"] == "Cantidad (Q)"
+    assert len(g["lineas"]) == 2 and g["equilibrio"]["x"] == pytest.approx(27.5) and g["etiquetaX"] == "Cantidad (Q)"
     assert m.registro.startswith("# ") and "Q* (cantidad): base 20.0 → 27.5" in m.registro
     assert m.fechaCorrida and (c / "corridas" / "demo-d01.json").is_file()
     fila = m.resultadosModelo.fila(0)
@@ -128,7 +129,7 @@ def test_modelos_escenario_propio_y_datos(piezas, tmp_path):
 @requiere_binding
 def test_operaciones_f5_y_ctrl_intro(piezas, app):
     o, m, t = piezas["operaciones"], piezas["modelos"], piezas["tareas"]
-    assert o.actual == "correr" and o.verbo == "Correr" and not o.puedeSimular and o.motivoNoSimular == "Elige primero un modelo en la tabla."
+    assert o.actual == "correr" and o.verbo == "Correr" and not o.puedeSimular and o.motivoNoSimular == "Elige primero un modelo en el catálogo."
     m.irA("demo/d01")
     assert o.puedeSimular and not o.escribe and o.motivoNoAplicar.startswith("Esta operación no tiene modo")
     assert o.simular() and m.hayCorrida and o.plan.startswith("# ")
@@ -163,10 +164,69 @@ def test_operaciones_cli_real_de_la_disciplina(piezas, app):
     assert o.simular()
     _esperar(app, t)
     assert terminadas and terminadas[0][0] == "verificar_disciplina" and terminadas[0][2] == 1, o.plan      # d02 falla a propósito
-    assert m.contadores == {"verificado": 1, "diferencias": 1, "sin_verificar": 0}, m.contadores
+    assert m.contadores == {"verificado": 2, "diferencias": 1, "sin_verificar": 0}, m.contadores
     assert "verificaciones superadas" in o.plan
     o.fijar("catalogo")
     terminadas.clear()
     assert o.simular()
     _esperar(app, t)
     assert terminadas[0][2] == 0                                                 # el catálogo de la muestra está al día
+
+
+# ---------------------------------------------------------------------- reingeniería: el espacio de simulación
+@requiere_binding
+def test_abrir_verifica_y_corre(piezas):
+    m = piezas["modelos"]
+    m.verificar_al_abrir = True
+    m.irA("demo/d01")
+    assert m.estado == "verificado" and m.hayCorrida and m.validez["valido"] is True           # al abrir: verificado y corrido
+    assert m.graficoBase["lineas"] and m.limitesComunes["xMax"] >= m.grafico["limites"]["xMax"]
+    m.irA("demo/d02")
+    v = m.validez
+    assert m.estado == "diferencias" and not v["valido"] and v["titulo"] == "NO VÁLIDO"
+    assert m.grafico["barras"]["roles"] and len(set(m.grafico["barras"]["roles"])) > 1          # las barras con el color de cada una
+    m.irA("demo/d03")
+    assert m.temporal and m.grafico["temporal"] and m.grafico["horizontales"][0]["nombre"].startswith("estado estacionario")
+
+
+@requiere_binding
+def test_en_vivo_recalcula_al_mover_un_parametro(piezas, app):
+    m = piezas["modelos"]
+    m.irA("demo/d01")
+    antes = m.grafico["equilibrio"]["x"]
+    assert m.vivo
+    m.fijarValor("a", 150)
+    inicio = time.monotonic()
+    while m.grafico["equilibrio"]["x"] == antes and time.monotonic() - inicio < 3:
+        app.processEvents()
+        time.sleep(0.02)
+    assert m.grafico["equilibrio"]["x"] > antes and m.escenario == "propio" and m.msCorrida >= 0
+    despues = m.grafico["equilibrio"]["x"]
+    m.vivo = False
+    m.fijarValor("a", 170)
+    for _ in range(20):
+        app.processEvents()
+        time.sleep(0.02)
+    assert m.valores["a"] == 170 and m.grafico["equilibrio"]["x"] == despues and not m.vivo     # sin vivo: espera a F5
+    assert m.correr() and m.grafico["equilibrio"]["x"] > despues
+    m.vivo = True
+    assert m.vivo
+
+
+@requiere_binding
+def test_sensibilidad_en_el_controlador(piezas):
+    m = piezas["modelos"]
+    m.irA("demo/d01")
+    assert m.magnitudes[0] == "Q* (cantidad)" and m.parametroSensibilidad == "a"
+    assert m.calcularSensibilidad("b", "P* (precio)") and m.parametroSensibilidad == "b" and m.magnitudSensibilidad == "P* (precio)"
+    assert len(m.sensibilidad["x"]) == 25 and m.sensibilidad["grafico"]["lineas"]
+    assert not m.calcularSensibilidad("no_existe", "")
+
+
+@requiere_binding
+def test_operaciones_visibles_segun_la_disciplina(piezas):
+    o, m = piezas["operaciones"], piezas["modelos"]
+    m.irA("demo/d01")
+    assert "fuentes" not in [x["id"] for x in o.lista]                          # L10: la muestra no tiene «main.py fuentes»
+    o.fijar("fuentes")
+    assert not o.puedeSimular and "no tiene «main.py fuentes»" in o.motivoNoSimular

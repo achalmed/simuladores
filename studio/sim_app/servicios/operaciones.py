@@ -54,6 +54,7 @@ class Operacion:
     entrada: str = ""                           # "parametro" · "escenarios" · "nombre": lo que pide
     etiqueta: str = ""
     icono: str = "system-run"
+    requiere: str = ""                          # el subcomando de main.py que la disciplina debe tener (`def cmd_<requiere>`)
 
     @property
     def verbo(self) -> str:
@@ -100,7 +101,7 @@ OPERACIONES: tuple[Operacion, ...] = (
     Operacion("verificar_disciplina", "Verificar la disciplina", "main.py verificar de la disciplina: todas las verificaciones de todos sus modelos; los estados de la tabla se actualizan con su salida",
               "disciplina", simular=lambda c: _main_disciplina(c, "verificar"), sobre_disciplina=True, icono="checkmark"),
     Operacion("fuentes", "Comprobar las citas", "main.py fuentes de la disciplina: cada cita contra la hoja del PDF de la biblioteca (estadística)",
-              "disciplina", simular=lambda c: _main_disciplina(c, "fuentes"), sobre_disciplina=True, icono="bookmarks"),
+              "disciplina", simular=lambda c: _main_disciplina(c, "fuentes"), sobre_disciplina=True, icono="bookmarks", requiere="fuentes"),
     Operacion("listar", "Listar los modelos", "main.py listar de la disciplina: los modelos por sección",
               "disciplina", simular=lambda c: _main_disciplina(c, "listar"), sobre_disciplina=True, icono="view-list-text"),
     # --- el laboratorio
@@ -117,6 +118,19 @@ OPERACIONES: tuple[Operacion, ...] = (
 
 def operacion(id_: str) -> Operacion | None:
     return next((o for o in OPERACIONES if o.id == id_), None)
+
+
+def disponible(o: Operacion, raiz: Path, disciplina: str) -> bool:
+    """¿La disciplina tiene lo que la operación pide? (reingeniería L10: «Comprobar las citas» solo donde existe
+    `main.py fuentes`). Sin `requiere`, siempre."""
+    if not o.requiere:
+        return True
+    if not disciplina:
+        return False
+    try:
+        return f"def cmd_{o.requiere}(" in (Path(raiz) / disciplina / "main.py").read_text(encoding="utf-8")
+    except OSError:
+        return False
 
 
 def de_grupo(grupo: str) -> list[Operacion]:

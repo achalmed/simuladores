@@ -2,15 +2,16 @@
 """studio/capturar.py — una captura de Simuladores Studio para la documentación sobre el LABORATORIO DE MUESTRA
 (`muestra.py`: el motor real con una disciplina de juguete, nunca los modelos del repo) creado en una carpeta temporal
 fuera de la carpeta de inicio, con HOME, configuración, caché y datos temporales (ninguna ruta de la máquina en
-pantalla), el esquema de color que se pida, el modelo, el escenario, la pestaña de detalles y, si se pide, la paleta.
+pantalla), el esquema de color que se pida, el modelo, el escenario, los valores de los parámetros, la vista del
+espacio de simulación y, si se pide, la paleta.
 
-    /usr/bin/python3 studio/capturar.py docs/figuras/simuladores-studio-oscuro.png --esquema ~/Documents/lliphi/generado/esquema/LliphiOscuro.colors --modelo demo/d01 --escenario 1 --pestana 2
-    /usr/bin/python3 studio/capturar.py docs/figuras/simuladores-studio-claro.png --esquema ~/Documents/lliphi/generado/esquema/LliphiClaro.colors --modelo demo/d02 --pestana 3
+    /usr/bin/python3 studio/capturar.py docs/figuras/simuladores-studio-oscuro.png --esquema ~/Documents/lliphi/generado/esquema/LliphiOscuro.colors --modelo demo/d01 --escenario 1
+    /usr/bin/python3 studio/capturar.py docs/figuras/simuladores-studio-claro.png --esquema ~/Documents/lliphi/generado/esquema/LliphiClaro.colors --modelo demo/d02 --vista 0
+    /usr/bin/python3 studio/capturar.py salida.png --modelo demo/d03 --valor s=0.35 --vista 1
     /usr/bin/python3 studio/capturar.py salida.png --paleta "mercado"
 
 Antes de capturar corre de verdad, sobre la muestra, el escenario del modelo elegido y sus verificaciones (el motor
-en proceso); la salida del panel inferior es la del motor. Sin pantalla, QuickCharts necesita el renderizador RHI
-(`QT_QUICK_BACKEND=rhi`): la plataforma offscreen elige por omisión el de software, que no dibuja sus materiales.
+en proceso). El gráfico es un Canvas: la plataforma offscreen lo dibuja con su renderizador (`QT_QUICK_BACKEND=rhi`).
 """
 
 import argparse
@@ -32,11 +33,13 @@ def main() -> int:
     parser.add_argument("--modelo", default="demo/d01", help="la referencia del modelo (disciplina/id; vacío: ninguno)")
     parser.add_argument("--escenario", type=int, default=1, help="el índice del escenario (0 la base)")
     parser.add_argument("--operacion", default="", help="la operación elegida al capturar (id del catálogo)")
-    parser.add_argument("--pestana", type=int, default=-1, help="pestaña de detalles (0 Ficha · 1 Escenario · 2 Resultados · 3 Verificaciones · 4 Registro · 5 Operación)")
+    parser.add_argument("--vista", type=int, default=0, help="la vista (0 Simulación · 1 Comparación · 2 Sensibilidad · 3 Ficha · 4 Verificaciones · 5 Laboratorio)")
+    parser.add_argument("--valor", action="append", default=[], help="nombre=valor de un parámetro, tras el escenario (se repite)")
+    parser.add_argument("--sensibilidad", default="", help="parametro[:magnitud] que barre la vista Sensibilidad")
     parser.add_argument("--sin-correr", action="store_true", help="no corre ni verifica antes de capturar")
     parser.add_argument("--paleta", default=None, help="abre la paleta de órdenes con este texto")
-    parser.add_argument("--ancho", type=int, default=1280)
-    parser.add_argument("--alto", type=int, default=800)
+    parser.add_argument("--ancho", type=int, default=1400)
+    parser.add_argument("--alto", type=int, default=860)
     args = parser.parse_args()
 
     if "SIMULADORES_STUDIO_CAPTURA" not in os.environ:      # primera pasada: la muestra, el entorno temporal (y esquema), y relanzar
@@ -81,21 +84,20 @@ def main() -> int:
         if args.modelo:
             modelos.irA(args.modelo)
             modelos.aplicarEscenarioPorIndice(args.escenario)
+            for par in args.valor:
+                nombre, _, valor = par.partition("=")
+                modelos.fijarValor(nombre, float(valor))
             if not args.sin_correr:
-                operaciones.fijar("correr")
-                operaciones.simular()
                 operaciones.fijar("verificar")
                 operaciones.simular()
                 operaciones.fijar("correr")
+                operaciones.simular()
+            if args.sensibilidad:
+                parametro, _, magnitud = args.sensibilidad.partition(":")
+                modelos.calcularSensibilidad(parametro, magnitud)
         if args.operacion:
             operaciones.fijar(args.operacion)
-        raiz.setProperty("mostrarDetalles", True)
-        raiz.setProperty("mostrarInferior", True)
-        inferior = raiz.property("inferior")
-        if inferior is not None:
-            inferior.setProperty("pestanaActual", 0)
-        if args.pestana >= 0:
-            QTimer.singleShot(500, lambda: interfaz.pedir.emit("pestana", {"indice": args.pestana}))
+        QTimer.singleShot(300, lambda: interfaz.pedir.emit("vista", {"indice": args.vista}))
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: interfaz.pedir.emit("paleta", {"texto": args.paleta}))
         app.capturar(args.salida, espera_ms=2400)
