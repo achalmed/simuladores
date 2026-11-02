@@ -1,19 +1,21 @@
-# studio/suite.yml — suite simuladores_studio: Aplicación de escritorio (PySide6) del laboratorio: los modelos por disciplina con su ficha, ecuaciones, escenarios, verificaciones y el gráfico en vivo.
+# studio/suite.yml — suite simuladores_studio: Simuladores Studio, la ventana (QML + Kirigami sobre gui-comun 2.6) del laboratorio.
 # Contrato: core/suite.schema.yml; core/suites.py validar lo comprueba y generar escribe los índices y README.
 id: simuladores_studio
 objetivo: publicacion
-resumen: 'Aplicación de escritorio (PySide6) del laboratorio: los modelos por disciplina con su ficha, ecuaciones, escenarios, verificaciones y el gráfico en vivo.'
+resumen: 'Ventana del laboratorio (QML + Kirigami sobre gui-comun 2.6): los modelos de cada disciplina con su estado de verificación, su ficha, su escenario (formulario desde los parámetros), su corrida con el gráfico (QuickCharts) y las magnitudes frente a la base, y sus verificaciones con su fuente; F5 corre y lee con el motor, Ctrl+Intro exporta figuras y datos, guarda un escenario propio o regenera el catálogo tras confirmar.'
 escribe_en:
-- ninguno
-simula_por_defecto: false
-pruebas: python3 -m pytest -q tests   # desde la raíz del repo: el laboratorio cambia de disciplina, cada modelo carga, la ventana abre y dibuja
+- archivos
+simula_por_defecto: true
+pruebas: simuladores/tests/run.sh   # desde ~/Documents; el laboratorio de muestra en un temporal (motor real + disciplina demo), una corrida real del motor, cada QML y --smoke con el Python del sistema o el .venv del repo; nada toca los modelos reales
 comandos:
-- main.py
+- main.py   # ejecutable; su intérprete es /usr/bin/python3 (se relanza con .venv/bin/python si existe)
 - main.py --smoke
-- main.py --instalar-lanzador [-n]
+- ../install.sh
 estado: activo
 interfaz: gui
 depende_de:
-- PySide6
-- matplotlib
-- numpy
+- /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*), Kirigami (qml6-module-org-kde-kirigami) y QuickCharts (qml6-module-org-kde-quickcharts)
+- gui-comun 2.6 (módulo QML GuiComun, Grafico)
+- .venv del repo con matplotlib para la figura académica, las fórmulas, los reportes y las CLI (requirements.txt; opcional)
+- el motor del repo (base.py, navegador.py) y los modelos de cada disciplina, sin copiarlos
+nota: 'No edita ningún modelo: correr y verificar calculan en proceso y escriben solo la caché del studio; exportar (salidas/ de la disciplina), guardar un escenario propio (datos del studio) y regenerar catalogo.json o navegador.json piden confirmación con la orden exacta.'

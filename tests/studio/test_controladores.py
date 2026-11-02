@@ -1,0 +1,172 @@
+"""tests/studio/test_controladores.py — los controladores de la ventana en proceso (sin QML) sobre el laboratorio de
+muestra: espacio (los filtros y la navegación), modelos (la tabla con su estado, el modelo actual con su ficha, sus
+parámetros y escenarios, correr de verdad con el motor, verificar, el escenario propio, los datos exportados),
+operaciones (la actual, las órdenes, por qué no se puede, correr y verificar por F5, el plan y la aplicación de lo que
+escribe, y, con matplotlib, la CLI real de la disciplina). Nada toca los modelos reales ni catalogo.json."""
+from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+
+import pytest
+
+from conftest import HAY_MATPLOTLIB, requiere_binding
+
+
+def _esperar(app, tareas, segundos=240):
+    inicio = time.monotonic()
+    while tareas.activa and time.monotonic() - inicio < segundos:
+        app.processEvents()
+        time.sleep(0.05)
+    app.processEvents()
+
+
+@pytest.fixture
+def piezas(app, muestra_sesion, ajustes_temporales):
+    from gui_comun.consola import Consola
+    from gui_comun.tareas import Tareas
+    from sim_app.controladores.ajustes import Ajustes
+    from sim_app.controladores.espacio import Espacio
+    from sim_app.controladores.modelos import Modelos
+    from sim_app.controladores.operaciones import Operaciones
+    consola = Consola()
+    tareas = Tareas(consola)
+    ajustes = Ajustes()
+    espacio = Espacio(consola, ajustes)
+    cache = ajustes_temporales / "cache" / "studio"
+    modelos = Modelos(espacio, consola, cache=cache, datos=ajustes_temporales / "datos", raiz=muestra_sesion.raiz)
+    operaciones = Operaciones(espacio, modelos, ajustes, consola, tareas, cache=cache)
+    yield dict(consola=consola, tareas=tareas, espacio=espacio, modelos=modelos, operaciones=operaciones, ajustes=ajustes, muestra=muestra_sesion, cache=cache)
+    _esperar(app, tareas, 10)
+
+
+@requiere_binding
+def test_espacio_filtros_y_navegacion(piezas):
+    e, m = piezas["espacio"], piezas["modelos"]
+    assert e.disciplina == "" and e.estado == "" and e.nombreNavegacion == "disciplina"
+    e.fijarDisciplina("demo")
+    assert e.textoDisciplina == "Demostración" and e.nombreNavegacion == "disciplina.demo" and m.modelo.filas == 2
+    e.fijarEstado("verificado")
+    assert e.nombreNavegacion == "estado.verificado" and m.modelo.filas == 0 and e.textoFiltro == "Demostración · verificado"
+    e.fijarEstado("")
+    e.fijarDisciplina("noexiste")
+    assert e.disciplina == ""
+    assert [x["nombre"] for x in e.entradas_paleta("")][:2] == ["ir.disciplina", "ir.disciplina.demo"]
+
+
+@requiere_binding
+def test_modelos_tabla_y_actual(piezas):
+    m = piezas["modelos"]
+    assert m.total == 2 and m.resumen == "2 modelos · 1 disciplina · 0 verificados · 0 con diferencias · 2 sin verificar"
+    assert [f["texto"] for f in m.filasDisciplinas] == ["Todas", "Demostración"] and m.filasEstados[2]["contador"] == 2
+    assert not m.hayActual
+    assert m.irA("demo/d01") and m.hayActual and m.cargado and m.id == "d01" and m.textoDisciplina == "Demostración"
+    assert m.archivoCorto == "demo/modelos/nivel_01/d01_mercado_lineal.py" and Path(m.archivo).is_file()
+    assert [p["nombre"] for p in m.parametros] == ["a", "b", "c", "d"] and m.parametros[0]["unidad"] == "u. m."
+    assert [e["nombre"] for e in m.escenarios] == ["base", "mas_demanda", "mas_costo"] and m.escenario == "base"
+    assert m.ficha.startswith("# d01 · Mercado lineal") and "## Ecuaciones" in m.ficha
+    assert m.estado == "sin_verificar" and m.textoEstado == "Sin verificar"
+    assert m.fijarFila(1) is None and m.id == "d02"
+    assert not m.irA("demo/d99")
+    nombres = [x["texto"] for x in m.entradas_paleta("")]
+    assert nombres == ["d01 · Mercado lineal", "d02 · Flujo en barras"]
+
+
+@requiere_binding
+def test_modelos_escenario_corrida_y_verificacion(piezas):
+    m, c = piezas["modelos"], piezas["cache"]
+    m.irA("demo/d01")
+    m.aplicarEscenario("mas_demanda")
+    assert m.escenario == "mas_demanda" and m.valores["a"] == 130 and m.textoEscenario == "la demanda autónoma sube de 100 a 130"
+    assert "Mecanismo" in m.lecturaEscenario
+    m.fijarValor("a", 150)
+    assert m.escenario == "propio" and m.valores["a"] == 150
+    m.fijarValor("a", 10_000)
+    assert m.valores["a"] == 200                                              # al rango del parámetro
+    m.restablecer()
+    assert m.escenario == "base" and m.valores["a"] == 100
+    m.aplicarEscenarioPorIndice(1)
+    assert m.correr() and m.hayCorrida and m.nResultados == 3
+    g = m.grafico
+    assert len(g["series"]) == 2 and g["equilibrio"]["x"] == pytest.approx(27.5) and g["etiquetaX"] == "Cantidad (Q)"
+    assert m.registro.startswith("# ") and "Q* (cantidad): base 20.0 → 27.5" in m.registro
+    assert m.fechaCorrida and (c / "corridas" / "demo-d01.json").is_file()
+    fila = m.resultadosModelo.fila(0)
+    assert fila["magnitud"] == "Q* (cantidad)" and fila["nivel"] == "positivo"
+    assert m.verificar() and m.nVerificaciones == 3 and m.nFallos == 0 and m.estado == "verificado"
+    assert m.resumenVerificacion.startswith("3 de 3 verificaciones superadas")
+    assert m.contadores["verificado"] == 1 and m.filasEstados[0]["contador"] == 1
+    m.irA("demo/d02")
+    assert not m.verificar() and m.nFallos == 1 and m.estado == "diferencias"
+    assert m.verificacionesModelo.fila(2)["nivel"] == "error" and "esperado > 1000" in m.verificacionesModelo.fila(2)["detalle"]
+    assert m.correr() and m.grafico["barras"]["categorias"] == ["S", "I", "G"]
+    m.irA("demo/d01")                                                         # la corrida y las verificaciones se releen de la caché
+    assert m.hayCorrida and m.escenario == "mas_demanda" and m.nVerificaciones == 3 and m.valores["a"] == 130
+
+
+@requiere_binding
+def test_modelos_escenario_propio_y_datos(piezas, tmp_path):
+    m = piezas["modelos"]
+    m.irA("demo/d01")
+    m.fijarValor("c", 40)
+    plan = m.planGuardarEscenario("mi-escenario")
+    assert "«mi-escenario»" in plan and "c = 40" in plan
+    assert m.guardarEscenario("mi-escenario") and m.escenario == "mi-escenario"
+    assert [e["nombre"] for e in m.escenarios][-1] == "mi-escenario" and m.escenarios[-1]["propio"] is True
+    archivo = Path(piezas["ajustes"].raiz).parent if False else (tmp_path / "datos" / "escenarios" / "demo-d01.json")
+    assert archivo.is_file() and json.loads(archivo.read_text(encoding="utf-8"))["escenarios"][0]["cambios"] == {"c": 40.0}
+    m.restablecer()
+    m.aplicarEscenario("mi-escenario")
+    assert m.valores["c"] == 40
+    assert m.correr()
+    assert "mi-escenario.csv" in m.planDatos() and m.escribirDatos()
+    carpeta = piezas["muestra"].raiz / "demo" / "salidas" / "studio" / "d01"
+    assert (carpeta / "mi-escenario.csv").is_file() and json.loads((carpeta / "mi-escenario.json").read_text(encoding="utf-8"))["escenario"] == "mi-escenario"
+
+
+@requiere_binding
+def test_operaciones_f5_y_ctrl_intro(piezas, app):
+    o, m, t = piezas["operaciones"], piezas["modelos"], piezas["tareas"]
+    assert o.actual == "correr" and o.verbo == "Correr" and not o.puedeSimular and o.motivoNoSimular == "Elige primero un modelo en la tabla."
+    m.irA("demo/d01")
+    assert o.puedeSimular and not o.escribe and o.motivoNoAplicar.startswith("Esta operación no tiene modo")
+    assert o.simular() and m.hayCorrida and o.plan.startswith("# ")
+    o.fijar("verificar")
+    assert o.verbo == "Verificar" and o.simular() and m.estado == "verificado"
+    o.fijar("guardar_escenario")
+    assert o.escribe and o.entradaTipo == "nombre" and o.puedeAplicar
+    o.fijarValor("desde-op")
+    assert o.simular() and "«desde-op»" in o.plan                              # F5: el plan
+    assert o.aplicar() and m.escenario == "desde-op" and "aplicado" in o.registro
+    o.fijar("datos")
+    assert o.simular() and "desde-op.csv" in o.plan and o.aplicar()
+    o.fijar("sensibilidad")
+    assert o.entradaTipo == "parametro" and o.valor == "a" and o.ordenSimular == "cd demo && python3 main.py sensibilidad d01 --param a"
+    o.fijarValor("b")
+    assert o.ordenSimular.endswith("--param b")
+    o.fijar("catalogo")
+    assert o.ordenSimular == "python3 main.py catalogo --verificar" and o.ordenAplicar == "python3 main.py catalogo --aplicar"
+    assert "reescribe catalogo.json" in o.textoConfirmacion
+    assert [x["grupo"] for x in o.lista][:1] == ["Modelo"] and o.indiceActual == [x["id"] for x in o.lista].index("catalogo")
+
+
+@requiere_binding
+@pytest.mark.skipif(not HAY_MATPLOTLIB, reason="las CLI de la disciplina necesitan matplotlib")
+def test_operaciones_cli_real_de_la_disciplina(piezas, app):
+    o, m, t = piezas["operaciones"], piezas["modelos"], piezas["tareas"]
+    m.irA("demo/d02")
+    o.fijar("verificar_disciplina")
+    assert o.sobreDisciplina and o.disciplina == "demo" and o.puedeSimular, o.motivoNoSimular
+    terminadas = []
+    o.terminada.connect(lambda i, a, c: terminadas.append((i, a, c)))
+    assert o.simular()
+    _esperar(app, t)
+    assert terminadas and terminadas[0][0] == "verificar_disciplina" and terminadas[0][2] == 1, o.plan      # d02 falla a propósito
+    assert m.contadores == {"verificado": 1, "diferencias": 1, "sin_verificar": 0}, m.contadores
+    assert "verificaciones superadas" in o.plan
+    o.fijar("catalogo")
+    terminadas.clear()
+    assert o.simular()
+    _esperar(app, t)
+    assert terminadas[0][2] == 0                                                 # el catálogo de la muestra está al día

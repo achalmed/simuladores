@@ -1,56 +1,26 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """
-main.py — Punto de entrada de Simuladores Studio.
+main.py — Punto de entrada de Simuladores Studio. Sin lógica: la aplicación se arma en sim_app/aplicacion.py.
 
-Orquestación mínima: crea la QApplication, aplica el tema guardado y abre la ventana. La lógica vive en sim_app/ y en
-gui_comun (el repo gui-comun); los modelos, en las disciplinas de este repo (macro/, estadistica/…), sin copiarlos.
+Corre con el Python del sistema (/usr/bin/python3), cuyo Qt es el que trae Kirigami; si existe el entorno del studio
+(`<repo>/.venv`, creado con `/usr/bin/python3 -m venv --system-site-packages .venv` más `pip install -r requirements.txt`:
+matplotlib), se relanza con él: ve el mismo PySide6 del sistema y además lo que el motor necesita para las figuras, las
+fórmulas, los reportes y las CLI. Sin el .venv avisa qué crear y sigue (correr y verificar un modelo funcionan igual:
+el motor registra un matplotlib vacío, como en el navegador). Los modelos son los de las disciplinas de este repo
+(macro/, estadistica/…), sin copiarlos.
 
 Uso:
-    python3 studio/main.py                    # desde simuladores/
-    python3 studio/main.py --smoke            # construye la interfaz y sale (prueba de humo)
-    python3 studio/main.py --instalar-lanzador [-n]   # el acceso directo en el menú de aplicaciones
+    /usr/bin/python3 studio/main.py                       # desde simuladores/
+    /usr/bin/python3 studio/main.py --smoke               # construye la interfaz y sale (prueba de humo)
+    /usr/bin/python3 studio/main.py --instalar-lanzador   # el acceso directo del menú (-n simula)
 """
 
 import sys
 from pathlib import Path
 
-_AQUI = Path(__file__).resolve().parent
-sys.path.insert(0, str(_AQUI))
+sys.path.insert(0, str(Path(__file__).resolve().parent))      # el paquete del studio
 
-import sim_app  # noqa: F401  encuentra gui_comun
-
-APP_ID = "simuladores-studio"
-
-
-def datos_lanzador() -> dict:
-    """El acceso directo en el menú de aplicaciones (gui_comun.lanzador)."""
-    from sim_app.ventana import ACENTO, LOGO
-    return dict(app_id=APP_ID, nombre="Simuladores Studio", comentario="Laboratorio computacional: modelos de economía "
-                "y estadística que se derivan, simulan y ven", orden=[sys.executable, str(_AQUI / "main.py")],
-                logo_svg=LOGO, acento=ACENTO, categorias="Education;Economy;Math;",
-                palabras="macroeconomía;estadística;simulador;modelo;IS-LM;laboratorio;")
-
-
-def main() -> int:
-    from gui_comun import lanzador
-    atendido = lanzador.desde_main(sys.argv[1:], **datos_lanzador())   # --instalar-lanzador / --quitar-lanzador
-    if atendido is not None:
-        return atendido
-    from gui_comun.diseno import preparar_plataforma
-    preparar_plataforma()                 # sin el plugin de Wayland, XWayland sin aviso
-    from PySide6.QtCore import QTimer
-    from PySide6.QtWidgets import QApplication
-    QApplication.setOrganizationName("EdisonAchalma")
-    QApplication.setApplicationName("SimuladoresStudio")
-    QApplication.setDesktopFileName(APP_ID)    # la ventana se agrupa con su acceso directo (Wayland)
-    app = QApplication(sys.argv)
-    from sim_app.ventana import Ventana
-    ventana = Ventana()
-    ventana.show()
-    if "--smoke" in sys.argv:
-        QTimer.singleShot(0, app.quit)
-    return app.exec()
-
+from sim_app.aplicacion import main                             # noqa: E402  (sim_app localiza gui_comun al importarse)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

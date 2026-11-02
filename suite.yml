@@ -17,7 +17,7 @@ comandos:
 interfaz: cli+gui
 entrada: 'los modelos de <disciplina>/modelos/nivel_NN/; datos reales de datafw por DATAFW_DIR (nivel 12 de macro)'
 depende_de:
-  - python3 con numpy, matplotlib y yaml (el de anaconda base; el del sistema no trae matplotlib)
+  - python3 con numpy, matplotlib y yaml (el .venv del repo sobre /usr/bin/python3, requirements.txt; o anaconda base: el Python del sistema no trae matplotlib)
   - manim (conda manim-datafw; solo estadistica/animaciones)
   - core/env.py (DATAFW_DIR)
   - core/py-common/biblioteca.py (fuentes.py comprueba las citas contra Calibre)

@@ -1,0 +1,5 @@
+# simuladores — lo que el motor necesita y el Python del sistema no trae (numpy y PyYAML ya están en él).
+# Va en el entorno del studio, creado sobre el Python del sistema para que vea su PySide6 y su Kirigami (rediseño S9):
+#   /usr/bin/python3 -m venv --system-site-packages .venv && .venv/bin/pip install -r requirements.txt
+# PySide6 NO se instala aquí: la ventana usa el del sistema (python3-pyside6.*), el único que carga Kirigami.
+matplotlib
