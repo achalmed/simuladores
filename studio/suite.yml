@@ -1,8 +1,8 @@
-# studio/suite.yml — suite simuladores_studio: Simuladores Studio, la ventana (QML + Kirigami sobre gui-comun 2.6) del laboratorio.
+# studio/suite.yml — suite simuladores_studio: Simuladores Studio, el laboratorio de simulación (QML + Kirigami sobre gui-comun 3.0).
 # Contrato: core/suite.schema.yml; core/suites.py validar lo comprueba y generar escribe los índices y README.
 id: simuladores_studio
 objetivo: publicacion
-resumen: 'Ventana del laboratorio (QML + Kirigami sobre gui-comun 2.6): los modelos de cada disciplina con su estado de verificación, su ficha, su escenario (formulario desde los parámetros), su corrida con el gráfico (QuickCharts) y las magnitudes frente a la base, y sus verificaciones con su fuente; F5 corre y lee con el motor, Ctrl+Intro exporta figuras y datos, guarda un escenario propio o regenera el catálogo tras confirmar.'
+resumen: 'Laboratorio de simulación (QML + Kirigami sobre gui-comun 3.0, VentanaBase): el catálogo de modelos por disciplina, el espacio de simulación con el gráfico que se redibuja al mover los parámetros (deslizadores con el rango del modelo), el escenario frente a la base lado a lado, la evolución temporal, la sensibilidad de un parámetro, los resultados numéricos, la ficha pedagógica y las verificaciones; un resultado solo se presenta como válido si las verificaciones del modelo pasan. F5 corre, Ctrl+T verifica, Ctrl+Intro exporta, guarda un escenario o regenera el catálogo tras confirmar.'
 escribe_en:
 - archivos
 simula_por_defecto: true
@@ -14,8 +14,8 @@ comandos:
 estado: activo
 interfaz: gui
 depende_de:
-- /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*), Kirigami (qml6-module-org-kde-kirigami) y QuickCharts (qml6-module-org-kde-quickcharts)
-- gui-comun 2.6 (módulo QML GuiComun, Grafico)
+- /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami)
+- gui-comun 3.0 (módulo QML GuiComun: VentanaBase, escritorio, estados de operación)
 - .venv del repo con matplotlib para la figura académica, las fórmulas, los reportes y las CLI (requirements.txt; opcional)
 - el motor del repo (base.py, navegador.py) y los modelos de cada disciplina, sin copiarlos
 nota: 'No edita ningún modelo: correr y verificar calculan en proceso y escriben solo la caché del studio; exportar (salidas/ de la disciplina), guardar un escenario propio (datos del studio) y regenerar catalogo.json o navegador.json piden confirmación con la orden exacta.'

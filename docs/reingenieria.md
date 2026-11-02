@@ -12,7 +12,7 @@ Simuladores Studio debe parecer un laboratorio de simulación científica, no un
 principal es un espacio de trabajo científico, no una tabla; los gráficos se actualizan al mover los parámetros cuando
 el modelo lo permite; y **un resultado no se muestra como válido si sus verificaciones no pasaron**. Este documento es
 el diagnóstico de la ventana 2.0 (la de la fase 5, `docs/rediseno.md`), la distribución nueva y sus decisiones
-(L1–L12). Lo construido y lo que quedó fuera, en §5 y §6.
+(L1–L12). Lo construido, cómo se verificó y lo que quedó fuera, en §4 y §5.
 
 ## 1. Diagnóstico de la ventana 2.0 (leído en el código, `respaldo/antes-reingenieria-2026-11-02`)
 
@@ -22,15 +22,15 @@ Capturas de antes: `docs/figuras/antes/simuladores-studio-{oscuro,claro,paleta}.
 
 | pieza | dónde | qué hace de verdad |
 |---|---|---|
-| catálogo | `servicios/laboratorio.py`, `catalogo.json` | los modelos por disciplina sin importarlos; cada disciplina se activa a demanda (sus `config` y `modelos` no conviven en `sys.modules`). **Correcto** |
-| tabla de modelos | `controladores/modelos.py`, `Main.qml` | una `TablaDatos` (Id · Modelo · Estado) es la vista principal |
-| escenario | `componentes/Escenario.qml` | un formulario con un control por parámetro; los cambios **no recalculan**: hay que pulsar F5 con «Correr el escenario» elegido en un combo |
-| corrida | `servicios/corridas.py` | `navegador.calcular` (el mismo cálculo que el navegador de los pubs) y las magnitudes frente a la base. Correcto |
+| catálogo | `studio/sim_app/servicios/laboratorio.py`, `catalogo.json` | los modelos por disciplina sin importarlos; cada disciplina se activa a demanda (sus `config` y `modelos` no conviven en `sys.modules`). **Correcto** |
+| tabla de modelos | `studio/sim_app/controladores/modelos.py`, `Main.qml` | una `TablaDatos` (Id · Modelo · Estado) es la vista principal |
+| escenario | el formulario `Escenario` (retirado) | un formulario con un control por parámetro; los cambios **no recalculan**: hay que pulsar F5 con «Correr el escenario» elegido en un combo |
+| corrida | `studio/sim_app/servicios/corridas.py` | `navegador.calcular` (el mismo cálculo que el navegador de los pubs) y las magnitudes frente a la base. Correcto |
 | gráfico | `corridas.para_grafico`, `GuiComun.Grafico` (QuickCharts) | QuickCharts sitúa cada valor por su índice: las líneas se **remuestrean** en una rejilla común (una curva con x no uniforme se deforma) y las barras salen de **un solo color** (el modelo las colorea por su sentido: filtraciones e inyecciones) |
-| verificaciones | `servicios/verificaciones.py` | `base.verificar` y las citas; el estado por modelo con la huella del archivo. **Correcto**, pero el resultado de una corrida se muestra igual aunque el modelo tenga verificaciones fallidas |
-| ficha | `servicios/fichas.py` | Markdown con las ecuaciones dibujadas por mathtext. Correcta; sus apartados no siguen el orden pedagógico del encargo (objetivo, fundamento, ecuaciones, variables, parámetros, supuestos, limitaciones, interpretación, referencias); los **parámetros** no están |
-| sensibilidad y comparación | `servicios/operaciones.py` | solo como CLI (`main.py sensibilidad`, `comparar`) con su salida de texto en el panel inferior: ningún gráfico |
-| operaciones | `servicios/operaciones.py` | catálogo de operaciones en proceso y de CLI. «Comprobar las citas» se ofrece en toda disciplina aunque solo estadística tiene `main.py fuentes`: en macro responde con error |
+| verificaciones | `studio/sim_app/servicios/verificaciones.py` | `base.verificar` y las citas; el estado por modelo con la huella del archivo. **Correcto**, pero el resultado de una corrida se muestra igual aunque el modelo tenga verificaciones fallidas |
+| ficha | `studio/sim_app/servicios/fichas.py` | Markdown con las ecuaciones dibujadas por mathtext. Correcta; sus apartados no siguen el orden pedagógico del encargo (objetivo, fundamento, ecuaciones, variables, parámetros, supuestos, limitaciones, interpretación, referencias); los **parámetros** no están |
+| sensibilidad y comparación | `studio/sim_app/servicios/operaciones.py` | solo como CLI (`main.py sensibilidad`, `comparar`) con su salida de texto en el panel inferior: ningún gráfico |
+| operaciones | `studio/sim_app/servicios/operaciones.py` | catálogo de operaciones en proceso y de CLI. «Comprobar las citas» se ofrece en toda disciplina aunque solo estadística tiene `main.py fuentes`: en macro responde con error |
 
 ### 1.2 Lo incompleto y lo que no se comporta
 
@@ -78,10 +78,10 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
 
 - **L1. `VentanaBase` de `gui-comun` 3.0**: catálogo a la izquierda (plegable, F9), el espacio de simulación en el
   centro con sus vistas, los parámetros a la derecha. Sin tabla como vista principal.
-- **L2. Gráfico propio** (`componentes/GraficoCientifico.qml`, `Canvas`): cada línea con su propio x (sin
+- **L2. Gráfico propio** (`studio/sim_app/qml/componentes/GraficoCientifico.qml`, `Canvas`): cada línea con su propio x (sin
   remuestrear), barras con el color de cada barra, puntos, equilibrio, líneas verticales y horizontales, leyenda,
   ejes con marcas «redondas» y el valor bajo el cursor. La base se dibuja punteada debajo del escenario.
-- **L3. Colores del modelo por una paleta del tema** (`servicios/paleta.py`): cada color del modelo (hex, nombre de
+- **L3. Colores del modelo por una paleta del tema** (`studio/sim_app/servicios/paleta.py`): cada color del modelo (hex, nombre de
   matplotlib, `C0`–`C9`, `tab:*`) se lleva a un rol (azul, rojo, verde, dorado, morado, cian, gris, texto) por su tono, y
   QML pinta cada rol con un color de `Kirigami.Theme`. Ningún color propio en QML.
 - **L4. En vivo**: mover un deslizador recalcula el escenario (agendado, en proceso con el motor); si el modelo tarda
@@ -104,6 +104,51 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
 - **L10. «Comprobar las citas» solo donde existe** (`main.py fuentes` en la disciplina); en las demás, la acción no
   aparece.
 - **L11. KDE**: abrir el `.py` con su aplicación y mostrarlo en Dolphin con `escritorio` de la base.
-- **L12. Atajos de un laboratorio**: F5 o Ctrl+R correr, Ctrl+T verificar, Ctrl+1–5 las vistas, F9 el catálogo, Ctrl+F
+- **L12. Atajos de un laboratorio**: F5 correr, Ctrl+T verificar, Ctrl+1–6 las vistas, F9 el catálogo, Ctrl+F
   buscar un modelo, Ctrl+Mayús+R restablecer los parámetros, Ctrl+G la figura académica, Ctrl+Intro exportar o regenerar
   tras confirmar, Ctrl+K la paleta.
+
+## 4. Lo construido y cómo se verificó
+
+![El escenario sobre la base](figuras/simuladores-studio-claro.png)
+
+| pieza | dónde |
+|---|---|
+| la ventana (L1, L11, L12) | `studio/sim_app/qml/Main.qml` sobre `VentanaBase`; `studio/sim_app/aplicacion.py` (vistas Ctrl+1–6, F9, Ctrl+F, F5, Ctrl+T, F8; `escritorio` de la base; estados de operación) |
+| el catálogo | `studio/sim_app/qml/componentes/CatalogoModelos.qml` sobre `Modelos.catalogo` (una `ModeloLista` filtrada por búsqueda, disciplina y estado) |
+| el gráfico (L2, L3) | `studio/sim_app/qml/componentes/GraficoCientifico.qml` (Canvas) con los datos de `studio/sim_app/servicios/simulacion.py` (`grafico`, `unir_limites`) y los roles de `studio/sim_app/servicios/paleta.py` |
+| en vivo (L4) | `studio/sim_app/controladores/modelos.py`: `fijarValor` agenda la corrida (150 ms); `correr(en_vivo=True)` mide y apaga el modo en vivo de un modelo lento (400 ms) |
+| base y escenario (L5) | `graficoBase`, `limitesComunes`; `studio/sim_app/qml/componentes/Comparacion.qml` |
+| sensibilidad (L6) | `simulacion.sensibilidad` sobre `base.sensibilidad`; `studio/sim_app/qml/componentes/Sensibilidad.qml` |
+| evolución temporal (L7) | `simulacion.es_temporal`; el modelo dinámico d03 de `studio/muestra.py` |
+| validez (L8) | `simulacion.validez` y `Modelos.validez`; la marca del gráfico, el aviso y la tabla atenuada de `studio/sim_app/qml/componentes/EspacioSimulacion.qml`, el chip de la cabecera; verificar al abrir |
+| ficha (L9) | `studio/sim_app/servicios/fichas.py` |
+| fuentes (L10) | `operaciones.disponible`; `Operaciones.lista` y la acción `op.fuentes` solo donde la disciplina tiene `cmd_fuentes` |
+
+Además: la ficha dibujaba cada ecuación tres veces (el importador de Markdown de Qt partía el texto alternativo en
+sus escapes LaTeX, `b\,Q`, e insertaba la imagen una vez por trozo); el texto alternativo ya no lleva escapes.
+`corridas.para_grafico`, el remuestreo para QuickCharts, se retiró.
+
+Verificación (2026-11-02, rama `wip/2026-11-02-reingenieria`):
+
+- `tests/run.sh`: 41 pruebas (las 27 de antes, adaptadas, y la paleta, el gráfico con x no uniforme, la validez, la
+  sensibilidad, el recálculo en vivo, verificar al abrir, «fuentes» por disciplina; cada componente QML se carga sin y
+  con un modelo abierto).
+- `python3 main.py verificar` (con el `.venv`): estadística 121/121, macro 569/569, también por disciplina.
+- `main.py catalogo --verificar` y `main.py web --verificar`: 0; `divulgacion` importa un modelo desde la rama.
+- Capturas sobre la muestra, sin rutas de la máquina: `docs/figuras/simuladores-studio-{claro,oscuro,invalido,
+  comparacion,sensibilidad,ficha,paleta}.png`; las de antes, en `docs/figuras/antes/`.
+- En la sesión real (Wayland, tema de KDE del usuario): la ventana abre los 139 modelos del repo, y la muestra con la
+  plataforma real dibuja el gráfico, el NO VÁLIDO y la sensibilidad sin avisos de QML.
+
+## 5. Lo que quedó fuera
+
+- **El cálculo en vivo va en el hilo de la ventana**: el motor corre en proceso y en milisegundos para la muestra; un
+  modelo lento apaga su modo en vivo (L4) en vez de pasar a un hilo. Medir los 139 modelos reales es del autor
+  (`estado.md` §Por hacer).
+- **La sensibilidad barre alrededor de la base**, como `main.py sensibilidad`; barrer alrededor del escenario en
+  edición pediría cambiar `base.sensibilidad`, que es contrato.
+- **`GraficoCientifico` vive en simuladores**: si otro studio necesita un gráfico científico, se promueve a
+  `gui-comun` (con la paleta de roles).
+- **Las capturas oscuras sin pantalla** pintan claros los campos de texto (el estilo de KDE en `offscreen`; igual en
+  Raphi Studio); en la sesión real no pasa.

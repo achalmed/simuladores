@@ -1,5 +1,5 @@
-"""studio/sim_app/controladores/espacio.py — lo transversal: la disciplina y el estado de verificación que filtran la
-tabla (la navegación), el resumen y el contexto de la barra de estado, y las acciones sobre una ruta (abrir con el
+"""studio/sim_app/controladores/espacio.py — lo transversal: la disciplina y el estado de verificación que filtran el
+catálogo, el resumen y el contexto de la barra de estado, y las acciones sobre una ruta (abrir con el
 sistema, Dolphin, terminal, portapapeles). Los filtros se recuerdan en QSettings."""
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 """studio/sim_app/controladores/modelos.py — el catálogo de modelos (de `catalogo.json`, sin importar nada) con su estado
-de verificación y su última corrida; el modelo actual, importado al elegirlo con su disciplina activa
-(`servicios.laboratorio`): su ficha en Markdown, sus parámetros (el formulario del escenario), sus escenarios (los del
-modelo y los propios del studio), la corrida (curvas para `GuiComun.Grafico`, magnitudes frente a la base) y sus
+de verificación y su última corrida (la lista del catálogo); el modelo actual, importado al elegirlo con su disciplina
+activa (`servicios.laboratorio`): su ficha en Markdown, sus parámetros (los deslizadores), sus escenarios (los del
+modelo y los propios del studio), la corrida (lo que dibuja `GraficoCientifico`, magnitudes frente a la base) y sus
 verificaciones (`ListaDiagnosticos`). Correr y verificar calculan en proceso con el motor y escriben solo la caché
 del studio; guardar un escenario escribe en los datos del studio; exportar los datos escribe en salidas/ de la
 disciplina, siempre tras confirmar (`controladores.operaciones`).

@@ -25,9 +25,9 @@ desde la fase 4 de la plataforma educativa, los pubs (`catalogo.json`).
   (decide el pub que publica sus modelos); nunca en el motor.
 - **Nada de rutas a otros repos**: `core/` se localiza subiendo carpetas (`_datos_bcrp.py`, `fuentes.py`) y desde ahí
   `DATAFW_DIR` y la biblioteca; ningún `docencia/…` ni `../` hacia fuera.
-- **Simuladores Studio (`studio/`) es QML + Kirigami sobre `gui-comun` 2.6** (`docs/rediseno.md`): cada operación
-  existe una vez en `studio/sim_app/aplicacion.py` (F5 corre y lee con el motor, Ctrl+Intro escribe tras confirmar);
-  corre con `/usr/bin/python3` y el `.venv` del repo (matplotlib; PySide6 nunca); pruebas y capturas sobre la muestra.
+- **Simuladores Studio (`studio/`) es un laboratorio de simulación sobre `VentanaBase` de `gui-comun` 3.0**
+  (`docs/reingenieria.md`): el centro es el gráfico, nunca una tabla, y un resultado no es válido si fallan sus
+  verificaciones; F5 corre, Ctrl+T verifica, Ctrl+Intro escribe tras confirmar; `/usr/bin/python3` y el `.venv`.
 
 ## Estructura: un laboratorio, varias disciplinas hermanas
 
