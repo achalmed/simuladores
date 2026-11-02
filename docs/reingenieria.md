@@ -150,5 +150,5 @@ Verificación (2026-11-02, rama `wip/2026-11-02-reingenieria`):
   edición pediría cambiar `base.sensibilidad`, que es contrato.
 - **`GraficoCientifico` vive en simuladores**: si otro studio necesita un gráfico científico, se promueve a
   `gui-comun` (con la paleta de roles).
-- **Las capturas oscuras sin pantalla** pintan claros los campos de texto (el estilo de KDE en `offscreen`; igual en
-  Raphi Studio); en la sesión real no pasa.
+- **Las capturas con esquema forzado** eligen también el tema de Kvantum a juego (como Git Studio): sin eso los
+  campos salían claros en el oscuro. Lo común sería que `gui_comun.galeria.esquema.entorno_con_esquema` lo hiciera.

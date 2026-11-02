@@ -58,6 +58,12 @@ def main() -> int:
             elif origen.is_file():
                 shutil.copy2(origen, hogar / ".config" / nombre)
         env = entorno_con_esquema(Path(args.esquema).expanduser(), hogar / ".config") if args.esquema else dict(os.environ, XDG_CONFIG_HOME=str(hogar / ".config"))
+        if args.esquema:
+            # con QApplication (gui-comun 3.0) los campos los pinta el QStyle (Kvantum) con la paleta de su tema: el tema
+            # de Kvantum va a juego con el esquema forzado (LliphiOscuro.colors → LliphiOscuro), o salen claros (Git Studio)
+            tema, kv = Path(args.esquema).stem, hogar / ".config" / "Kvantum"
+            if (kv / tema).is_dir():
+                (kv / "kvantum.kvconfig").write_text(f"[General]\ntheme={tema}\n", encoding="utf-8")
         env.update(m.entorno)
         env.update({"XDG_DATA_HOME": str(Path.home() / ".local" / "share"), "SIMULADORES_STUDIO_CAPTURA": str(carpeta), "QT_QPA_PLATFORM": "offscreen"})
         env.setdefault("QT_QPA_PLATFORMTHEME", "kde")

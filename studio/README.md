@@ -97,6 +97,6 @@ escenarios propios, en `$XDG_DATA_HOME/simuladores-studio/escenarios/`; nada de 
   del escenario en edición.
 - **Azul, morado y cian salen del tema solo si el tema los trae** (Breeze: el enlace es azul); con un acento rojo
   (Lliphi) se derivan con la saturación y la luminosidad de los colores semánticos del tema.
-- **Las capturas oscuras sin pantalla** pintan los campos de texto en claro (el estilo de KDE en `offscreen`; igual en
-  Raphi Studio); en la sesión real no pasa.
+- **Una captura con esquema forzado** necesita el tema de Kvantum a juego (`capturar.py` lo escribe): con la
+  `QApplication` de 3.0 los campos los pinta Kvantum con la paleta de su propio tema.
 - **El recorrido guiado** (`main.py app`) se abre en su propia ventana matplotlib; no está dentro del studio.
