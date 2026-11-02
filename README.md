@@ -11,7 +11,7 @@ Laboratorio computacional: cada teoría o método como modelo ejecutable (ficha 
 
 - Escribe en: archivos · simula por defecto: no
 - Entrada: los modelos de <disciplina>/modelos/nivel_NN/; datos reales de datafw por DATAFW_DIR (nivel 12 de macro)
-- Depende de: python3 con numpy, matplotlib y yaml (el de anaconda base; el del sistema no trae matplotlib), manim (conda manim-datafw; solo estadistica/animaciones), core/env.py (DATAFW_DIR), core/py-common/biblioteca.py (fuentes.py comprueba las citas contra Calibre)
+- Depende de: {'python3 con numpy, matplotlib y yaml (el .venv del repo sobre /usr/bin/python3, requirements.txt; o anaconda base': 'el Python del sistema no trae matplotlib)'}, manim (conda manim-datafw; solo estadistica/animaciones), core/env.py (DATAFW_DIR), core/py-common/biblioteca.py (fuentes.py comprueba las citas contra Calibre)
 - Nota: Repo propio desde 2026-10-20 (antes docencia/simuladores, con su historia). catalogo simula por defecto (imprime) y escribe catalogo.json solo con --aplicar; reporte escribe en <disciplina>/salidas/ (regenerable, fuera de git) sin pedir --aplicar. La app (sin argumentos) abre la GUI matplotlib. web simula por defecto y escribe navegador.json (los modelos que corren en el navegador con Pyodide) solo con --aplicar.
 
 Comandos:
@@ -24,7 +24,7 @@ macro/main.py [app | listar | ficha <m> | simular <m> | comparar <m> | sensibili
 estadistica/main.py [app | listar | fuentes | ficha <e> | simular <e> | reporte <e> | verificar]
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-31); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-11-02); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 <!-- suites:inicio -->
@@ -32,10 +32,10 @@ Suites de esta carpeta (2); índice global en `meta/INDICE_SCRIPTS.md`. Patrón:
 
 | Suite | Carpeta | Objetivo | Escribe en | Simula | Timer | Estado | Patrón |
 |---|---|---|---|---|---|---|---|
-| `simuladores_studio` | [simuladores/studio](studio/) | publicacion | ninguno | no |  | activo | `M··` |
+| `simuladores_studio` | [simuladores/studio](studio/) | publicacion | archivos | sí |  | activo | `M··` |
 | `simuladores` | [simuladores](./) | publicacion | archivos | no |  | activo | `M··` |
 
-<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-10-31); no se edita a mano.</sub>
+<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-11-02); no se edita a mano.</sub>
 <!-- suites:fin -->
 
 Laboratorio histórico y computacional de economía y sus herramientas: cada teoría o método reconstruido como
@@ -51,8 +51,9 @@ disciplina) vive en la raíz, con la aplicación (`app.py`); cada disciplina es 
 
 ```bash
 cd ~/Documents/simuladores
-python3 studio/main.py                     # Simuladores Studio: cada modelo con su ficha y su gráfico en vivo (studio/README.md)
+/usr/bin/python3 studio/main.py            # Simuladores Studio (QML + Kirigami): los modelos con su estado, su escenario, su corrida y sus verificaciones (studio/README.md)
 ./install.sh                               # su acceso directo en el menú de aplicaciones (-n simula)
+tests/run.sh                               # las pruebas del studio sobre el laboratorio de muestra
 python3 main.py verificar                  # verificar de todas las disciplinas (salida 0 solo si todas pasan)
 python3 main.py catalogo                   # el catálogo de modelos por stdout (simula: no escribe)
 python3 main.py catalogo --aplicar         # escribe catalogo.json, el contrato que leen los pubs
@@ -98,7 +99,8 @@ La página `/laboratorio/<id>/` de cada pub ejecuta el MISMO modelo en el navega
 
 ```
 simuladores/
-├── studio/ · tests/ · install.sh   Simuladores Studio (la ventana), sus pruebas y su acceso directo del menú
+├── studio/ · tests/ · install.sh   Simuladores Studio (la ventana QML + Kirigami), sus pruebas y su acceso directo del menú
+├── docs/           rediseno.md (la ventana), decisiones.md y las capturas
 ├── main.py         el laboratorio entero: catalogo (catalogo.json) y verificar de todas las disciplinas
 ├── base.py         MOTOR: dataclasses (Modelo/Ficha/Escenario/Verificacion), cálculo y verificación
 ├── graficos.py     render matplotlib con anti-solape y dibujo progresivo

@@ -28,7 +28,7 @@ catálogo y dice qué crear.
 ## 1. Auditoría de la GUI actual (Widgets, `gui-comun` 1.1)
 
 Una barra lateral con Inicio y una página por disciplina (la marca «Simuladores Studio · Laboratorio computacional»
-en la cabecera, retirada en esta fase), construidas a mano con `gui_comun.widgets` y `QtWidgets`. `sim_app/laboratorio.py`
+en la cabecera, retirada en esta fase), construidas a mano con `gui_comun.widgets` y `QtWidgets`. el cargador de disciplinas
 (sin Qt) carga cada disciplina a demanda en su espacio de nombres y es lo que esta fase conserva como servicio.
 
 | página | qué hace hoy | entidades y operaciones | lógica separada | mezclado en la ventana |
