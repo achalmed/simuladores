@@ -14,9 +14,8 @@ _A_MATHTEXT = ((r"\tfrac", r"\frac"), (r"\dfrac", r"\frac"), (r"\operatorname{",
 
 
 def disponible() -> bool:
-    import importlib.util
-    spec = importlib.util.find_spec("matplotlib")
-    return spec is not None and spec.origin is not None       # el matplotlib vacío de navegador.py no tiene origen
+    from sim_app.servicios.rutas import hay_matplotlib
+    return hay_matplotlib()                                    # el matplotlib vacío de navegador.py no cuenta
 
 
 def preparar(latex: str) -> str:

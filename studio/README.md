@@ -41,8 +41,8 @@ de `gui-comun` 3.0:
   exacta, el registro de la corrida y la salida del motor (F8).
 - **Los parámetros** (derecha): el escenario (la base, los del modelo y los propios) y un deslizador por parámetro con
   el rango, el paso y la unidad que el modelo declara; el valor se escribe también a mano. **Mover un deslizador
-  recalcula en vivo** (150 ms tras el último cambio); si un modelo tarda más de 400 ms, el modo en vivo se apaga para
-  él y queda F5.
+  recalcula en vivo** (150 ms tras el último cambio); si un modelo tarda más de 400 ms, su recálculo en vivo va a un
+  hilo aparte (la ventana sigue atendiendo; solo el último valor pedido se pinta).
 - **Validez**: una corrida solo se presenta como válida si el modelo está verificado con su archivo actual y sus
   números son finitos. Si no, el gráfico lleva «NO VÁLIDO» o «SIN VERIFICAR», los resultados se atenúan, el motivo va
   arriba y el chip de la cabecera lo dice. Al abrir un modelo sin estado se verifica solo.
@@ -91,10 +91,11 @@ escenarios propios, en `$XDG_DATA_HOME/simuladores-studio/escenarios/`; nada de 
 
 ## Límite honesto
 
-- **El modo en vivo es para modelos rápidos**: el cálculo corre en el hilo de la ventana (el motor, en proceso); un
-  modelo que pasa de 400 ms por corrida apaga el modo en vivo y se corre con F5.
-- **La sensibilidad barre alrededor de la base** (los valores por defecto del modelo, como `main.py sensibilidad`), no
-  del escenario en edición.
+- **El modo en vivo**: un modelo rápido se calcula en el hilo de la ventana (el motor, en proceso); uno que pasa de
+  400 ms por corrida, en un hilo aparte, de a uno. `studio/medir.py` mide los del repo (el 2026-11-03, 139 modelos:
+  solo e26, con unos 410 ms, pasa del tope). El hilo no hace más rápido el cálculo: evita que la ventana se detenga.
+- **La sensibilidad barre alrededor del escenario en edición** (los demás parámetros fijos en sus valores); sin cambios
+  es la de la base, como `main.py sensibilidad`. Con el recálculo en vivo, mover un parámetro vuelve a barrer.
 - **Azul, morado y cian salen del tema solo si el tema los trae** (Breeze: el enlace es azul); con un acento rojo
   (Lliphi) se derivan con la saturación y la luminosidad de los colores semánticos del tema.
 - **Una captura con esquema forzado** necesita el tema de Kvantum a juego (`capturar.py` lo escribe): con la

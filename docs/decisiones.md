@@ -14,6 +14,14 @@ de la ventana.
 
 ## La ventana
 
+- **2026-11-03 · La sensibilidad sigue al escenario y un modelo lento se calcula en un hilo, sin apagar el modo en vivo.**
+  El barrido de la ventana mantiene los demás parámetros del escenario en edición y toma la derivada en su valor
+  (`studio/sim_app/servicios/simulacion.py`); sin cambios es `base.sensibilidad` del motor, que no se tocó (contrato del
+  CLI y de los pubs). Los 139 modelos del repo se midieron con `studio/medir.py` (la corrida del recálculo en vivo, con
+  sus valores por omisión): solo e26 pasa de 400 ms (unos 410). En vez de apagarle el modo en vivo, su recálculo corre en
+  un hilo aparte, de a uno, con un testigo por modelo: lo que llega de otro modelo o de valores ya cambiados no se
+  pinta. Python no calcula más rápido en un hilo (el GIL): lo que se gana es que la ventana no se detenga.
+
 - **2026-11-02 · Simuladores Studio es un laboratorio de simulación sobre `VentanaBase` de `gui-comun` 3.0
   (reingeniería de los diez studios, §3.8).** El diagnóstico, la distribución y sus doce decisiones (L1–L12) están en
   [`reingenieria.md`](reingenieria.md): el área central es el espacio de simulación y no una tabla; el gráfico es

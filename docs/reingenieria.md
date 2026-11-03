@@ -53,7 +53,7 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
 | riesgo | mitigación |
 |---|---|
 | romper los contratos (`base.Modelo`, `catalogo.json`, `navegador.json`) | el motor no cambia; `main.py catalogo --verificar` y `web --verificar` en 0 antes de cada commit |
-| recalcular en vivo un modelo lento | el cálculo en vivo se agenda (≈150 ms tras el último cambio) y se mide; si una corrida pasa de 400 ms, el modo en vivo se apaga para ese modelo y queda F5 |
+| recalcular en vivo un modelo lento | el cálculo en vivo se agenda (≈150 ms tras el último cambio) y se mide; si una corrida pasa de 400 ms, el recálculo de ese modelo va a un hilo aparte, de a uno, y solo el último valor pedido se pinta (2026-11-03; antes se apagaba) |
 | barrer la sensibilidad sobre un dominio donde el modelo falla | cada punto del barrido que no calcula o da un valor no finito se marca y se excluye del gráfico; la derivada solo se da si sus dos puntos calculan |
 | tocar los modelos reales en las pruebas | las pruebas y las capturas usan el laboratorio de muestra (`studio/muestra.py`), con un modelo dinámico nuevo |
 
@@ -85,7 +85,7 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
   matplotlib, `C0`–`C9`, `tab:*`) se lleva a un rol (azul, rojo, verde, dorado, morado, cian, gris, texto) por su tono, y
   QML pinta cada rol con un color de `Kirigami.Theme`. Ningún color propio en QML.
 - **L4. En vivo**: mover un deslizador recalcula el escenario (agendado, en proceso con el motor); si el modelo tarda
-  más de 400 ms, el modo en vivo se apaga para él y queda F5.
+  más de 400 ms, su recálculo va a un hilo aparte (2026-11-03; antes el modo en vivo se apagaba para él).
 - **L5. Base y escenario**: la base son los valores por defecto del modelo; el escenario, el elegido (del modelo o propio)
   o los valores de los deslizadores. «Comparación» los dibuja lado a lado con la misma escala y la tabla de diferencias,
   con la lectura y el mecanismo de transmisión del escenario.
@@ -117,7 +117,7 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
 | la ventana (L1, L11, L12) | `studio/sim_app/qml/Main.qml` sobre `VentanaBase`; `studio/sim_app/aplicacion.py` (vistas Ctrl+1–6, F9, Ctrl+F, F5, Ctrl+T, F8; `escritorio` de la base; estados de operación) |
 | el catálogo | `studio/sim_app/qml/componentes/CatalogoModelos.qml` sobre `Modelos.catalogo` (una `ModeloLista` filtrada por búsqueda, disciplina y estado) |
 | el gráfico (L2, L3) | `studio/sim_app/qml/componentes/GraficoCientifico.qml` (Canvas) con los datos de `studio/sim_app/servicios/simulacion.py` (`grafico`, `unir_limites`) y los roles de `studio/sim_app/servicios/paleta.py` |
-| en vivo (L4) | `studio/sim_app/controladores/modelos.py`: `fijarValor` agenda la corrida (150 ms); `correr(en_vivo=True)` mide y apaga el modo en vivo de un modelo lento (400 ms) |
+| en vivo (L4) | `studio/sim_app/controladores/modelos.py`: `fijarValor` agenda la corrida (150 ms); `correr(en_vivo=True)` mide; un modelo lento (400 ms) pasa a `_recalcular_en_vivo` en un hilo aparte, con un testigo por modelo |
 | base y escenario (L5) | `graficoBase`, `limitesComunes`; `studio/sim_app/qml/componentes/Comparacion.qml` |
 | sensibilidad (L6) | `simulacion.sensibilidad` sobre `base.sensibilidad`; `studio/sim_app/qml/componentes/Sensibilidad.qml` |
 | evolución temporal (L7) | `simulacion.es_temporal`; el modelo dinámico d03 de `studio/muestra.py` |
@@ -143,11 +143,10 @@ Verificación (2026-11-02, rama `wip/2026-11-02-reingenieria`):
 
 ## 5. Lo que quedó fuera
 
-- **El cálculo en vivo va en el hilo de la ventana**: el motor corre en proceso y en milisegundos para la muestra; un
-  modelo lento apaga su modo en vivo (L4) en vez de pasar a un hilo. Medir los 139 modelos reales es del autor
-  (`estado.md` §Por hacer).
-- **La sensibilidad barre alrededor de la base**, como `main.py sensibilidad`; barrer alrededor del escenario en
-  edición pediría cambiar `base.sensibilidad`, que es contrato.
+- **El cálculo en vivo**: hecho el 2026-11-03. Los 139 modelos del repo medidos con `studio/medir.py` (solo e26 pasa de
+  400 ms) y los lentos, en un hilo aparte en vez de apagar su modo en vivo.
+- **La sensibilidad alrededor del escenario en edición**: hecha el 2026-11-03 en el servicio del studio
+  (`simulacion.sensibilidad(valores=)`); `base.sensibilidad`, que es contrato, no cambió y sigue barriendo la base.
 - **`GraficoCientifico` vive en simuladores**: si otro studio necesita un gráfico científico, se promueve a
   `gui-comun` (con la paleta de roles).
 - **Las capturas con esquema forzado** eligen también el tema de Kvantum a juego (como Git Studio): sin eso los

@@ -4,8 +4,9 @@
   línea con su propio x (sin remuestrear: a lo sumo se ralea tomando uno de cada k puntos, conservando los extremos),
   las barras con el rol de color de cada una (`paleta`), los puntos, el equilibrio, las líneas verticales y horizontales
   y los límites de los ejes. `unir_limites` da la misma escala a dos gráficos (base y escenario lado a lado).
-- `sensibilidad(base, modelo, parametro, magnitud, n)`: el barrido del parámetro sobre su rango con `base.sensibilidad`
-  del motor, más robusto: cada punto que no calcula o no es finito queda marcado y fuera de la curva.
+- `sensibilidad(base, modelo, parametro, magnitud, n, valores)`: el barrido del parámetro sobre su rango, alrededor de la
+  base (`base.sensibilidad` del motor) o del escenario en edición (`valores`), más robusto: cada punto que no calcula o
+  no es finito queda marcado y fuera de la curva.
 - `validez(estado, fallos, corrida)`: si una corrida puede presentarse como válida (L8).
 - `es_temporal(xlabel)`: si el eje x es el tiempo (L7).
 """
@@ -123,47 +124,68 @@ def magnitudes(resultados: list) -> list[str]:
     return [str(k) for k, v in resultados if _num(v) is not None]
 
 
-def sensibilidad(base, modelo, parametro: str, magnitud: str = "", n: int = 25) -> dict:
-    """{parametro, etiqueta, magnitud, x, y, fallidos, actual, valorActual, derivada, unidad} sobre el rango declarado.
+def sensibilidad(base, modelo, parametro: str, magnitud: str = "", n: int = 25, valores: dict | None = None) -> dict:
+    """{parametro, etiqueta, magnitud, x, y, fallidos, actual, valorActual, derivada, unidad, escenario} sobre el rango declarado.
 
-    La malla, el valor base y la derivada central los da `base.sensibilidad` del motor (n puntos); si el motor falla en
-    algún punto del rango, se barre punto a punto y los puntos que no calculan quedan en `fallidos`."""
+    Alrededor de la base (sin `valores`, o con los de la base) la malla, el valor base y la derivada central los da
+    `base.sensibilidad` del motor (n puntos), como el CLI. Alrededor del escenario en edición (`valores` distintos de la
+    base, 2026-11-03) el barrido mantiene fijos los demás parámetros del escenario y la derivada se toma en su valor del
+    parámetro. En los dos casos, si el modelo falla en algún punto del rango, se barre punto a punto y los puntos que no
+    calculan quedan en `fallidos`."""
     p = modelo.parametro(parametro)
+    defecto = modelo.dict_params()
+    fijos = {k: v for k, v in (valores or {}).items() if k in defecto and k != parametro and v != defecto[k]}
+    centro = float((valores or {}).get(parametro, p.valor))
+    en_escenario = bool(fijos) or centro != float(p.valor)
+
+    def calcular(v):
+        return modelo.calcular(**fijos, **{parametro: v})
+
     try:
+        if en_escenario:
+            raise _PuntoAPunto()
         r = base.sensibilidad(modelo, parametro, magnitud or None, n=n)
         xs, ys = [float(v) for v, _y in r["filas"]], [_num(y) for _v, y in r["filas"]]
         magnitud, derivada = r["magnitud"], _num(r["derivada"])
     except KeyError:
         raise
-    except Exception:       # noqa: BLE001  un punto del rango fuera de dominio: punto a punto
-        res = modelo.calcular()
+    except Exception:       # noqa: BLE001  el escenario en edición, o un punto del rango fuera de dominio: punto a punto
+        res = calcular(centro)
         magnitud = magnitud or next(k for k, v in res.items() if isinstance(v, (int, float)))
+        if magnitud not in res:
+            raise KeyError(f"magnitud '{magnitud}' no está en resultados() (disponibles: {', '.join(res)})")
         xs, ys = [], []
         for i in range(n):
             v = p.minimo + i * (p.maximo - p.minimo) / (n - 1)
             xs.append(v)
             try:
-                ys.append(_num(modelo.calcular(**{parametro: v})[magnitud]))
+                ys.append(_num(calcular(v)[magnitud]))
             except Exception:       # noqa: BLE001
                 ys.append(None)
         try:
             h = p.paso or (p.maximo - p.minimo) / 100
-            derivada = _num((modelo.calcular(**{parametro: p.valor + h})[magnitud] - modelo.calcular(**{parametro: p.valor - h})[magnitud]) / (2 * h))
+            derivada = _num((calcular(centro + h)[magnitud] - calcular(centro - h)[magnitud]) / (2 * h))
         except Exception:       # noqa: BLE001
             derivada = None
     try:
-        actual = _num(modelo.calcular()[magnitud])
+        actual = _num(calcular(centro)[magnitud])
     except Exception:       # noqa: BLE001
         actual = None
     fallidos = [x for x, y in zip(xs, ys) if y is None]
     pares = [(x, y) for x, y in zip(xs, ys) if y is not None]
     etiqueta = p.etiqueta or p.nombre
+    rotulo = "valor del escenario" if en_escenario else "valor base"
     curvas = {"lineas": [{"etiqueta": magnitud, "x": [a for a, _b in pares], "y": [b for _a, b in pares], "color": "C0"}],
-              "puntos": [{"x": float(p.valor), "y": actual, "etiqueta": "valor base"}] if actual is not None else []}
+              "puntos": [{"x": centro, "y": actual, "etiqueta": rotulo}] if actual is not None else []}
     return {"parametro": parametro, "etiqueta": etiqueta, "unidad": p.unidad, "magnitud": magnitud,
-            "x": [a for a, _b in pares], "y": [b for _a, b in pares], "fallidos": fallidos, "valorActual": float(p.valor),
-            "actual": actual, "derivada": derivada,
+            "x": [a for a, _b in pares], "y": [b for _a, b in pares], "fallidos": fallidos, "valorActual": centro,
+            "actual": actual, "derivada": derivada, "escenario": en_escenario,
+            "fijos": {k: fijos[k] for k in sorted(fijos)},
             "grafico": grafico(curvas, etiqueta + (f" ({p.unidad})" if p.unidad else ""), magnitud)}
+
+
+class _PuntoAPunto(Exception):
+    """El barrido alrededor del escenario en edición no pasa por `base.sensibilidad` (que barre alrededor de la base)."""
 
 
 def validez(estado: str, fallos: list[str], corrida: dict | None, no_finitos: int = 0) -> dict:

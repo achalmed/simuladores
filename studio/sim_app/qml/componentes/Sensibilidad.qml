@@ -1,6 +1,7 @@
 // Sensibilidad — el barrido de un parámetro sobre su rango declarado (reingeniería L6): la magnitud elegida frente al
-// parámetro (`base.sensibilidad` del motor), con el valor base marcado y la derivada ∂magnitud/∂parámetro; los puntos
-// del rango donde el modelo no calcula se dicen y quedan fuera de la curva.
+// parámetro alrededor del escenario en edición (los demás parámetros, en sus valores; sin cambios es `base.sensibilidad`
+// del motor, la base), con su valor marcado y la derivada ∂magnitud/∂parámetro en él; los puntos del rango donde el
+// modelo no calcula se dicen y quedan fuera de la curva. Con el recálculo en vivo, mover un parámetro vuelve a barrer.
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -19,6 +20,9 @@ ColumnLayout {
     spacing: 0
     onVisibleChanged: if (visible && (s.x === undefined || s.parametro !== m.parametroSensibilidad)) barrer()
     Connections { target: raiz.m; function onActualCambiado() { if (raiz.visible) Qt.callLater(raiz.barrer) } }
+    // un parámetro movido: el barrido sigue al escenario si el modelo es rápido (en vivo); si no, «Barrer»
+    Connections { target: raiz.m; function onValoresCambiados() { if (raiz.visible && raiz.m.vivo) rebarrer.restart() } }
+    Timer { id: rebarrer; interval: 250; onTriggered: raiz.barrer() }
 
     RowLayout {
         Layout.fillWidth: true
@@ -69,13 +73,20 @@ ColumnLayout {
         Layout.margins: Kirigami.Units.smallSpacing
         visible: raiz.s.x !== undefined
         QQC2.Label {
-            Kirigami.FormData.label: "Derivada en la base:"
+            Kirigami.FormData.label: raiz.s.escenario ? "Derivada en el escenario:" : "Derivada en la base:"
             text: "∂" + (raiz.s.magnitud || "") + " / ∂" + (raiz.s.parametro || "") + " = " + raiz.numero(raiz.s.derivada)
             font: Kirigami.Theme.fixedWidthFont
         }
         QQC2.Label {
-            Kirigami.FormData.label: "Valor base:"
+            Kirigami.FormData.label: raiz.s.escenario ? "Valor del escenario:" : "Valor base:"
             text: (raiz.s.parametro || "") + " = " + raiz.numero(raiz.s.valorActual) + (raiz.s.unidad ? " " + raiz.s.unidad : "") + "  →  " + (raiz.s.magnitud || "") + " = " + raiz.numero(raiz.s.actual)
+        }
+        QQC2.Label {
+            Kirigami.FormData.label: "Fijos del escenario:"
+            visible: !!raiz.s.escenario && raiz.s.fijos !== undefined && Object.keys(raiz.s.fijos).length > 0
+            text: raiz.s.fijos ? Object.keys(raiz.s.fijos).map(k => k + " = " + raiz.numero(raiz.s.fijos[k])).join(", ") : ""
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
         QQC2.Label {
             Kirigami.FormData.label: "Rango barrido:"

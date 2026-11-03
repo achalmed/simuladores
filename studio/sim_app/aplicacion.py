@@ -68,6 +68,7 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
     ajustes = Ajustes()
     espacio = Espacio(consola, ajustes)
     modelos = Modelos(espacio, consola, cache=cache, datos=datos, raiz=raiz)
+    app.app.aboutToQuit.connect(modelos.apagar)        # el hilo aparte del recálculo en vivo (L4)
     operaciones = Operaciones(espacio, modelos, ajustes, consola, tareas, cache=cache)
     acciones = Acciones()
     acciones.estandar(NOMBRE, paneles=False)

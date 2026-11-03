@@ -29,6 +29,16 @@ def test_rutas(muestra_sesion):
     assert rutas.interprete().endswith("python") or rutas.interprete().endswith("python3")
 
 
+def test_matplotlib_vacio_no_cuenta_ni_rompe(monkeypatch):
+    """Con el matplotlib vacío de navegador.py en sys.modules (un intérprete sin matplotlib), `find_spec` lanzaría
+    ValueError: la ficha y la figura dicen «sin matplotlib» en vez de romper al abrir un modelo (2026-11-03)."""
+    import sys
+    import types
+    vacio = types.ModuleType("matplotlib")
+    monkeypatch.setitem(sys.modules, "matplotlib", vacio)
+    assert rutas.hay_matplotlib() is False and formulas.disponible() is False
+
+
 def test_catalogo_y_disciplinas(muestra_sesion):
     c = lab.catalogo(muestra_sesion.raiz)
     assert c["disciplinas"] == ["demo"] and c["total"] == 3

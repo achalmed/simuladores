@@ -54,9 +54,19 @@ def orden_crear_venv() -> str:
 
 
 def hay_matplotlib() -> bool:
-    """¿El intérprete actual trae matplotlib de verdad (no el vacío que registra navegador.py)?"""
+    """¿El intérprete actual trae matplotlib de verdad (no el vacío que registra navegador.py)? Con el vacío ya en
+    `sys.modules`, `find_spec` no se puede llamar (su `__spec__` es None: ValueError): se mira su origen."""
     import importlib.util
-    return importlib.util.find_spec("matplotlib") is not None
+    import sys
+    cargado = sys.modules.get("matplotlib")
+    if cargado is not None:
+        spec = getattr(cargado, "__spec__", None)
+        return spec is not None and spec.origin is not None
+    try:
+        spec = importlib.util.find_spec("matplotlib")
+    except (ValueError, ImportError):
+        return False
+    return spec is not None and spec.origin is not None
 
 
 def relativa(ruta: Path | str) -> str:

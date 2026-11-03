@@ -224,6 +224,79 @@ def test_sensibilidad_en_el_controlador(piezas):
 
 
 @requiere_binding
+def test_sensibilidad_alrededor_del_escenario_en_edicion(piezas):
+    """Con un parámetro movido, el barrido mantiene el escenario (los demás fijos) y la derivada se toma en su valor; sin
+    cambios es el de la base (base.sensibilidad, como el CLI). d01: Q* = (a − c) / (b + d)."""
+    m = piezas["modelos"]
+    m.irA("demo/d01")
+    assert m.calcularSensibilidad("a", "Q* (cantidad)")
+    base = m.sensibilidad
+    assert not base["escenario"] and base["fijos"] == {}
+    m.vivo = False                                                    # sin recálculo: solo el barrido
+    c0, b, d = m.valores["c"], m.valores["b"], m.valores["d"]
+    m.fijarValor("c", c0 + 20)
+    m.fijarValor("a", 150)
+    assert m.calcularSensibilidad("a", "Q* (cantidad)")
+    s = m.sensibilidad
+    assert s["escenario"] and s["fijos"] == {"c": c0 + 20} and s["valorActual"] == 150
+    assert s["x"] == base["x"]
+    for y0, y1 in zip(base["y"], s["y"]):                             # la curva baja 20 / (b + d) en todo el rango
+        assert abs((y0 - y1) - 20 / (b + d)) < 1e-6
+    assert abs(s["actual"] - (150 - c0 - 20) / (b + d)) < 1e-6 and abs(s["derivada"] - 1 / (b + d)) < 1e-6
+    assert s["grafico"]["puntos"][0]["nombre"] == "valor del escenario"
+    m.restablecer()
+    assert m.calcularSensibilidad("a", "Q* (cantidad)") and not m.sensibilidad["escenario"]
+    m.vivo = True
+
+
+@requiere_binding
+def test_un_modelo_lento_se_recalcula_en_un_hilo_aparte(piezas, app, monkeypatch):
+    """Un modelo que pasa de TOPE_VIVO_MS no apaga el modo en vivo: el recálculo va a un hilo aparte (la ventana sigue
+    atendiendo), de a uno, y solo el último valor pedido se pinta; lo que llega de otro modelo se tira."""
+    from sim_app.controladores import modelos as mod
+    original = mod.corridas.correr
+
+    def lenta(navegador, modelo, valores):
+        time.sleep((mod.TOPE_VIVO_MS + 150) / 1000)
+        return original(navegador, modelo, valores)
+
+    monkeypatch.setattr(mod.corridas, "correr", lenta)
+    m = piezas["modelos"]
+    m.irA("demo/d01")                                                 # la primera corrida, en este hilo, lo mide lento
+    assert m.lento and m.vivo
+    antes = m.grafico["equilibrio"]["x"]
+    m.fijarValor("a", 150)
+    inicio = time.monotonic()
+    while not m.calculando and time.monotonic() - inicio < 2:          # el temporizador lanza el hilo
+        app.processEvents()
+        time.sleep(0.01)
+    assert m.calculando
+    t = time.monotonic()
+    app.processEvents()                                               # la ventana no espera al cálculo
+    assert time.monotonic() - t < 0.2 and m.grafico["equilibrio"]["x"] == antes
+    m.fijarValor("a", 190)                                            # mientras calcula: queda pendiente
+    inicio = time.monotonic()
+    while (m.calculando or m.valores["a"] != 190 or abs(m.grafico["equilibrio"]["x"] - (190 - m.valores["c"]) / (m.valores["b"] + m.valores["d"])) > 1e-6) \
+            and time.monotonic() - inicio < 10:
+        app.processEvents()
+        time.sleep(0.02)
+    q = (190 - m.valores["c"]) / (m.valores["b"] + m.valores["d"])
+    assert not m.calculando and abs(m.grafico["equilibrio"]["x"] - q) < 1e-6           # el último pedido, no el 150
+    # un cálculo de un modelo que ya no está abierto no se pinta
+    m.fijarValor("a", 100)
+    inicio = time.monotonic()
+    while not m.calculando and time.monotonic() - inicio < 2:
+        app.processEvents()
+        time.sleep(0.01)
+    m.irA("demo/d03")
+    m.esperar_hilo()
+    for _ in range(10):
+        app.processEvents()
+        time.sleep(0.02)
+    assert m.id == "d03" and m.grafico.get("temporal")
+
+
+@requiere_binding
 def test_operaciones_visibles_segun_la_disciplina(piezas):
     o, m = piezas["operaciones"], piezas["modelos"]
     m.irA("demo/d01")

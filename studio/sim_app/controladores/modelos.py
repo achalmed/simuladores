@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from gui_comun.modelos import ModeloFiltrado, ModeloLista, ModeloTabla
@@ -52,6 +53,8 @@ class Modelos(QObject):
     figuraCambiada = Signal()
     sensibilidadCambiada = Signal()
     vivoCambiado = Signal()
+    calculandoCambiado = Signal()       # un recálculo en vivo corre en el hilo aparte (modelo lento)
+    _hecho = Signal(int, object, str, float, object)   # desde el hilo: token, corrida, error, segundos, valores
     seleccionar = Signal(int)           # QML: selecciona esa fila visible de la tabla
     aviso = Signal(str, str)
 
@@ -89,7 +92,12 @@ class Modelos(QObject):
         self._sens_param = ""
         self._sens_magnitud = ""
         self._vivo = True                             # el usuario lo quiere
-        self._vivo_modelo = True                      # el modelo es bastante rápido (L4)
+        self._lento = False                           # pasó de TOPE_VIVO_MS: el recálculo en vivo va a un hilo aparte (L4)
+        self._calculando = False
+        self._pendiente = False                       # se movió un parámetro mientras el hilo calculaba
+        self._token = 0                               # sube con cada modelo: lo que llega del hilo de otro modelo se tira
+        self._hilos = ThreadPoolExecutor(max_workers=1, thread_name_prefix="simulacion")
+        self._hecho.connect(self._al_terminar)
         self._ms = 0.0
         self.verificar_al_abrir = True
         self._lista = ModeloLista(ROLES_CATALOGO, parent=self)
@@ -99,7 +107,7 @@ class Modelos(QObject):
         self._espera = QTimer(self)
         self._espera.setSingleShot(True)
         self._espera.setInterval(ESPERA_VIVO_MS)
-        self._espera.timeout.connect(lambda: self.correr(en_vivo=True))
+        self._espera.timeout.connect(self._recalcular_en_vivo)
         self._modelo.aceptar_con(self._acepta)
         espacio.filtroCambiado.connect(lambda: (self._modelo.aceptar_con(self._acepta), self._catalogo_filtrado.aceptar_con(self._acepta_catalogo)))
         self.recargar()
@@ -270,7 +278,8 @@ class Modelos(QObject):
         self._actual = ref if ref in self._filas else ""
         self._m, self._archivo, self._motivo, self._ficha, self._figura = None, None, "", "", ""
         self._valores, self._escenario, self._corrida, self._grafico, self._registro = {}, "base", {}, {}, ""
-        self._base, self._grafico_base, self._sens, self._vivo_modelo = {}, {}, {}, True
+        self._base, self._grafico_base, self._sens, self._lento, self._pendiente = {}, {}, {}, False, False
+        self._token += 1
         self._resultados.poner([])
         self._verificaciones.poner([])
         if self._actual:
@@ -417,7 +426,7 @@ class Modelos(QObject):
             if self._escenario != "propio":
                 self._escenario = "propio"
             self.valoresCambiados.emit()
-            if self._vivo and self._vivo_modelo:
+            if self._vivo:
                 self._espera.start()
 
     @Slot()
@@ -427,7 +436,7 @@ class Modelos(QObject):
         self._valores = dict(self._m.dict_params())
         self._escenario = "base"
         self.valoresCambiados.emit()
-        if self._vivo and self._vivo_modelo:
+        if self._vivo:
             self._espera.start()
 
     def _escenarios_modelo(self) -> list[dict]:
@@ -480,7 +489,7 @@ class Modelos(QObject):
                 self._valores[k] = float(v)
         self._escenario = nombre
         self.valoresCambiados.emit()
-        if self._vivo and self._vivo_modelo:
+        if self._vivo:
             self._espera.start()
 
     @Slot(int)
@@ -562,8 +571,8 @@ class Modelos(QObject):
     @Slot(result=bool)
     def correr(self, en_vivo: bool = False) -> bool:
         """F5 de «Correr el escenario» (o el recálculo en vivo al mover un parámetro): el motor en proceso; la corrida
-        queda en la caché del studio. En vivo no escribe en la consola; si el modelo tarda más de TOPE_VIVO_MS, el modo
-        en vivo se apaga para él (L4)."""
+        queda en la caché del studio. En vivo no escribe en la consola; si el modelo tarda más de TOPE_VIVO_MS, su
+        recálculo en vivo pasa a un hilo aparte (L4; antes se apagaba)."""
         if self._m is None:
             if not en_vivo:
                 self.aviso.emit(self._motivo or "Elige primero un modelo.", "aviso")
@@ -572,22 +581,26 @@ class Modelos(QObject):
         inicio = time.monotonic()
         try:
             corrida = corridas.correr(self.lab.navegador(), self._m, self._valores)
+            segundos = time.monotonic() - inicio            # solo la corrida: la de la base, la primera vez, no cuenta
             if not self._base:
                 self._base = corridas.correr(self.lab.navegador(), self._m, {})
                 self._grafico_base = sim.grafico(self._base.get("curvas", {}), self._m.xlabel, self._m.ylabel)
-            base = self._base
         except Exception as e:      # noqa: BLE001  un parámetro fuera de dominio no tumba la ventana
             self._registro = f"# {time.strftime('%Y-%m-%d %H:%M:%S')} · correr · {self._actual} · {self._escenario}\nNo se pudo calcular: {type(e).__name__}: {e}\n"
             self.consola.registrar("error", f"{self._actual}: no se pudo calcular: {e}")
             self.corridaCambiada.emit()
             self.aviso.emit(f"No se pudo calcular {self.id}: {e}", "error")
             return False
-        segundos = time.monotonic() - inicio
+        return self._poner_corrida(corrida, segundos, en_vivo)
+
+    def _poner_corrida(self, corrida: dict, segundos: float, en_vivo: bool) -> bool:
+        """Lo que sigue a una corrida (en este hilo o en el aparte): el gráfico, los resultados, el registro, la caché."""
+        base = self._base
         self._ms = segundos * 1000
-        if en_vivo and self._ms > TOPE_VIVO_MS and self._vivo_modelo:
-            self._vivo_modelo = False
+        if self._ms > TOPE_VIVO_MS and not self._lento:
+            self._lento = True
             self.vivoCambiado.emit()
-            self.aviso.emit(f"{self.id} tarda {self._ms:.0f} ms por cálculo: el recálculo en vivo se apaga para este modelo; corre con F5.", "informacion")
+            self.aviso.emit(f"{self.id} tarda {self._ms:.0f} ms por cálculo: el recálculo en vivo sigue, en un hilo aparte (la ventana no se detiene).", "informacion")
         self._corrida = corrida
         self._corrida["base"] = base.get("resultados", [])
         self._grafico = self._armar_grafico()
@@ -659,15 +672,74 @@ class Modelos(QObject):
         return sim.validez(self.estado, list(r.get("fallos", [])), self._corrida, int(self._grafico.get("noFinitos", 0)) if self._grafico else 0)
 
     def _vivo_get(self) -> bool:
-        return self._vivo and self._vivo_modelo
+        return self._vivo
 
     def _vivo_set(self, v: bool) -> None:
         self._vivo = bool(v)
-        if v:
-            self._vivo_modelo = True
         self.vivoCambiado.emit()
 
     vivo = Property(bool, _vivo_get, _vivo_set, notify=vivoCambiado)
+
+    @Property(bool, notify=vivoCambiado)
+    def lento(self) -> bool:
+        """El modelo pasa de TOPE_VIVO_MS por cálculo: su recálculo en vivo corre en un hilo aparte."""
+        return self._lento
+
+    @Property(bool, notify=calculandoCambiado)
+    def calculando(self) -> bool:
+        return self._calculando
+
+    # ------------------------------------------------------------------ el recálculo en vivo (L4)
+    def _recalcular_en_vivo(self) -> None:
+        """Tras mover un parámetro: en este hilo si el modelo es rápido; si es lento, en el hilo aparte, de a uno (lo que
+        se pide mientras calcula espera, y solo el último pedido se calcula)."""
+        if self._m is None:
+            return
+        if not self._lento or not self._base:
+            self.correr(en_vivo=True)
+            return
+        if self._calculando:
+            self._pendiente = True
+            return
+        self.lab.activar(self.disciplina)
+        navegador, modelo, valores, token = self.lab.navegador(), self._m, dict(self._valores), self._token
+        self._calculando, self._pendiente = True, False
+        self.calculandoCambiado.emit()
+
+        def trabajo():
+            inicio = time.monotonic()
+            try:
+                corrida, error = corridas.correr(navegador, modelo, valores), ""
+            except Exception as e:      # noqa: BLE001  un parámetro fuera de dominio: se dice, no tumba el hilo
+                corrida, error = {}, f"{type(e).__name__}: {e}"
+            self._hecho.emit(token, corrida, error, time.monotonic() - inicio, valores)
+
+        self._hilos.submit(trabajo)
+
+    def _al_terminar(self, token: int, corrida: dict, error: str, segundos: float, valores: dict) -> None:
+        """En el hilo de la ventana: lo que llegó del hilo aparte. Se tira si es de otro modelo o de valores que ya no son
+        los del escenario (entonces se calcula el último pedido)."""
+        self._calculando = False
+        self.calculandoCambiado.emit()
+        if token != self._token or self._m is None:
+            return
+        if valores != self._valores or self._pendiente:
+            self._pendiente = False
+            self._recalcular_en_vivo()
+            return
+        if error:
+            self._registro = f"# {time.strftime('%Y-%m-%d %H:%M:%S')} · correr · {self._actual} · {self._escenario}\nNo se pudo calcular: {error}\n"
+            self.consola.registrar("error", f"{self._actual}: no se pudo calcular: {error}")
+            self.corridaCambiada.emit()
+            return
+        self._poner_corrida(corrida, segundos, en_vivo=True)
+
+    def esperar_hilo(self, segundos: float = 30) -> None:
+        """Para las pruebas: espera a que el hilo aparte termine lo que tenga (los resultados llegan con la cola de Qt)."""
+        self._hilos.submit(lambda: None).result(timeout=segundos)
+
+    def apagar(self) -> None:
+        self._hilos.shutdown(wait=False, cancel_futures=True)
 
     # ------------------------------------------------------------------ la sensibilidad (L6)
     @Property("QVariantList", notify=corridaCambiada)
@@ -688,13 +760,14 @@ class Modelos(QObject):
 
     @Slot(str, str, result=bool)
     def calcularSensibilidad(self, parametro: str, magnitud: str) -> bool:
-        """El barrido del parámetro sobre su rango declarado para una magnitud de los resultados (`base.sensibilidad`)."""
+        """El barrido del parámetro sobre su rango declarado para una magnitud de los resultados, alrededor del escenario
+        en edición (los demás parámetros fijos en sus valores; sin cambios, es `base.sensibilidad`, como el CLI)."""
         if self._m is None:
             return False
         parametro = parametro or self._sens_param
         self.lab.activar(self.disciplina)
         try:
-            self._sens = sim.sensibilidad(self.lab.base(), self._m, parametro, magnitud or "")
+            self._sens = sim.sensibilidad(self.lab.base(), self._m, parametro, magnitud or "", valores=self._valores)
         except Exception as e:      # noqa: BLE001
             self._sens = {}
             self.aviso.emit(f"No se pudo barrer {parametro}: {e}", "error")
