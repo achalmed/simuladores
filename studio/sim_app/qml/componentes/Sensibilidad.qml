@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 ColumnLayout {
     id: raiz
@@ -55,7 +56,7 @@ ColumnLayout {
         }
         Item { Layout.fillWidth: true }
     }
-    GraficoCientifico {
+    GraficoXY {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.margins: Kirigami.Units.smallSpacing

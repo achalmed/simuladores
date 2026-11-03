@@ -49,7 +49,7 @@ ColumnLayout {
                     elide: Text.ElideRight
                 }
             }
-            GraficoCientifico {
+            GraficoXY {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.margins: Kirigami.Units.smallSpacing

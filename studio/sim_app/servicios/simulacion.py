@@ -1,6 +1,6 @@
 """studio/sim_app/servicios/simulacion.py — lo que el espacio de simulación dibuja y decide (reingeniería L2–L8; sin Qt).
 
-- `grafico(curvas, xlabel, ylabel)`: las curvas serializadas (`navegador.serializar`) para `GraficoCientifico.qml`: cada
+- `grafico(curvas, xlabel, ylabel)`: las curvas serializadas (`navegador.serializar`) para `GraficoXY` de gui-comun: cada
   línea con su propio x (sin remuestrear: a lo sumo se ralea tomando uno de cada k puntos, conservando los extremos),
   las barras con el rol de color de cada una (`paleta`), los puntos, el equilibrio, las líneas verticales y horizontales
   y los límites de los ejes. `unir_limites` da la misma escala a dos gráficos (base y escenario lado a lado).
@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 import re
 
-from sim_app.servicios import paleta
+from gui_comun import paleta                      # gui-comun 3.1 (antes, la copia propia)
 from sim_app.servicios.corridas import sin_mathtext
 
 MAX_PUNTOS = 600
@@ -47,7 +47,7 @@ def es_temporal(xlabel: str) -> bool:
 
 
 def grafico(curvas: dict, xlabel: str = "", ylabel: str = "") -> dict:
-    """Los datos de `GraficoCientifico` desde las curvas serializadas; `limites` con un margen."""
+    """Los datos de `GraficoXY` (gui-comun) desde las curvas serializadas; `limites` con un margen."""
     salida = {"lineas": [], "barras": {}, "puntos": [], "equilibrio": None, "verticales": [], "horizontales": [],
               "etiquetaX": sin_mathtext(xlabel), "etiquetaY": sin_mathtext(ylabel), "temporal": es_temporal(xlabel),
               "anotacion": " · ".join(sin_mathtext(t) for t in str(curvas.get("anotacion", "")).replace("\\n", "\n").split("\n") if t.strip()),

@@ -13,7 +13,8 @@ from conftest import HAY_MATPLOTLIB, REPO, muestra_sesion  # noqa: F401
 
 from sim_app.servicios import corridas, fichas, formulas, operaciones as ops, rutas, verificaciones as ver
 from sim_app.servicios import laboratorio as lab
-from sim_app.servicios import paleta, simulacion as sim
+from gui_comun import paleta  # noqa: E402  (la de gui-comun 3.1)
+from sim_app.servicios import simulacion as sim
 
 
 @pytest.fixture

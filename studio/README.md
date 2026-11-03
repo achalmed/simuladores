@@ -82,7 +82,7 @@ studio/
     ├── servicios/          sin Qt: rutas, laboratorio (disciplinas aisladas), corridas, simulacion (gráfico, sensibilidad,
     │                       validez), paleta (colores del modelo → roles del tema), verificaciones, fichas, formulas, operaciones
     ├── controladores/      espacio (filtros), modelos (catálogo, modelo actual, en vivo, base, sensibilidad, validez), operaciones, ajustes
-    └── qml/                Main.qml sobre GuiComun.VentanaBase y componentes/ (CatalogoModelos, PanelParametros, GraficoCientifico,
+    └── qml/                Main.qml sobre GuiComun.VentanaBase y componentes/ (CatalogoModelos, PanelParametros,
                             EspacioSimulacion, Comparacion, Sensibilidad, Ficha, Verificaciones, Laboratorio, Operacion, Registro)
 ```
 

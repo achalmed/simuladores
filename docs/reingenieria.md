@@ -78,10 +78,10 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
 
 - **L1. `VentanaBase` de `gui-comun` 3.0**: catálogo a la izquierda (plegable, F9), el espacio de simulación en el
   centro con sus vistas, los parámetros a la derecha. Sin tabla como vista principal.
-- **L2. Gráfico propio** (`studio/sim_app/qml/componentes/GraficoCientifico.qml`, `Canvas`): cada línea con su propio x (sin
+- **L2. Gráfico propio** (`GraficoXY` de gui-comun 3.1 desde el 2026-11-03; nació aquí como `GraficoCientifico.qml`, `Canvas`): cada línea con su propio x (sin
   remuestrear), barras con el color de cada barra, puntos, equilibrio, líneas verticales y horizontales, leyenda,
   ejes con marcas «redondas» y el valor bajo el cursor. La base se dibuja punteada debajo del escenario.
-- **L3. Colores del modelo por una paleta del tema** (`studio/sim_app/servicios/paleta.py`): cada color del modelo (hex, nombre de
+- **L3. Colores del modelo por una paleta del tema** (`gui_comun.paleta` desde el 2026-11-03; antes, un servicio propio del studio): cada color del modelo (hex, nombre de
   matplotlib, `C0`–`C9`, `tab:*`) se lleva a un rol (azul, rojo, verde, dorado, morado, cian, gris, texto) por su tono, y
   QML pinta cada rol con un color de `Kirigami.Theme`. Ningún color propio en QML.
 - **L4. En vivo**: mover un deslizador recalcula el escenario (agendado, en proceso con el motor); si el modelo tarda
@@ -116,7 +116,7 @@ archivo) y abrir el modelo, a `escritorio.abrirConAplicacion`.
 |---|---|
 | la ventana (L1, L11, L12) | `studio/sim_app/qml/Main.qml` sobre `VentanaBase`; `studio/sim_app/aplicacion.py` (vistas Ctrl+1–6, F9, Ctrl+F, F5, Ctrl+T, F8; `escritorio` de la base; estados de operación) |
 | el catálogo | `studio/sim_app/qml/componentes/CatalogoModelos.qml` sobre `Modelos.catalogo` (una `ModeloLista` filtrada por búsqueda, disciplina y estado) |
-| el gráfico (L2, L3) | `studio/sim_app/qml/componentes/GraficoCientifico.qml` (Canvas) con los datos de `studio/sim_app/servicios/simulacion.py` (`grafico`, `unir_limites`) y los roles de `studio/sim_app/servicios/paleta.py` |
+| el gráfico (L2, L3) | `GraficoXY` de gui-comun 3.1 (Canvas) con los datos de `studio/sim_app/servicios/simulacion.py` (`grafico`, `unir_limites`) y los roles de `gui_comun.paleta` |
 | en vivo (L4) | `studio/sim_app/controladores/modelos.py`: `fijarValor` agenda la corrida (150 ms); `correr(en_vivo=True)` mide; un modelo lento (400 ms) pasa a `_recalcular_en_vivo` en un hilo aparte, con un testigo por modelo |
 | base y escenario (L5) | `graficoBase`, `limitesComunes`; `studio/sim_app/qml/componentes/Comparacion.qml` |
 | sensibilidad (L6) | `simulacion.sensibilidad` sobre `base.sensibilidad`; `studio/sim_app/qml/componentes/Sensibilidad.qml` |
@@ -147,7 +147,7 @@ Verificación (2026-11-02, rama `wip/2026-11-02-reingenieria`):
   400 ms) y los lentos, en un hilo aparte en vez de apagar su modo en vivo.
 - **La sensibilidad alrededor del escenario en edición**: hecha el 2026-11-03 en el servicio del studio
   (`simulacion.sensibilidad(valores=)`); `base.sensibilidad`, que es contrato, no cambió y sigue barriendo la base.
-- **`GraficoCientifico` vive en simuladores**: si otro studio necesita un gráfico científico, se promueve a
-  `gui-comun` (con la paleta de roles).
+- **`GraficoCientifico` subió a `gui-comun`** como `GraficoXY` (3.1, con `gui_comun.paleta` y `PaletaCategorica`); la
+  copia se retiró el 2026-11-03.
 - **Las capturas con esquema forzado** eligen también el tema de Kvantum a juego (como Git Studio): sin eso los
   campos salían claros en el oscuro. Lo común sería que `gui_comun.galeria.esquema.entorno_con_esquema` lo hiciera.

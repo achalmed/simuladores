@@ -26,7 +26,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Kirigami.Heading { level: 4; text: "Base"; Layout.leftMargin: Kirigami.Units.smallSpacing }
-            GraficoCientifico {
+            GraficoXY {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 datos: raiz.m.graficoBase
@@ -42,7 +42,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Kirigami.Heading { level: 4; text: "Escenario «" + raiz.m.escenario + "»"; Layout.leftMargin: Kirigami.Units.smallSpacing }
-            GraficoCientifico {
+            GraficoXY {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 datos: raiz.m.grafico
