@@ -38,7 +38,9 @@ def test_avisos_por_la_base_sin_globos_propios():
         assert not re.search(r"\b(Popup|Drawer|Kirigami\.OverlaySheet)\s*\{", codigo), qml
     main = (QML / "Main.qml").read_text(encoding="utf-8")
     assert main.count("mensajes.mostrar(") == 1                                   # solo `avisar`: lo demás pasa por ella
-    assert 'if (tipo === "pista") pista(texto)' in main and "contexto: ventana.pistaActual || espacio.contexto" in main
+    # la pista es la de Mensajes de gui-comun 4.1 (6 s en la barra de estado): sin `pistaActual` ni `Timer` propios
+    assert 'function pista(texto) { avisar(texto, "pista") }' in main and "contexto: espacio.contexto" in main
+    assert "pistaActual" not in main and "relojPista" not in main
 
 
 def test_la_forma_del_laboratorio():
@@ -104,7 +106,7 @@ raiz = app.motor.rootObjects()[0]
 a, m, i = piezas["acciones"], piezas["modelos"], piezas["interfaz"]
 banda = raiz.findChild(QObject, "bandaVerificaciones")
 m.correr(); app.app.processEvents()
-pista = raiz.property("pistaActual")
+pista = raiz.property("footer").property("textoDerecha")     # lo que se ve a la derecha de la barra de estado
 sin_modelo = banda.property("visible")
 m.verificar_al_abrir = False
 m.irA("demo/d01"); m.verificar(); app.app.processEvents()

@@ -25,7 +25,6 @@ VentanaBase {
     property int vista: 0
     property bool mostrarCatalogo: true
     property bool mostrarVerificaciones: true
-    property string pistaActual: ""            // lo efímero («elige primero un modelo»): a la barra de estado, unos segundos
     readonly property var vistas: [modelos.temporal ? "Evolución temporal" : "Simulación", "Comparación", "Sensibilidad", "Ficha", "Verificaciones", "Laboratorio"]
 
     title: (modelos.hayActual ? modelos.id + " · " + modelos.titulo : "Laboratorio") + " — Simuladores Studio"
@@ -40,13 +39,10 @@ VentanaBase {
 
     function accion(nombre) { return registro.accion(nombre) }
     function irAVista(i) { ventana.vista = Math.max(0, Math.min(ventana.vistas.length - 1, i)) }
-    function pista(texto) { pistaActual = texto; relojPista.restart() }
-    // un aviso de los controladores: la pista a la barra de estado; lo demás, a Mensajes (sin acciones: Plasma)
-    function avisar(texto, tipo) {
-        if (tipo === "pista") pista(texto)
-        else ventana.mensajes.mostrar(texto, tipo || "informacion")
-    }
-    Timer { id: relojPista; interval: 6000; onTriggered: ventana.pistaActual = "" }
+    // lo efímero («elige primero un modelo»): la pista de Mensajes, 6 s en la barra de estado (gui-comun 4.1)
+    function pista(texto) { avisar(texto, "pista") }
+    // un aviso de los controladores, a Mensajes: la pista a la barra de estado; lo demás, sin acciones, a Plasma
+    function avisar(texto, tipo) { ventana.mensajes.mostrar(texto, tipo || "informacion") }
 
     Settings {
         category: "espacio"
@@ -224,7 +220,7 @@ VentanaBase {
 
     footer: BarraEstado {
         resumen: espacio.resumen
-        contexto: ventana.pistaActual || espacio.contexto
+        contexto: espacio.contexto                // la pista de Mensajes lo tapa mientras dura
         tareas: studio.tareas
         onProgresoPulsado: { irAVista(5); laboratorio.pestana = 2 }
     }
