@@ -19,7 +19,7 @@ class Operaciones(QObject):
     cambiado = Signal()
     corridaCambiada = Signal()
     terminada = Signal(str, bool, int)      # id, aplicar, código
-    aviso = Signal(str, str)
+    aviso = Signal(str, str)              # texto, tipo: informacion · positivo · aviso · error (Mensajes → Plasma) · pista (la barra de estado, 6 s)
 
     def __init__(self, espacio, modelos, ajustes, consola, tareas, cache: Path | None = None, parent=None):
         super().__init__(parent)
@@ -273,7 +273,7 @@ class Operaciones(QObject):
         """F5: correr o verificar en proceso, el plan de lo que escribe, o la CLI del laboratorio."""
         o = self._op()
         if o is None or not self.puedeSimular:
-            self.aviso.emit(self.motivoNoSimular, "aviso")
+            self.aviso.emit(self.motivoNoSimular, "pista")
             return False
         if o.en_proceso == "correr":
             ok = self.modelos.correr()
@@ -305,7 +305,7 @@ class Operaciones(QObject):
         """Ctrl+Intro, tras la confirmación en QML."""
         o = self._op()
         if o is None or not self.puedeAplicar:
-            self.aviso.emit(self.motivoNoAplicar, "aviso")
+            self.aviso.emit(self.motivoNoAplicar, "pista")
             return False
         if o.en_proceso == "guardar":
             ok = self.modelos.guardarEscenario(self._valor_de(o))

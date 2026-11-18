@@ -108,7 +108,7 @@ QQC2.Control {
                             implicitWidth: Kirigami.Units.iconSizes.small
                             implicitHeight: implicitWidth
                             Layout.alignment: Qt.AlignTop
-                            Layout.topMargin: 2
+                            Layout.topMargin: Kirigami.Units.smallSpacing / 2
                         }
                         ColumnLayout {
                             Layout.fillWidth: true

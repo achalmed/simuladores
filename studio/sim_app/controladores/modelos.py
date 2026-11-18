@@ -56,7 +56,7 @@ class Modelos(QObject):
     calculandoCambiado = Signal()       # un recálculo en vivo corre en el hilo aparte (modelo lento)
     _hecho = Signal(int, object, str, float, object)   # desde el hilo: token, corrida, error, segundos, valores
     seleccionar = Signal(int)           # QML: selecciona esa fila visible de la tabla
-    aviso = Signal(str, str)
+    aviso = Signal(str, str)              # texto, tipo: informacion · positivo · aviso · error (Mensajes → Plasma) · pista (la barra de estado, 6 s)
 
     def __init__(self, espacio, consola, cache: Path | None = None, datos: Path | None = None, raiz: Path | None = None, parent=None):
         super().__init__(parent)
@@ -575,7 +575,7 @@ class Modelos(QObject):
         recálculo en vivo pasa a un hilo aparte (L4; antes se apagaba)."""
         if self._m is None:
             if not en_vivo:
-                self.aviso.emit(self._motivo or "Elige primero un modelo.", "aviso")
+                self.aviso.emit(self._motivo or "Elige primero un modelo.", "pista")
             return False
         self.lab.activar(self.disciplina)
         inicio = time.monotonic()
@@ -600,7 +600,7 @@ class Modelos(QObject):
         if self._ms > TOPE_VIVO_MS and not self._lento:
             self._lento = True
             self.vivoCambiado.emit()
-            self.aviso.emit(f"{self.id} tarda {self._ms:.0f} ms por cálculo: el recálculo en vivo sigue, en un hilo aparte (la ventana no se detiene).", "informacion")
+            self.aviso.emit(f"{self.id} tarda {self._ms:.0f} ms por cálculo: el recálculo en vivo sigue, en un hilo aparte (la ventana no se detiene).", "pista")
         self._corrida = corrida
         self._corrida["base"] = base.get("resultados", [])
         self._grafico = self._armar_grafico()
@@ -799,7 +799,7 @@ class Modelos(QObject):
 
     def escribirDatos(self) -> bool:
         if not self._corrida:
-            self.aviso.emit("No hay corrida que exportar: corre primero el escenario.", "aviso")
+            self.aviso.emit("No hay corrida que exportar: corre primero el escenario.", "pista")
             return False
         carpeta = self._carpeta_salidas()
         nombre = self._escenario or "base"
@@ -856,7 +856,7 @@ class Modelos(QObject):
     def verificar(self) -> bool:
         """F5 de «Verificar el modelo»: `base.verificar` y las citas, en proceso; el estado queda en la caché."""
         if self._m is None:
-            self.aviso.emit(self._motivo or "Elige primero un modelo.", "aviso")
+            self.aviso.emit(self._motivo or "Elige primero un modelo.", "pista")
             return False
         self.lab.activar(self.disciplina)
         try:
@@ -897,6 +897,12 @@ class Modelos(QObject):
     @Property(str, notify=verificacionCambiada)
     def fechaVerificacion(self) -> str:
         return self.estados.registro(self._actual).get("fecha", "") if self._actual else ""
+
+    @Property(str, notify=verificacionCambiada)
+    def fuenteVerificaciones(self) -> str:
+        """La fuente contra la que se verifica el modelo: su procedencia (la de la ficha o, si no la declara, la de la
+        disciplina), tal como la guardó la última verificación. Las citas (`Ficha.fuentes`) llevan la suya en su fila."""
+        return next((str(f.get("fuente", "")) for f in self._verificaciones.todas() if not str(f.get("mensaje", "")).startswith("cita ·")), "")
 
     @Property(str, notify=verificacionCambiada)
     def resumenVerificacion(self) -> str:

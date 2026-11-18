@@ -138,9 +138,8 @@ QQC2.Control {
                             // la marca de la base
                             Rectangle {
                                 visible: parametro.cambiado
-                                width: 2
+                                width: Kirigami.Units.smallSpacing / 2
                                 height: Kirigami.Units.gridUnit * 0.7
-                                radius: 1
                                 color: Kirigami.Theme.disabledTextColor
                                 y: deslizador.topPadding + deslizador.availableHeight / 2 - height / 2
                                 x: deslizador.leftPadding + (parametro.modelData.valor - deslizador.from) / Math.max(1e-12, deslizador.to - deslizador.from) * deslizador.availableWidth - 1

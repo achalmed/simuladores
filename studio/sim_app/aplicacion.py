@@ -3,8 +3,9 @@ registro de acciones (menú, paleta, atajos) y carga `qml/Main.qml` (VentanaBase
 
 Toda operación existe una sola vez, aquí, en `Acciones`, con su estado (lectura, simulación, escritura, instalación).
 El experimento: F5 corre el escenario, Ctrl+T verifica, Ctrl+Mayús+R vuelve a la base y mover un parámetro recalcula
-en vivo; Ctrl+1–6 las vistas del espacio de simulación, F9 el catálogo, Ctrl+F buscar un modelo. Las demás operaciones
-del catálogo (`op.<id>`) se eligen en la vista Laboratorio y Ctrl+Intro las aplica tras confirmar con la orden exacta.
+en vivo; Ctrl+1–6 las vistas del espacio de simulación, F9 el catálogo, Ctrl+Mayús+T las verificaciones al pie,
+Ctrl+F buscar un modelo. Las demás operaciones del catálogo (`op.<id>`) se eligen en la vista Laboratorio y Ctrl+Intro
+las aplica tras confirmar con la orden exacta.
 Abrir el modelo y mostrarlo en Dolphin son de `escritorio` de la base. Lo que necesita un diálogo o una vista lo pide a
 QML por `Interfaz.pedir`. Python no construye interfaz; la ventana no edita ningún modelo.
 """
@@ -92,6 +93,8 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
                        descripcion="El campo de búsqueda del catálogo")
     # --- Ver: el catálogo, las vistas del espacio de simulación, la disciplina y el estado
     acciones.registrar("ver.catalogo", "Mostrar u ocultar el &catálogo", "sidebar-show-symbolic", "F9", "Ver", al_disparar=pedir("catalogo"))
+    acciones.registrar("ver.verificaciones", "Mostrar u ocultar las &verificaciones al pie", "checkmark", "Ctrl+Shift+T", "Ver", al_disparar=pedir("verificaciones"),
+                       descripcion="Las verificaciones del modelo contra la teoría, con su fuente, bajo el gráfico y los parámetros")
     for i, (nombre, texto, icono) in enumerate(VISTAS):
         acciones.registrar(f"ver.vista.{nombre}", texto, icono, f"Ctrl+{i + 1}", "Ver › Vista", al_disparar=pedir("vista", indice=i))
     acciones.registrar("ver.disciplina", "&Todas las disciplinas", "view-list-tree", None, "Ver › Disciplina", marcable=True,
@@ -143,7 +146,7 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
     acciones.definir_menus([
         ("&Archivo", ["archivo.abrir", "archivo.carpeta", "archivo.terminal", "archivo.copiar", "|", "archivo.catalogo", "|", "app.salir"]),
         ("&Editar", ["editar.buscar"]),
-        ("&Ver", ["ver.catalogo", "|"] + [f"ver.vista.{n}" for n, _t, _i in VISTAS] + ["ver.salida", "|",
+        ("&Ver", ["ver.catalogo", "ver.verificaciones", "|"] + [f"ver.vista.{n}" for n, _t, _i in VISTAS] + ["ver.salida", "|",
                   ("&Disciplina", ["ver.disciplina"] + [f"ver.disciplina.{d}" for d in disciplinas]),
                   ("&Estado", ["ver.estado", "ver.estado.verificado", "ver.estado.diferencias", "ver.estado.sin_verificar"]), "|",
                   "ver.figura", "ver.releer", "|", "ventana.pantalla_completa"]),
@@ -166,7 +169,7 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
     def recorrido() -> None:
         carpeta = modelos.carpetaDisciplina
         if not (Path(carpeta) / "main.py").is_file():
-            interfaz.pedir.emit("aviso", {"texto": "Elige un modelo o una disciplina: el recorrido es de la disciplina (main.py app).", "tipo": "aviso"})
+            interfaz.pedir.emit("aviso", {"texto": "Elige un modelo o una disciplina: el recorrido es de la disciplina (main.py app).", "tipo": "pista"})
             return
         subprocess.Popen([rutas.interprete(), "main.py", "app"], cwd=carpeta)
         consola.registrar("info", f"Recorrido guiado de {Path(carpeta).name}: se abre en su propia ventana; elige el modelo en su menú.")

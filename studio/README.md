@@ -6,7 +6,7 @@ estado: activo
 <!-- suite:inicio -->
 **Suite `simuladores_studio`** · objetivo *publicacion* · estado *activo* · python · interfaz gui
 
-Laboratorio de simulación (QML + Kirigami sobre gui-comun 3.0, VentanaBase): el catálogo de modelos por disciplina, el espacio de simulación con el gráfico que se redibuja al mover los parámetros (deslizadores con el rango del modelo), el escenario frente a la base lado a lado, la evolución temporal, la sensibilidad de un parámetro, los resultados numéricos, la ficha pedagógica y las verificaciones; un resultado solo se presenta como válido si las verificaciones del modelo pasan. F5 corre, Ctrl+T verifica, Ctrl+Intro exporta, guarda un escenario o regenera el catálogo tras confirmar.
+Laboratorio de simulación (QML + Kirigami sobre gui-comun 3.0, VentanaBase): el catálogo de modelos por disciplina, el espacio de simulación con el gráfico que se redibuja al mover los parámetros (deslizadores con el rango del modelo), el escenario frente a la base lado a lado, la evolución temporal, la sensibilidad de un parámetro, los resultados numéricos, la ficha pedagógica y, al pie, las verificaciones contra la teoría con su fuente; el equilibrio marcado; los colores del tema de KDE y los avisos en sus notificaciones; un resultado solo se presenta como válido si las verificaciones del modelo pasan. F5 corre, Ctrl+T verifica, Ctrl+Intro exporta, guarda un escenario o regenera el catálogo tras confirmar.
 
 - Escribe en: archivos · simula por defecto: sí
 - Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), {'gui-comun 3.0 (módulo QML GuiComun': 'VentanaBase, escritorio, estados de operación)'}, .venv del repo con matplotlib para la figura académica, las fórmulas, los reportes y las CLI (requirements.txt; opcional), el motor del repo (base.py, navegador.py) y los modelos de cada disciplina, sin copiarlos
@@ -20,20 +20,23 @@ main.py --smoke
 ../install.sh
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-11-02); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-11-18); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 ## Qué es
 
 Un laboratorio de simulación al modo de MATLAB, RStudio y JupyterLab (`../docs/reingenieria.md`), sobre `VentanaBase`
-de `gui-comun` 3.0:
+de `gui-comun` 3.0, con la forma propia aprobada el 2026-11-18 (`../docs/decisiones.md`): el catálogo a la izquierda,
+las curvas al centro, los parámetros a la derecha y las verificaciones al pie. Sin colores propios: todo sale del
+esquema de KDE activo y sigue el cambio de claro a oscuro con la ventana abierta.
 
 ![Simuladores Studio: el escenario sobre la base](../docs/figuras/simuladores-studio-claro.png)
 
 - **El catálogo** (izquierda; F9 lo pliega): los modelos de `catalogo.json` por disciplina y sección, con su estado de
   verificación; Ctrl+F busca, los botones filtran por disciplina y el combo por estado.
 - **El espacio de simulación** (centro; Ctrl+1–6): **Simulación** —o **Evolución temporal** cuando el eje x es el
-  tiempo— con el gráfico grande del escenario sobre la base punteada y los resultados frente a la base; **Comparación**,
+  tiempo— con las curvas del escenario sobre las de la base punteadas, el **equilibrio** marcado en el gráfico y dicho
+  arriba con sus cifras y las de la base (cuando el modelo lo declara), y los resultados frente a la base; **Comparación**,
   base y escenario lado a lado con la misma escala, la lectura del escenario y las diferencias; **Sensibilidad**, el
   barrido de un parámetro sobre su rango declarado (`base.sensibilidad`) con el valor base y la derivada; **Ficha**, la
   ficha pedagógica (objetivo, fundamento, ecuaciones dibujadas con el `.venv`, variables, parámetros, supuestos,
@@ -43,9 +46,14 @@ de `gui-comun` 3.0:
   el rango, el paso y la unidad que el modelo declara; el valor se escribe también a mano. **Mover un deslizador
   recalcula en vivo** (150 ms tras el último cambio); si un modelo tarda más de 400 ms, su recálculo en vivo va a un
   hilo aparte (la ventana sigue atendiendo; solo el último valor pedido se pinta).
+- **Las verificaciones contra la teoría** (al pie; Ctrl+Mayús+T la pliega): cuántas pasan y cuándo, la fuente contra la
+  que se verifica (la procedencia del modelo o de su disciplina) y una fila por verificación con lo que el motor
+  devolvió; en una cita, su propia fuente. Doble clic, o el botón de la derecha, lleva a la vista Verificaciones.
 - **Validez**: una corrida solo se presenta como válida si el modelo está verificado con su archivo actual y sus
   números son finitos. Si no, el gráfico lleva «NO VÁLIDO» o «SIN VERIFICAR», los resultados se atenúan, el motivo va
-  arriba y el chip de la cabecera lo dice. Al abrir un modelo sin estado se verifica solo.
+  arriba y la etiqueta de la cabecera lo dice. Al abrir un modelo sin estado se verifica solo.
+- **Avisos**: lo que no pide decisión («3 de 3 verificaciones superadas», el fin de una operación) va a las
+  notificaciones de KDE; las pistas («elige primero un modelo»), a la barra de estado unos segundos.
 
 ![Un modelo con una verificación fallida: NO VÁLIDO](../docs/figuras/simuladores-studio-invalido.png)
 
@@ -65,6 +73,7 @@ cd ~/Documents/simuladores
 ./install.sh                               # el acceso directo del menú (-n simula)
 tests/run.sh                               # las pruebas del studio sobre el laboratorio de muestra
 /usr/bin/python3 studio/capturar.py salida.png --esquema ~/Documents/lliphi/generado/esquema/LliphiOscuro.colors --modelo demo/d03 --valor s=0.35 --vista 1
+/usr/bin/python3 studio/capturar.py claro.png --esquema …/LliphiClaro.colors --vivo …/LliphiOscuro.colors   # el cambio en vivo, aislado
 ```
 
 Sin el `.venv` la ventana corre igual (correr y verificar un modelo: el motor registra un `matplotlib` vacío, como en
@@ -83,7 +92,8 @@ studio/
     │                       validez), paleta (colores del modelo → roles del tema), verificaciones, fichas, formulas, operaciones
     ├── controladores/      espacio (filtros), modelos (catálogo, modelo actual, en vivo, base, sensibilidad, validez), operaciones, ajustes
     └── qml/                Main.qml sobre GuiComun.VentanaBase y componentes/ (CatalogoModelos, PanelParametros,
-                            EspacioSimulacion, Comparacion, Sensibilidad, Ficha, Verificaciones, Laboratorio, Operacion, Registro)
+                            EspacioSimulacion, BandaVerificaciones, Comparacion, Sensibilidad, Ficha, Verificaciones,
+                            Laboratorio, Operacion, Registro)
 ```
 
 Los estados de verificación y las corridas viven en la caché del studio (`$XDG_CACHE_HOME/simuladores-studio/`); los
@@ -101,3 +111,7 @@ escenarios propios, en `$XDG_DATA_HOME/simuladores-studio/escenarios/`; nada de 
 - **Una captura con esquema forzado** necesita el tema de Kvantum a juego (`capturar.py` lo escribe): con la
   `QApplication` de 3.0 los campos los pinta Kvantum con la paleta de su propio tema.
 - **El recorrido guiado** (`main.py app`) se abre en su propia ventana matplotlib; no está dentro del studio.
+- **La figura académica** (Ctrl+G) no sigue el tema: es la de matplotlib, con fondo blanco y la paleta del laboratorio,
+  la misma que va al reporte (un dato que se exporta, no un color de la ventana).
+- **El cambio de claro a oscuro en vivo** lo hace todo el studio; los campos y las pestañas que pinta Kvantum siguen a
+  Kvantum, que no se recarga con el esquema (es del entorno).

@@ -2,7 +2,7 @@
 # Contrato: core/suite.schema.yml; core/suites.py validar lo comprueba y generar escribe los índices y README.
 id: simuladores_studio
 objetivo: publicacion
-resumen: 'Laboratorio de simulación (QML + Kirigami sobre gui-comun 3.0, VentanaBase): el catálogo de modelos por disciplina, el espacio de simulación con el gráfico que se redibuja al mover los parámetros (deslizadores con el rango del modelo), el escenario frente a la base lado a lado, la evolución temporal, la sensibilidad de un parámetro, los resultados numéricos, la ficha pedagógica y las verificaciones; un resultado solo se presenta como válido si las verificaciones del modelo pasan. F5 corre, Ctrl+T verifica, Ctrl+Intro exporta, guarda un escenario o regenera el catálogo tras confirmar.'
+resumen: 'Laboratorio de simulación (QML + Kirigami sobre gui-comun 3.0, VentanaBase): el catálogo de modelos por disciplina, el espacio de simulación con el gráfico que se redibuja al mover los parámetros (deslizadores con el rango del modelo), el escenario frente a la base lado a lado, la evolución temporal, la sensibilidad de un parámetro, los resultados numéricos, la ficha pedagógica y, al pie, las verificaciones contra la teoría con su fuente; el equilibrio marcado; los colores del tema de KDE y los avisos en sus notificaciones; un resultado solo se presenta como válido si las verificaciones del modelo pasan. F5 corre, Ctrl+T verifica, Ctrl+Intro exporta, guarda un escenario o regenera el catálogo tras confirmar.'
 escribe_en:
 - archivos
 simula_por_defecto: true

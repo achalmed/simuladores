@@ -9,6 +9,12 @@ espacio de simulación y, si se pide, la paleta.
     /usr/bin/python3 studio/capturar.py docs/figuras/simuladores-studio-claro.png --esquema ~/Documents/lliphi/generado/esquema/LliphiClaro.colors --modelo demo/d02 --vista 0
     /usr/bin/python3 studio/capturar.py salida.png --modelo demo/d03 --valor s=0.35 --vista 1
     /usr/bin/python3 studio/capturar.py salida.png --paleta "mercado"
+    /usr/bin/python3 studio/capturar.py claro.png --esquema …/LliphiClaro.colors --vivo …/LliphiOscuro.colors   # + claro-vivo.png
+
+`--vivo` prueba el cambio de esquema con la ventana abierta, AISLADO: corre dentro de `dbus-run-session` (un bus de
+sesión propio), captura, reescribe el kdeglobals TEMPORAL con el otro esquema, emite `notifyChange` solo en ese bus y
+vuelve a capturar sin reiniciar (`<salida>-vivo.png`). Nunca toca el escritorio de quien lo corre; si el bus resultara
+ser el de la sesión, no emite nada y sale con error.
 
 Antes de capturar corre de verdad, sobre la muestra, el escenario del modelo elegido y sus verificaciones (el motor
 en proceso). El gráfico es un Canvas: la plataforma offscreen lo dibuja con su renderizador (`QT_QUICK_BACKEND=rhi`).
@@ -26,6 +32,21 @@ AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 
 
+def _detener_servicios_del_bus(carpeta: str) -> None:
+    """Los servicios que el bus propio activó (el portal, ksecretd) sobreviven a `dbus-run-session`: se detienen por su
+    PID, solo los que llevan en su entorno la carpeta temporal de ESTA captura (nunca por nombre ni por patrón)."""
+    import signal
+    marca = f"SIMULADORES_STUDIO_CAPTURA={carpeta}".encode()
+    for proc in Path("/proc").iterdir():
+        if not proc.name.isdigit() or int(proc.name) == os.getpid():
+            continue
+        try:
+            if marca in (proc / "environ").read_bytes().split(b"\0"):
+                os.kill(int(proc.name), signal.SIGTERM)
+        except (OSError, ValueError):
+            continue
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Captura de Simuladores Studio sobre el laboratorio de muestra")
     parser.add_argument("salida")
@@ -38,6 +59,7 @@ def main() -> int:
     parser.add_argument("--sensibilidad", default="", help="parametro[:magnitud] que barre la vista Sensibilidad")
     parser.add_argument("--sin-correr", action="store_true", help="no corre ni verifica antes de capturar")
     parser.add_argument("--paleta", default=None, help="abre la paleta de órdenes con este texto")
+    parser.add_argument("--vivo", default=None, help="otro .colors: tras capturar, el cambio en vivo a ese esquema (aislado) y una segunda captura")
     parser.add_argument("--ancho", type=int, default=1400)
     parser.add_argument("--alto", type=int, default=860)
     args = parser.parse_args()
@@ -69,7 +91,16 @@ def main() -> int:
         env.setdefault("QT_QPA_PLATFORMTHEME", "kde")
         env.setdefault("QT_QUICK_BACKEND", "rhi")
         orden = [sys.executable, str(AQUI / "capturar.py")] + [a for a in sys.argv[1:] if not a.startswith("--esquema") and a != args.esquema]
+        if args.vivo:
+            if not shutil.which("dbus-run-session"):
+                print("--vivo necesita dbus-run-session (el bus propio): no se prueba en el bus de la sesión", file=sys.stderr)
+                return 2
+            orden = [a if a != args.vivo else str(Path(args.vivo).expanduser().resolve()) for a in orden]
+            env["SIMULADORES_STUDIO_BUS_SESION"] = os.environ.get("DBUS_SESSION_BUS_ADDRESS", "")
+            orden = ["dbus-run-session", "--"] + orden
         codigo = subprocess.run(orden, env=env).returncode
+        if args.vivo:
+            _detener_servicios_del_bus(str(carpeta))
         shutil.rmtree(carpeta, ignore_errors=True)
         return codigo
 
@@ -106,7 +137,34 @@ def main() -> int:
         QTimer.singleShot(300, lambda: interfaz.pedir.emit("vista", {"indice": args.vista}))
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: interfaz.pedir.emit("paleta", {"texto": args.paleta}))
+        if args.vivo:
+            QTimer.singleShot(3200, lambda: capturar_y_cambiar())
+            return
         app.capturar(args.salida, espera_ms=2400)
+
+    def capturar_y_cambiar():
+        """El cambio de esquema en vivo, solo en el bus propio de dbus-run-session (nunca en el de la sesión)."""
+        raiz.grabWindow().save(args.salida)
+        print("CAPTURA", args.salida, "· texto", modelos._color_texto)
+        bus = os.environ.get("DBUS_SESSION_BUS_ADDRESS", "")
+        if not bus or bus == os.environ.get("SIMULADORES_STUDIO_BUS_SESION", ""):
+            print("el bus es el de la sesión: no se emite notifyChange", file=sys.stderr)
+            app.app.exit(2)
+            return
+        from gui_comun.galeria.esquema import kdeglobals_con_esquema
+        config = Path(os.environ["XDG_CONFIG_HOME"])
+        vivo = Path(args.vivo)
+        kdeglobals_con_esquema(vivo, config / "kdeglobals", kdeglobals=config / "kdeglobals")
+        if (config / "Kvantum" / vivo.stem).is_dir():
+            (config / "Kvantum" / "kvantum.kvconfig").write_text(f"[General]\ntheme={vivo.stem}\n", encoding="utf-8")
+        subprocess.run(["dbus-send", "--session", "--type=signal", "/KGlobalSettings", "org.kde.KGlobalSettings.notifyChange", "int32:0", "int32:0"], check=False)
+        segunda = str(Path(args.salida).with_name(Path(args.salida).stem + "-vivo.png"))
+
+        def segunda_captura():
+            raiz.grabWindow().save(segunda)
+            print("CAPTURA", segunda, "· texto", modelos._color_texto)
+            app.app.quit()
+        QTimer.singleShot(3500, segunda_captura)
 
     QTimer.singleShot(400, listo)
     codigo = app.app.exec()

@@ -1,7 +1,9 @@
-// EspacioSimulacion — la vista principal (reingeniería L2, L7, L8): el gráfico grande del escenario (sólido) sobre la
-// base (punteada), que se redibuja al mover los parámetros; «Evolución temporal» cuando el eje x es el tiempo; debajo,
-// los resultados numéricos frente a la base. Si la corrida no puede presentarse como válida (verificaciones fallidas,
-// sin verificar, números no finitos), el gráfico lleva la marca, la tabla se atenúa y el motivo va arriba.
+// EspacioSimulacion — la vista principal (reingeniería L2, L7, L8; forma del laboratorio, 2026-11-18): las curvas del
+// escenario (sólidas) sobre las de la base (punteadas), que se mueven al arrastrar los parámetros; el equilibrio, marcado
+// en el gráfico y dicho con sus cifras arriba, frente al de la base; «Evolución temporal» cuando el eje x es el tiempo;
+// debajo, los resultados numéricos frente a la base. Si la corrida no puede presentarse como válida (verificaciones
+// fallidas, sin verificar, números no finitos), el gráfico lleva la marca, la tabla se atenúa y el motivo va arriba, en
+// una línea con el color de estado del tema (es un estado, no un aviso: no va a Mensajes).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -14,14 +16,38 @@ ColumnLayout {
     readonly property var v: m.validez
     readonly property bool valido: v.valido === true
     readonly property bool figura: studio.ajustes.figuraAcademica && m.figura !== ""
+    readonly property var eq: m.hayCorrida && m.grafico ? (m.grafico.equilibrio || null) : null
+    readonly property var eqBase: m.escenario !== "base" && m.graficoBase ? (m.graficoBase.equilibrio || null) : null
+    readonly property color colorNivel: v.nivel === "negativo" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
     spacing: 0
 
-    Kirigami.InlineMessage {
+    // una cifra del equilibrio, con los decimales que su tamaño pide
+    function cifra(x) {
+        const a = Math.abs(x)
+        return Number(x).toLocaleString(Qt.locale(), "f", a >= 1000 ? 0 : (a >= 10 ? 1 : (a >= 1 ? 2 : 3)))
+    }
+
+    RowLayout {
         Layout.fillWidth: true
-        Layout.margins: Kirigami.Units.smallSpacing
+        Layout.leftMargin: Kirigami.Units.largeSpacing
+        Layout.rightMargin: Kirigami.Units.largeSpacing
+        Layout.topMargin: Kirigami.Units.smallSpacing
         visible: raiz.m.hayCorrida && !raiz.valido && (raiz.v.titulo || "") !== ""
-        type: raiz.v.nivel === "negativo" ? Kirigami.MessageType.Error : Kirigami.MessageType.Warning
-        text: "<b>" + (raiz.v.titulo || "") + "</b> — " + (raiz.v.texto || "")
+        spacing: Kirigami.Units.smallSpacing
+        Kirigami.Icon {
+            source: raiz.v.nivel === "negativo" ? "data-error" : "data-warning"
+            color: raiz.colorNivel
+            implicitWidth: Kirigami.Units.iconSizes.small
+            implicitHeight: implicitWidth
+            Layout.alignment: Qt.AlignTop
+        }
+        QQC2.Label {
+            Layout.fillWidth: true
+            text: "<b>" + (raiz.v.titulo || "") + "</b> · " + (raiz.v.texto || "")
+            textFormat: Text.StyledText
+            color: raiz.colorNivel
+            wrapMode: Text.WordWrap
+        }
     }
     QQC2.SplitView {
         Layout.fillWidth: true
@@ -45,6 +71,29 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: raiz.m.hayCorrida ? "escenario «" + raiz.m.escenario + "»" + (raiz.m.escenario !== "base" ? " sobre la base (punteada)" : "")
                                               + (raiz.figura ? " · figura académica (matplotlib)" : "") : ""
+                    color: Kirigami.Theme.disabledTextColor
+                    elide: Text.ElideRight
+                }
+            }
+            // el equilibrio con sus cifras: el mismo punto que marca el gráfico (el acento del tema), y el de la base
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.largeSpacing
+                Layout.rightMargin: Kirigami.Units.largeSpacing
+                visible: raiz.eq !== null && !raiz.figura
+                spacing: Kirigami.Units.smallSpacing
+                QQC2.Label { text: "●"; color: Kirigami.Theme.highlightColor; Accessible.ignored: true }
+                QQC2.Label {
+                    text: raiz.eq ? "Equilibrio E: " + (raiz.m.grafico.etiquetaX || "x") + " = " + raiz.cifra(raiz.eq.x)
+                                    + " · " + (raiz.m.grafico.etiquetaY || "y") + " = " + raiz.cifra(raiz.eq.y) : ""
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                    Layout.maximumWidth: raiz.width * 0.7
+                }
+                QQC2.Label {
+                    Layout.fillWidth: true
+                    visible: raiz.eqBase !== null
+                    text: raiz.eqBase ? "base: " + raiz.cifra(raiz.eqBase.x) + " · " + raiz.cifra(raiz.eqBase.y) : ""
                     color: Kirigami.Theme.disabledTextColor
                     elide: Text.ElideRight
                 }
@@ -76,8 +125,8 @@ ColumnLayout {
             }
         }
         ColumnLayout {
-            QQC2.SplitView.preferredHeight: Kirigami.Units.gridUnit * 10
-            QQC2.SplitView.minimumHeight: Kirigami.Units.gridUnit * 5
+            QQC2.SplitView.preferredHeight: Kirigami.Units.gridUnit * 8
+            QQC2.SplitView.minimumHeight: Kirigami.Units.gridUnit * 4
             spacing: 0
             Kirigami.Separator { Layout.fillWidth: true }
             RowLayout {

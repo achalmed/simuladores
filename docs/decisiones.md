@@ -14,6 +14,33 @@ de la ventana.
 
 ## La ventana
 
+- **2026-11-18 · Simuladores Studio toma su forma propia, el laboratorio, con los colores del tema y los avisos en
+  Plasma.** El autor aprobó para los diez programas de la familia una forma propia cada uno, sin colores propios («el
+  color que toman depende de mi tema personal de KDE») y con las notificaciones de KDE, no internas. La de este studio:
+  1. **El catálogo por disciplina a la izquierda, las curvas en vivo al centro, los parámetros a la derecha** (ya
+     estaban) y, **al pie, las verificaciones contra la teoría con su fuente** (`BandaVerificaciones.qml`): cuántas
+     pasan y cuándo, la fuente contra la que se verifica (la procedencia que declara el modelo o, si no, su disciplina)
+     y una fila por verificación con su resultado en color de estado; en una cita (`Ficha.fuentes`), su propia fuente.
+     Va bajo el centro y los parámetros, no bajo el catálogo: es del modelo abierto. Se ve en las vistas del
+     experimento (Simulación, Comparación, Sensibilidad); la lista completa sigue en Verificaciones (Ctrl+5) y
+     Ctrl+Mayús+T la pliega. Antes las verificaciones eran solo una pestaña: el resultado se leía sin ver contra qué
+     se validaba.
+  2. **El equilibrio, marcado y dicho**: el punto del gráfico (el acento del tema, como antes) y, sobre él, «Equilibrio
+     E» con las cifras de los dos ejes y las de la base. Solo cuando el modelo lo declara (`curvas()["equilibrio"]`): no
+     se calcula un cruce que el modelo no afirma.
+  3. **Cero colores, radios y tamaños propios**: la pastilla de validez de la cabecera pasa a `EtiquetaNivel` de
+     gui-comun; la marca de la base en el deslizador pierde su radio y su ancho en píxeles. Las curvas siguen con los
+     roles del tema (`PaletaCategorica.rol`, que conserva el sentido del color del modelo: la demanda azul, la oferta
+     roja). La **figura académica** (Ctrl+G, matplotlib, fondo blanco, la paleta del laboratorio) **se conserva fija**:
+     es el dato que se exporta al reporte y debe salir igual con cualquier tema, como resolvió Datafw en su §8.19.
+  4. **Avisos**: los que no piden decisión ya iban a Plasma por `Mensajes` de la base; las **pistas** ante una acción
+     imposible («Elige primero un modelo», por qué no se puede correr o aplicar, que un modelo lento se calcula en un
+     hilo aparte) pasan a la barra de estado seis segundos (tipo `pista` en la señal `aviso`). El «NO VÁLIDO» de
+     Simulación deja de ser un `InlineMessage`: es un estado, no un aviso, y va en una línea con el color de estado.
+  5. **El cambio de claro a oscuro con la ventana abierta**: las fórmulas de la ficha se vuelven a dibujar con el color
+     del texto nuevo (antes solo al abrir un modelo). `capturar.py --vivo` lo prueba aislado (`dbus-run-session`, HOME
+     y kdeglobals temporales, `notifyChange` solo en ese bus) y detiene por su PID los servicios que ese bus activó.
+
 - **2026-11-03 · La sensibilidad sigue al escenario y un modelo lento se calcula en un hilo, sin apagar el modo en vivo.**
   El barrido de la ventana mantiene los demás parámetros del escenario en edición y toma la derivada en su valor
   (`studio/sim_app/servicios/simulacion.py`); sin cambios es `base.sensibilidad` del motor, que no se tocó (contrato del

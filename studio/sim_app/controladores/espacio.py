@@ -17,7 +17,7 @@ class Espacio(QObject):
     filtroCambiado = Signal()
     resumenCambiado = Signal()
     contextoCambiado = Signal()
-    aviso = Signal(str, str)
+    aviso = Signal(str, str)              # texto, tipo: informacion · positivo · aviso · error (Mensajes → Plasma) · pista (la barra de estado, 6 s)
 
     def __init__(self, consola, ajustes=None, parent=None):
         super().__init__(parent)
