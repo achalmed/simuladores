@@ -3,66 +3,614 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Maqueta — Simuladores</title>
+<title>Maqueta de Simuladores Studio</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-/* Variables de respaldo: imitan las del anfitrión donde se mostró la maqueta. */
-:root{color-scheme:light;
---bg-primary:#ffffff;--surface-1:#f4f3ef;--surface-2:#ffffff;
---text-primary:#1c1c1e;--text-secondary:#6b6b66;--text-muted:#8e8e88;
---text-accent:#2563eb;--text-success:#15803d;--text-warning:#b45309;--text-danger:#b91c1c;
---border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.24);--border-accent:#2563eb;--border-danger:#dc2626;--border-warning:#d97706;
---bg-accent:#dbe7fd;--bg-accent-muted:#eef3fe;--bg-success:#dcfce7;--bg-warning:#fef3c7;--bg-danger:#fee2e2;
---fill-accent:#2563eb;--fill-success:#16a34a;--fill-warning:#d97706;--fill-danger:#dc2626;--fill-ghost-selected:rgba(0,0,0,.06);
---on-accent:#ffffff;--radius:8px;
---font-sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;--font-voice:Georgia,"Source Serif 4",serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
---bg-primary:#1c1c1e;--surface-1:#242426;--surface-2:#2c2c2e;
---text-primary:#f5f5f0;--text-secondary:#a0a09a;--text-muted:#7c7c76;
---text-accent:#7aa7ff;--text-success:#4ade80;--text-warning:#fbbf24;--text-danger:#f87171;
---border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.24);--border-accent:#7aa7ff;
---bg-accent:#1e3a6e;--bg-accent-muted:#1a2740;--bg-success:#14532d;--bg-warning:#4a3410;--bg-danger:#4c1d1d;
---fill-ghost-selected:rgba(255,255,255,.08)}}
-body{margin:0;padding:24px 16px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-sans);font-size:14px;line-height:1.5}
-main{max-width:1100px;margin:0 auto}
-.encabezado{margin:0 0 14px}.encabezado h1{font-size:18px;font-weight:600;margin:0}
-.encabezado p{margin:4px 0 0;color:var(--text-secondary);font-size:12px}
-button{font:inherit;color:var(--text-primary);background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer}
-input,select,textarea{font:inherit;color:inherit}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-</style>
-<style>
-/* La metáfora de Simuladores: El laboratorio: el catálogo a la izquierda, las curvas que se mueven al arrastrar los parámetros y las verificaciones contra la teoría al pie. Mueve G o M. Acento propio #65a30d; en la app el color sale del tema de KDE. */
-.nota-maqueta{color:var(--text-secondary);font-size:13px;margin:0 0 12px;max-width:820px}
-.win{border:0.5px solid var(--border);border-radius:12px;overflow:hidden;font-size:12px;background:var(--surface-2);box-shadow:0 8px 30px rgb(0 0 0 / .10)}
-.tit{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:0.5px solid var(--border);background:var(--surface-1)}
-.mut{color:var(--text-secondary);font-size:11px}
-.row{display:flex;align-items:center;gap:6px}
-.btn{font-size:11px;padding:3px 9px}
-.pane{border-right:0.5px solid var(--border);padding:8px;overflow:hidden}
-.dt{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+/* La metáfora: el laboratorio. El catálogo a la izquierda, las curvas al centro que se mueven al arrastrar los parámetros de la derecha, y al pie las verificaciones contra la teoría. Acento propio verde lima; los neutros son Lliphi Claro y Oscuro (en la app salen de Kirigami.Theme). */
+:root{
+  --n0:#fbfcfd;--n1:#f2f3f5;--n2:#ecedef;--n3:#e0e1e5;--n4:#ccced2;--n5:#66676c;--n6:#4b4d53;--n7:#1d1f24;
+  --ac:#65a30d;--ac-t:#3f6d06;--c2:#0d9488;--c3:#6a46c2;--pos:#137738;--neg:#b63132;--neu:#915b00;
+  --lienzo:#ffffff;--rej:#e8e9ec;
+  --ui:Inter,"Noto Sans",system-ui,sans-serif;--mono:"JetBrains Mono","JetBrainsMono Nerd Font",ui-monospace,monospace;--ser:Literata,"Noto Serif",Georgia,serif;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --n0:#101012;--n1:#161719;--n2:#1b1c1e;--n3:#232426;--n4:#3d3e42;--n5:#97989c;--n6:#bcbec1;--n7:#eaebed;
+  --ac:#8fc93a;--ac-t:#b3e070;--c2:#3cc7b8;--c3:#b79cf0;--pos:#6fc884;--neg:#fb817a;--neu:#ebb25f;
+  --lienzo:#18191b;--rej:#2a2b2e;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n2);color:var(--n7);font:13px/1.5 var(--ui);padding:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.mandos{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;margin:0 auto 12px;max-width:1320px}
+.mandos .grupo{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+.mandos .rot{color:var(--n5);margin-right:6px}
+.mandos button{border:1px solid var(--n4);background:var(--n0);padding:4px 10px;border-radius:4px}
+.mandos button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme="dark"] .mandos button[aria-pressed="true"],:root[data-theme="dark"] .btn.prim,:root[data-theme="dark"] .segm button.on{color:#10140a}
+.nota-maqueta{max-width:1320px;margin:0 auto 10px;color:var(--n5)}
+
+.ventana{max-width:1320px;margin:0 auto;background:var(--n1);border:1px solid var(--n4);border-radius:8px;overflow:hidden;box-shadow:0 8px 30px rgb(0 0 0 / .12);display:flex;flex-direction:column;position:relative}
+.ventana.celular{max-width:390px}
+.titulo{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--n2);border-bottom:1px solid var(--n3);color:var(--n6)}
+.titulo .t{flex:1;text-align:center;font-weight:500;color:var(--n7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titulo i.p{width:12px;height:12px;border-radius:50%;background:var(--n4);display:inline-block}
+.titulo .ico{color:var(--ac);font-size:16px}
+.menu{display:flex;gap:14px;padding:4px 12px;border-bottom:1px solid var(--n3);flex-wrap:wrap}
+.barra{display:flex;align-items:center;gap:4px;padding:5px 8px;border-bottom:1px solid var(--n3);flex-wrap:wrap}
+.b{border:1px solid transparent;background:none;padding:3px 8px;border-radius:4px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.b:hover{background:var(--n2)}
+.b .ti{font-size:16px;color:var(--n6)}
+.b.marco{border-color:var(--n4);background:var(--n0)}
+.b.on{background:color-mix(in oklab,var(--ac) 18%,transparent)}
+.sep{width:1px;height:18px;background:var(--n3);margin:0 3px}
+.esp{flex:1}
+.ruta{color:var(--n5)}
+.ruta b{color:var(--n7);font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;letter-spacing:.03em;padding:1px 8px;border-radius:3px;border:1px solid currentColor}
+.chip.ok{color:var(--pos)}.chip.mal{color:var(--neg)}.chip.neu{color:var(--neu)}
+.celular .menu,.celular .solo-esc{display:none!important}
+
+.cuerpo{display:grid;grid-template-columns:240px minmax(0,1fr) 280px;min-height:600px}
+.catalogo{border-right:1px solid var(--n3);background:var(--n1);display:flex;flex-direction:column;min-width:0}
+.catalogo .cab{padding:8px;display:grid;gap:6px;border-bottom:1px solid var(--n3)}
+.buscar{border:1px solid var(--n4);background:var(--n0);border-radius:4px;padding:3px 8px;display:flex;gap:6px;align-items:center;color:var(--n5)}
+.buscar input{border:0;background:none;outline:0;font:inherit;color:var(--n7);flex:1;min-width:0}
+.arbol{overflow:auto;max-height:560px;padding:4px 6px 8px}
+.disc{margin:8px 4px 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--n5);font-weight:500}
+.secc{border:0;background:none;width:100%;text-align:left;padding:3px 4px;display:flex;gap:4px;align-items:center;color:var(--n6);border-radius:4px}
+.secc:hover{background:var(--n2)}
+.secc small{margin-left:auto;color:var(--n5)}
+.secc .ti{font-size:14px;color:var(--n5);transition:transform .15s}
+.secc.abierta .ti{transform:rotate(90deg)}
+.mod{border:0;background:none;width:100%;text-align:left;padding:3px 6px 3px 22px;display:flex;gap:6px;align-items:baseline;border-radius:4px;min-width:0}
+.mod:hover{background:var(--n2)}
+.mod.on{background:color-mix(in oklab,var(--ac) 20%,transparent)}
+.mod .id{font:11px var(--mono);color:var(--n5);flex:none;width:30px}
+.mod .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.mod .pt{width:7px;height:7px;border-radius:50%;background:var(--pos);flex:none;align-self:center}
+.mod .pt.sv{background:var(--n4)}
+.catalogo .pie{margin-top:auto;border-top:1px solid var(--n3);padding:6px 10px;color:var(--n5);font-size:11.5px}
+
+.centro{display:flex;flex-direction:column;min-width:0;background:var(--n0)}
+.pestanas{display:flex;border-bottom:1px solid var(--n3);padding:0 6px;overflow-x:auto;background:var(--n1)}
+.pest{border:0;background:none;padding:7px 10px;color:var(--n5);border-bottom:2px solid transparent;white-space:nowrap}
+.pest.on{color:var(--n7);border-bottom-color:var(--ac)}
+.pest kbd{font:10.5px var(--mono);color:var(--n5);margin-left:4px}
+.encab{padding:8px 12px 4px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.encab h2{margin:0;font-size:15px;font-weight:600}
+.equil{font-variant-numeric:tabular-nums;color:var(--n6)}
+.equil b{color:var(--n7);font-weight:600}
+.motivo{margin:0 12px 6px;font-size:12px;padding:6px 9px;border-radius:4px;border:1px solid color-mix(in oklab,var(--c) 45%,transparent);background:color-mix(in oklab,var(--c) 10%,transparent)}
+.vista{padding:6px 12px 12px;min-width:0}
+.vista[hidden]{display:none}
+.lienzo{position:relative;border:1px solid var(--n3);border-radius:6px;background:var(--lienzo);overflow:hidden}
+.lienzo svg{display:block}
+.lienzo .marca{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 44px var(--ui);letter-spacing:.08em;color:color-mix(in oklab,var(--neg) 40%,transparent);transform:rotate(-14deg);pointer-events:none}
+.lienzo .marca[hidden]{display:none}
+.dos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;color:var(--n6);font-size:12px;margin:6px 2px}
+.leyenda i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--c);vertical-align:middle;margin-right:5px}
+.leyenda i.punt{border-top-style:dashed}
+table.t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:12.5px}
+table.t th{font-weight:500;color:var(--n5);text-align:right;padding:3px 8px;border-bottom:1px solid var(--n3);white-space:nowrap}
+table.t td{text-align:right;padding:3px 8px;border-bottom:1px solid var(--n2);white-space:nowrap}
+table.t th:first-child,table.t td:first-child{text-align:left;white-space:normal}
+.sube{color:var(--pos)}.baja{color:var(--neg)}
+.tenue{opacity:.45}
+.suave{color:var(--n5);font-size:11.5px}
+.cadena{font-size:12px;color:var(--n6);line-height:1.8}
+.cadena span{white-space:normal}
+.cadena .fl{color:var(--ac-t);margin:0 4px}
+.btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--n4);background:var(--n0);border-radius:4px;padding:3px 10px;font-size:12px;white-space:nowrap}
+.btn:hover{border-color:var(--n5)}
+.btn.prim{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.segm{display:inline-flex;border:1px solid var(--n4);border-radius:4px;overflow:hidden;flex-wrap:wrap}
+.segm button{border:0;background:var(--n0);padding:2px 9px;font-size:12px}
+.segm button+button{border-left:1px solid var(--n4)}
+.segm button.on{background:var(--ac);color:#fff}
+.fila{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select{border:1px solid var(--n4);background:var(--n0);border-radius:4px;padding:3px 6px;font:12px var(--ui);color:var(--n7);max-width:100%}
+.resultados{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
+.res{border:1px solid var(--n3);border-radius:4px;padding:5px 8px;background:var(--n1)}
+.res .n{font-size:11.5px;color:var(--n5)}
+.res .v{font:600 15px var(--ui);font-variant-numeric:tabular-nums}
+.res .d{font-size:11.5px;font-variant-numeric:tabular-nums}
+
+.params{border-left:1px solid var(--n3);background:var(--n1);display:flex;flex-direction:column;min-width:0}
+.params .cab{padding:8px 10px;border-bottom:1px solid var(--n3);display:grid;gap:5px}
+.params h4,.ficha h4{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--n5);font-weight:500}
+.escen{display:grid;gap:1px}
+.escen button{border:0;background:none;text-align:left;padding:3px 7px;border-radius:4px;display:grid}
+.escen button:hover{background:var(--n2)}
+.escen button.on{background:color-mix(in oklab,var(--ac) 20%,transparent)}
+.escen button small{color:var(--n5);font-size:11px}
+.deslizadores{padding:6px 10px 10px;display:grid;gap:7px;overflow:auto;max-height:470px}
+.grupo-p{margin-top:4px;font-size:11px;color:var(--n5);text-transform:uppercase;letter-spacing:.05em}
+.par{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:0 8px;align-items:center}
+.par label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.par label.mov{color:var(--ac-t);font-weight:500}
+.par input[type=number]{width:70px;border:1px solid var(--n4);background:var(--n0);border-radius:4px;padding:1px 5px;font:12px var(--mono);color:var(--n7);text-align:right}
+.par input[type=range]{grid-column:1/3;width:100%;accent-color:var(--ac);margin:0}
+.par .rango{grid-column:1/3;display:flex;justify-content:space-between;font-size:10.5px;color:var(--n5);margin-top:-3px}
+.params .pie{margin-top:auto;border-top:1px solid var(--n3);padding:8px 10px;display:flex;gap:6px;flex-wrap:wrap}
+
+.banda{border-top:1px solid var(--n4);background:var(--n0)}
+.banda .cab{display:flex;gap:10px;align-items:center;padding:6px 12px;flex-wrap:wrap;border-bottom:1px solid var(--n3)}
+.banda .filas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px 16px;padding:6px 12px 8px;font-size:12px}
+.banda.plegada .filas{display:none}
+.vf{display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px;align-items:start}
+.vf .ti{font-size:15px;margin-top:1px}
+.vf small{display:block;color:var(--n5);font-size:11.5px}
+.estado{display:flex;gap:14px;padding:4px 12px;border-top:1px solid var(--n3);background:var(--n2);color:var(--n5);font-size:11.5px;flex-wrap:wrap}
+.ok{color:var(--pos)}.mal{color:var(--neg)}.neu{color:var(--neu)}
+
+.ficha{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px}
+.ficha .texto{font:14px/1.62 var(--ser);max-width:680px}
+.ficha .texto p{margin:0 0 10px}
+.ficha .texto h3{font:600 13px var(--ui);margin:14px 0 6px;color:var(--n6);text-transform:uppercase;letter-spacing:.05em}
+.ficha .pregunta{font:italic 17px/1.45 var(--ser);color:var(--n7);border-left:3px solid var(--ac);padding-left:12px;margin:2px 0 12px}
+.ec{font:15px/1.5 var(--ser);background:var(--n1);border:1px solid var(--n3);border-radius:4px;padding:7px 12px;margin:6px 0;overflow-x:auto}
+.ec .nom{display:block;font:11.5px var(--ui);color:var(--n5)}
+.ec i{font-style:italic}
+.ficha ul{margin:0 0 10px;padding-left:20px}
+.ficha .lado{display:grid;gap:10px;align-content:start}
+.caja{border:1px solid var(--n3);border-radius:6px;padding:8px 10px;background:var(--n1);font-size:12px}
+.caja table td{padding:2px 4px;vertical-align:top}
+.ver-list .vf{padding:8px 10px;border:1px solid var(--n3);border-radius:6px;background:var(--n1);margin-bottom:6px;font-size:13px}
+.ver-list .vf code{font:11.5px var(--mono);color:var(--n6)}
+.op{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:8px 10px;border:1px solid var(--n3);border-radius:6px;background:var(--n1);margin-bottom:6px;align-items:center}
+.op b{font-weight:500}
+.op code{grid-column:1/3;font:11.5px var(--mono);color:var(--n6);overflow-wrap:anywhere}
+pre.reg{margin:0;font:11.5px/1.6 var(--mono);background:var(--n1);border:1px solid var(--n3);border-radius:6px;padding:8px 10px;height:170px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+pre.reg .c{color:var(--n5)}
+
+.capa{position:absolute;inset:0;background:rgb(16 16 18 / .42);display:flex;align-items:flex-start;justify-content:center;padding-top:70px;z-index:50}
+.capa[hidden]{display:none}
+.dialogo{background:var(--n1);border:1px solid var(--n4);border-radius:8px;width:min(500px,94%);box-shadow:0 12px 40px rgb(0 0 0 / .3);display:grid}
+.dialogo .dc{padding:10px 14px;border-bottom:1px solid var(--n3);font-weight:500;display:flex;justify-content:space-between;gap:8px}
+.dialogo .dd{padding:12px 14px;display:grid;gap:9px}
+.dialogo .dp{padding:10px 14px;border-top:1px solid var(--n3);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.codigo{font:11.5px/1.55 var(--mono);background:var(--n0);border:1px solid var(--n3);border-radius:4px;padding:6px 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pasos{display:flex;gap:4px}
+.pasos i{flex:1;height:4px;border-radius:2px;background:var(--n3)}
+.pasos i.on{background:var(--ac)}
+.abajo-cel{display:none}
+.celular .abajo-cel{display:flex;justify-content:space-around;border-top:1px solid var(--n3);background:var(--n1);padding:6px 4px 8px;position:sticky;bottom:0;z-index:40}
+.abajo-cel button{border:0;background:none;display:grid;justify-items:center;gap:1px;color:var(--n5);font-size:11px}
+.abajo-cel .ti{font-size:19px}
+.abajo-cel button.on{color:var(--ac-t)}
+.notas{max-width:1320px;margin:22px auto 0;background:var(--n0);border:1px solid var(--n4);border-radius:8px;padding:14px 18px;color:var(--n6)}
+.notas h2{font-size:15px;margin:0 0 8px;color:var(--n7)}
+.notas li{margin-bottom:5px}
+@media (max-width:760px){body{padding:10px}}
+.celular .cuerpo{grid-template-columns:minmax(0,1fr);min-height:0}
+.celular .catalogo{display:none;border-right:0}
+.celular.ver-cat .catalogo{display:flex}
+.celular.ver-cat .centro,.celular.ver-cat .params,.celular.ver-cat .banda{display:none}
+.celular .params{border-left:0;border-top:1px solid var(--n4)}
+.celular .deslizadores{max-height:none}
+.celular .dos,.celular .ficha{grid-template-columns:minmax(0,1fr)}
+.celular .banda .filas{grid-template-columns:minmax(0,1fr)}
+.celular .capa{position:fixed;inset:0 auto 0 50%;width:min(390px,100%);transform:translateX(-50%);padding-top:0;align-items:flex-end}
+.celular .dialogo{width:100%;border-radius:12px 12px 0 0}
+.celular .estado{display:none}
+.celular .arbol{max-height:none}
 </style>
 </head>
 <body>
-<main>
-<header class="encabezado"><h1>Maqueta — Simuladores</h1>
-<p>Aprobada el 2026-11-18 (versión «identidad propia»).</p></header>
-<p class="nota-maqueta">El laboratorio: el catálogo a la izquierda, las curvas que se mueven al arrastrar los parámetros y las verificaciones contra la teoría al pie. Mueve G o M.</p>
-<div id="vista" aria-label="Ventana de Simuladores"></div>
-</main>
+
+<div class="mandos" role="toolbar" aria-label="Mandos de la maqueta">
+  <div class="grupo" id="g-pantalla"><span class="rot">Pantalla</span>
+    <button data-p="simulacion" aria-pressed="true">Simulación</button>
+    <button data-p="comparacion">Comparación</button>
+    <button data-p="sensibilidad">Sensibilidad</button>
+    <button data-p="ficha">Ficha</button>
+    <button data-p="verificaciones">Verificaciones</button>
+    <button data-p="laboratorio">Laboratorio</button>
+    <button data-p="solow">Solow · evolución</button>
+    <button data-p="tcl">TCL · estadística</button>
+  </div>
+  <div class="grupo" id="g-tema"><span class="rot">Tema</span>
+    <button data-t="light" aria-pressed="true">Lliphi Claro</button>
+    <button data-t="dark">Lliphi Oscuro</button>
+  </div>
+  <div class="grupo" id="g-ancho"><span class="rot">Ancho</span>
+    <button data-a="escritorio" aria-pressed="true">Escritorio</button>
+    <button data-a="celular">Celular (390 px)</button>
+  </div>
+</div>
+<p class="nota-maqueta">Maqueta de composición. El catálogo, los parámetros, los escenarios y las verificaciones son los de <code>catalogo.json</code>; IS-LM (m10), Solow (m26) y el teorema central del límite (e67) se calculan de verdad en la página, con las ecuaciones de sus archivos. Mueve un deslizador: las curvas, el equilibrio y las verificaciones se recalculan.</p>
+
+<div class="ventana" id="ventana">
+  <div class="titulo"><i class="p"></i><i class="p"></i><i class="p"></i><span class="t" id="t-ventana">Modelo IS-LM · macro/m10 · Simuladores Studio</span><i class="ti ti-flask ico" aria-hidden="true"></i></div>
+  <div class="menu" aria-label="Menú"><span>Archivo</span><span>Editar</span><span>Ver</span><span>Modelo</span><span>Herramientas</span><span>Ayuda</span></div>
+  <div class="barra" aria-label="Barra de herramientas">
+    <button class="b" data-cat title="Mostrar u ocultar el catálogo (F9)"><i class="ti ti-layout-sidebar"></i></button>
+    <span class="sep solo-esc"></span>
+    <button class="b" id="b-correr" title="Correr (F5)"><i class="ti ti-player-play"></i>Correr</button>
+    <button class="b" id="b-verificar" title="Verificar (Ctrl+T)"><i class="ti ti-checklist"></i><span class="solo-esc">Verificar</span></button>
+    <button class="b solo-esc" id="b-base" title="Volver a la base (Ctrl+Mayús+R)"><i class="ti ti-arrow-back-up"></i>Base</button>
+    <button class="b solo-esc on" id="b-vivo" title="Recalcular en vivo"><i class="ti ti-bolt"></i>En vivo</button>
+    <span class="sep solo-esc"></span>
+    <span class="ruta solo-esc" id="ruta">Macroeconomía › Mercado de bienes e IS-LM › <b>m10</b></span>
+    <span class="esp"></span>
+    <span class="chip ok" id="chip">VERIFICADO 4/4</span>
+    <button class="b marco solo-esc" id="b-guia"><i class="ti ti-route"></i>Recorrido guiado</button>
+  </div>
+
+  <div class="cuerpo">
+    <aside class="catalogo" aria-label="Catálogo de modelos">
+      <div class="cab">
+        <label class="buscar"><i class="ti ti-search"></i><input id="buscar" placeholder="Buscar un modelo (Ctrl+F)" aria-label="Buscar un modelo"></label>
+        <div class="fila"><span class="segm" id="seg-disc"><button class="on" data-d="">Todas</button><button data-d="macro">Macro</button><button data-d="estadistica">Estadística</button></span></div>
+      </div>
+      <div class="arbol" id="arbol"></div>
+      <div class="pie">139 modelos · 2 disciplinas · 120 corren también en el navegador</div>
+    </aside>
+
+    <main class="centro">
+      <div class="pestanas" id="pestanas" role="tablist">
+        <button class="pest on" data-v="simulacion" id="pest-sim">Simulación<kbd>Ctrl+1</kbd></button>
+        <button class="pest" data-v="comparacion">Comparación<kbd>2</kbd></button>
+        <button class="pest" data-v="sensibilidad">Sensibilidad<kbd>3</kbd></button>
+        <button class="pest" data-v="ficha">Ficha<kbd>4</kbd></button>
+        <button class="pest" data-v="verificaciones">Verificaciones<kbd>5</kbd></button>
+        <button class="pest" data-v="laboratorio">Laboratorio<kbd>6</kbd></button>
+      </div>
+      <div class="encab"><h2 id="m-titulo">Modelo IS-LM</h2><span class="equil" id="equil"></span></div>
+      <div class="motivo" id="motivo" hidden></div>
+
+      <section class="vista" data-v="simulacion">
+        <div id="g-sim-caja" class="dos" style="grid-template-columns:1fr"></div>
+        <div class="leyenda" id="leyenda"></div>
+        <div class="resultados" id="resultados"></div>
+      </section>
+
+      <section class="vista" data-v="comparacion" hidden>
+        <div class="dos"><div><div class="suave" style="margin-bottom:3px">Base</div><div class="lienzo" id="g-comp-base"></div></div><div><div class="suave" style="margin-bottom:3px" id="comp-nom">Escenario</div><div class="lienzo" id="g-comp-esc"></div></div></div>
+        <div class="suave" style="margin:6px 0">La misma escala en los dos gráficos.</div>
+        <div class="dos" style="margin-top:4px"><div><table class="t" id="t-comp"></table></div><div><h4 style="margin:0 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--n5);font-weight:500">La lectura del escenario</h4><p style="margin:0 0 8px" id="comp-lect"></p><div class="cadena" id="comp-cad"></div></div></div>
+      </section>
+
+      <section class="vista" data-v="sensibilidad" hidden>
+        <div class="fila" style="margin-bottom:6px"><span class="suave">Barrer</span><select id="sens-p"></select><span class="suave">y mirar</span><select id="sens-r"></select><span class="suave" id="sens-rango"></span></div>
+        <div class="lienzo" id="g-sens"></div>
+        <p id="sens-lect" style="margin:8px 0 0"></p>
+      </section>
+
+      <section class="vista" data-v="ficha" hidden><div class="ficha" id="ficha"></div></section>
+
+      <section class="vista" data-v="verificaciones" hidden>
+        <div class="fila" style="margin-bottom:8px"><span class="suave" id="ver-fuente"></span><span class="esp"></span><button class="btn" id="b-fallo">Ver cómo se presenta un fallo</button></div>
+        <div class="ver-list" id="ver-list"></div>
+      </section>
+
+      <section class="vista" data-v="laboratorio" hidden>
+        <div class="dos"><div id="ops"></div><div><h4 style="margin:0 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--n5);font-weight:500">Registro de la corrida y salida del motor (F8)</h4><pre class="reg" id="reg"></pre></div></div>
+      </section>
+    </main>
+
+    <aside class="params" aria-label="Parámetros">
+      <div class="cab"><h4>Escenario</h4><div class="escen" id="escen"></div></div>
+      <div class="deslizadores" id="deslizadores"></div>
+      <div class="pie"><button class="btn" id="b-base2">Volver a la base</button><button class="btn" id="b-guardar">Guardar escenario…</button></div>
+    </aside>
+  </div>
+
+  <div class="banda" id="banda">
+    <div class="cab"><b style="font-weight:500" id="ban-res"></b><span class="suave" id="ban-fuente"></span><span class="esp"></span><button class="btn" data-ir="verificaciones">Ver las verificaciones</button><button class="b" id="b-plegar" title="Ctrl+Mayús+T"><i class="ti ti-chevron-down"></i></button></div>
+    <div class="filas" id="ban-filas"></div>
+  </div>
+  <div class="estado"><span id="e-estado">listo · recalcula 150 ms después del último cambio</span><span id="e-corr">corrida en 2 ms (en proceso)</span><span>caché del studio: escribe solo ahí</span><span>tema: Lliphi</span></div>
+  <div class="abajo-cel" aria-label="Navegación"><button data-c="cat"><i class="ti ti-list-tree"></i>Catálogo</button><button data-c="modelo" class="on"><i class="ti ti-chart-line"></i>Modelo</button><button data-c="ficha"><i class="ti ti-book-2"></i>Ficha</button><button data-c="verif"><i class="ti ti-checklist"></i>Verificar</button></div>
+
+  <div class="capa" id="dlg-op" hidden><div class="dialogo" role="dialog" aria-label="Confirmar operación">
+    <div class="dc"><span id="op-tit">Operación</span><button class="b" data-cerrar>Esc</button></div>
+    <div class="dd"><div class="suave">Orden exacta</div><div class="codigo" id="op-orden"></div><div class="suave">Lo que toca</div><div class="codigo" id="op-toca"></div><div class="suave">Nada se escribe hasta que confirmes. Ctrl+Intro confirma.</div></div>
+    <div class="dp"><button class="btn" data-cerrar>Cancelar</button><button class="btn prim" id="op-ok">Confirmar y escribir</button></div>
+  </div></div>
+  <div class="capa" id="dlg-guia" hidden><div class="dialogo" role="dialog" aria-label="Recorrido guiado">
+    <div class="dc"><span>Recorrido guiado · <span id="guia-mod"></span></span><button class="b" data-cerrar>Esc</button></div>
+    <div class="dd"><div class="pasos" id="guia-pasos"></div><b id="guia-tit" style="font-weight:600"></b><div id="guia-txt" style="font:14px/1.6 var(--ser)"></div></div>
+    <div class="dp"><button class="btn" id="guia-ant">Anterior</button><button class="btn prim" id="guia-sig">Siguiente</button></div>
+  </div></div>
+</div>
+
+<section class="notas" aria-label="Notas de método">
+  <h2>Notas de método</h2>
+  <ul>
+    <li><b>El gráfico manda.</b> El centro es siempre la curva de un modelo teórico, nunca una tabla de datos (para eso está Datafw Studio). La base va punteada y el escenario sólido, con la misma escala, para que el desplazamiento se lea sin cifras.</li>
+    <li><b>Mover es recalcular.</b> Cada deslizador lleva el rango, el paso y la unidad que declara el modelo; el valor también se escribe a mano. Al tocar un parámetro el escenario pasa a «Propio» y el parámetro movido se marca en el color del acento.</li>
+    <li><b>Válido o no, a la vista.</b> Una corrida solo se presenta como válida si el modelo está verificado con su archivo actual y sus números son finitos. Si no, el gráfico lleva «NO VÁLIDO», los resultados se atenúan y el motivo va arriba. Los avisos del dominio (una tasa negativa, una inversión bajo cero) se dicen sin invalidar.</li>
+    <li><b>Las verificaciones son teoremas.</b> Al pie, siempre: cuántas pasan, contra qué fuente y qué devolvió el motor. Se recalculan aquí con las mismas funciones del modelo (residuos de ambos mercados, expulsión, multiplicador).</li>
+    <li><b>Nada se escribe sin la orden exacta.</b> Exportar, guardar un escenario o regenerar <code>catalogo.json</code> muestran la orden y lo que tocan, y corren solo al confirmar. Correr y verificar escriben solo la caché del studio.</li>
+    <li><b>Identidad propia.</b> El verde lima es de Simuladores; el turquesa marca la segunda curva. La ficha usa letra de libro porque se lee; el resto, la de la interfaz.</li>
+  </ul>
+</section>
+
 <script>
-const A={"simuladores": "#65a30d"};
-const el=id=>document.getElementById(id);
-const tb=(c,t,extra)=>`<div class="tit"><i class="ti ${t[0]}" style="color:${c};font-size:15px" aria-hidden="true"></i><span style="font-weight:500">${t[1]}</span>${extra||""}</div>`;
-const vista=c=>`<div class="win">${tb(c,["ti-math-function","Simuladores"],`<span class="mut">Macroeconomía › IS-LM</span><span style="flex:1"></span><button class="btn">Recorrido guiado</button><button class="btn">Ficha</button>`)}
-<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 170px">
-<div class="pane">${[["Macro",["IS-LM","Mundell-Fleming","Solow","Ramsey"]],["Estadística",["TCL","Bootstrap"]]].map(d=>`<div class="mut" style="margin:4px 0">${d[0]}</div>${d[1].map(m=>`<div style="padding:2px 6px;border-radius:4px;${m==="IS-LM"?`background:${c}22;color:${c}`:""}">${m}</div>`).join("")}`).join("")}</div>
-<div class="pane"><svg id="islm" viewBox="0 0 300 200" width="100%" height="200" role="img"><title>Curvas IS y LM</title></svg><div class="row" id="res" style="justify-content:center;gap:14px"></div></div>
-<div style="padding:10px"><label class="mut">Gasto público G <b id="gv"></b></label><input type="range" id="G" min="60" max="200" step="10" value="120" style="width:100%"><label class="mut">Oferta monetaria M <b id="mv"></b></label><input type="range" id="M" min="250" max="550" step="10" value="400" style="width:100%"><div class="mut" style="margin-top:6px">Recalcula en vivo</div></div></div>
-<div class="row" style="border-top:0.5px solid var(--border);padding:6px 10px;gap:12px"><span style="color:var(--text-success)">✓ multiplicador 1/(1−c)</span><span style="color:var(--text-success)">✓ equilibrio en la intersección</span><span class="mut">Hicks (1937); Mankiw, cap. 11</span></div></div>`;
-function islm(){const G=+el("G").value,M=+el("M").value,m=2.5,b=25,A=280,k=0.5,h=50;const Y=(m*(A+G)+m*b*M/h)/(1+m*b*k/h),r=(k*Y-M)/h;const X=y=>30+(y-600)/600*260,Yp=v=>180-v/8*170;const is=y=>(A+G)/b-y/(m*b),lm=y=>(k*y-M)/h;const c=A.simuladores||"#65a30d";let s=`<line x1="30" y1="180" x2="295" y2="180" stroke="var(--border-strong)"/><line x1="30" y1="5" x2="30" y2="180" stroke="var(--border-strong)"/><text x="292" y="194" font-size="9" text-anchor="end" fill="var(--text-secondary)">Y</text><text x="20" y="12" font-size="9" fill="var(--text-secondary)">r</text>`;const seg=(f,col,lab)=>{let p=[];for(let y=600;y<=1200;y+=20){const v=f(y);if(v>=0&&v<=8)p.push(`${X(y).toFixed(1)},${Yp(v).toFixed(1)}`)}return `<polyline points="${p.join(" ")}" fill="none" stroke="${col}" stroke-width="2"/>`+(p.length?`<text x="${p[p.length-1].split(",")[0]}" y="${+p[p.length-1].split(",")[1]-4}" font-size="10" fill="${col}">${lab}</text>`:"")};s+=seg(is,"#65a30d","IS")+seg(lm,"#0d9488","LM");if(r>=0&&r<=8)s+=`<line x1="${X(Y)}" y1="${Yp(r)}" x2="${X(Y)}" y2="180" stroke="var(--border-strong)" stroke-dasharray="3 3"/><circle cx="${X(Y)}" cy="${Yp(r)}" r="4" fill="var(--text-primary)"/>`;el("islm").innerHTML=s;el("gv").textContent=G;el("mv").textContent=M;el("res").innerHTML=`<span>Y* = <b>${Math.round(Y)}</b></span><span>r* = <b>${r.toFixed(1)} %</b></span>`}
-el("vista").innerHTML=vista("#65a30d");
-el("G").oninput=islm;el("M").oninput=islm;islm();
+(function(){
+  var raiz=document.documentElement,V=document.getElementById('ventana');
+  function $(s,c){return (c||document).querySelector(s)}
+  function $$(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))}
+  function f(x,d){if(!isFinite(x))return '—';var s=Math.abs(x).toFixed(d).split('.');s[0]=s[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ');var z=+Math.abs(x).toFixed(d)===0;return (x<0&&!z?'−':'')+s.join(',')}
+  function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+  var C1='var(--ac)',C2='var(--c2)',C3='var(--c3)';
+
+  /* ===== el catálogo (títulos reales de catalogo.json) ===== */
+  var CAT=[['macro','Macroeconomía',[
+    [1,'Fundamentos macroeconómicos','m01|Flujo circular de la renta;m02|PIB y componentes de la demanda agregada;m03|Función de consumo keynesiana;m04|Multiplicador keynesiano;m05|Paradoja del ahorro'],
+    [2,'Mercado de bienes e IS-LM','m06|Mercado de bienes (inversión sensible a la tasa);m07|Curva IS;m08|Mercado monetario;m09|Curva LM;m10|Modelo IS-LM;m11|Efecto expulsión;m12|Trampa de liquidez'],
+    [3,'Inflación, desempleo y ciclo','m13|Curva de Phillips (original);m14|Phillips aumentada por expectativas;m15|Ley de Okun;m16|Brecha del producto;m17|Ciclo económico;m18|Shock de demanda agregada;m19|Shock de oferta (estanflación)'],
+    [4,'El aparato AD-AS','m20|Demanda agregada derivada del IS-LM;m21|Oferta agregada de corto plazo;m22|Oferta agregada de largo plazo;m23|Modelo AD-AS completo;m24|Estanflación;m25|Ajuste hacia el largo plazo'],
+    [5,'Crecimiento económico','m26|Modelo de Solow;m27|Estado estacionario y transición;m28|Regla de oro del capital;m29|Solow con progreso tecnológico;m30|Convergencia;m31|Trampa de pobreza;m32|Crecimiento endógeno (AK);m33|Capital humano y crecimiento'],
+    [6,'Dinero y política monetaria','m34|Teoría cuantitativa del dinero;m35|Neutralidad del dinero;m36|Señoreaje;m37|Multiplicador monetario;m38|Regla de Taylor;m39|Banco central y tasa de interés;m40|Inflación objetivo;m41|Credibilidad;m42|Expectativas racionales'],
+    [7,'Macroeconomía abierta','m43|Balanza de pagos;m44|Cuenta corriente;m45|Tipo de cambio nominal;m46|Tipo de cambio real;m47|Paridad del poder adquisitivo;m48|Paridad descubierta de intereses;m49|Modelo Mundell-Fleming;m50|Trilema macroeconómico'],
+    [8,'Modelos modernos','m51|Modelo IS-MP;m52|AD-AS dinámico;m53|Nuevo keynesiano básico;m54|Curva IS dinámica (Euler);m55|Phillips nuevo keynesiana;m56|El modelo de 3 ecuaciones;m57|Ciclos reales (RBC);m58|Shock tecnológico;m59|Shock monetario;m60|Shock fiscal;m61|Shocks de productividad'],
+    [9,'Política fiscal','m62|Restricción presupuestaria;m63|Deuda pública;m64|Dinámica deuda/PIB;m65|Sostenibilidad fiscal;m66|Déficit estructural y cíclico;m67|Equivalencia ricardiana;m68|Política contracíclica;m69|Austeridad;m70|Multiplicadores fiscales'],
+    [10,'Crisis','m71|Crisis financiera;m72|Burbuja de activos;m73|Crisis bancaria;m74|Crisis cambiaria;m75|Sudden stop;m76|Deuda soberana;m77|Crisis de balanza de pagos;m78|Trampa de deuda;m79|Acelerador financiero;m80|Crisis sistémica'],
+    [11,'Escenarios aplicados','m81|COVID-19 como shock;m82|Shock petrolero;m83|Shock de alimentos;m84|Devaluación;m85|Inflación importada;m86|Alza de tasas de la FED;m87|Salida de capitales;m88|Boom de materias primas;m89|Caída del precio del cobre;m90|Shock de productividad;m91|Aumento del gasto público;m92|Recesión con inflación;m93|Estanflación de los 70;m94|Deflación;m95|Trampa de liquidez (episodio);m96|Deuda soberana (episodio)'],
+    [12,'Laboratorio del Perú','m97|Crecimiento del Perú (BCRP);m98|PIB potencial vs observado;m99|Inflación peruana (BCRP);m100|Regla de Taylor del BCRP;m101|Tasa de referencia e inflación;m102|Tipo de cambio PEN/USD;m103|Cobre y crecimiento;m104|Cobre y tipo de cambio;m105|Términos de intercambio;m106|Inversión pública;m107|Multiplicador fiscal (BCRP);m108|Deuda y sostenibilidad;m109|Exportaciones;m110|Shock externo sobre el Perú;m111|FED y flujo de capitales;m112|Minería, crecimiento y empleo;m113|Passthrough (BCRP);m114|Shock climático: El Niño;m115|Modelo simplificado del Perú']]],
+   ['estadistica','Estadística',[
+    [1,'I · Fundamentos: datos y medición','e02|Población y muestra'],
+    [2,'II · Estadística descriptiva','e17|La media aritmética;e18|La mediana;e19|La moda;e20|La media ponderada;e21|La media geométrica;e22|La media armónica;e23|Cuartiles y rango intercuartílico;e24|Los percentiles;e25|Los deciles;e26|El rango;e27|Varianza y desviación estándar;e28|Regla empírica y puntaje z;e29|Coeficiente de variación;e30|La asimetría;e31|La curtosis;e32|Medidas robustas;e33|Detección de atípicos'],
+    [3,'III · Probabilidad','e34|Experimentos aleatorios;e35|El espacio muestral;e36|Eventos y operaciones;e37|Probabilidad clásica (cumpleaños);e38|Probabilidad frecuentista'],
+    [5,'V · Teoremas fundamentales','e67|El teorema central del límite']]]];
+  var abiertas={'macro2':1,'macro5':1,'estadistica5':1},filtroDisc='',filtroTxt='';
+  function pintarArbol(){var h='';CAT.forEach(function(d){if(filtroDisc&&d[0]!==filtroDisc)return;var hd='';
+      d[2].forEach(function(s){var key=d[0]+s[0],ms=s[2].split(';').map(function(x){return x.split('|')});
+        if(filtroTxt)ms=ms.filter(function(m){return (m[0]+' '+m[1]).toLowerCase().indexOf(filtroTxt)>=0});
+        if(filtroTxt&&!ms.length)return;var ab=filtroTxt||abiertas[key];
+        hd+='<button class="secc'+(ab?' abierta':'')+'" data-k="'+key+'"><i class="ti ti-chevron-right"></i>'+(d[0]==='macro'?s[0]+'. ':'')+esc(s[1])+'<small>'+ms.length+'</small></button>';
+        if(ab)ms.forEach(function(m){var vivo=MOD[m[0]];hd+='<button class="mod'+(m[0]===act?' on':'')+'" data-m="'+m[0]+'" title="'+(vivo?'Abrir':'En el studio corre; en la maqueta, solo m10, m26 y e67')+'"><span class="id">'+m[0]+'</span><span class="nm">'+esc(m[1])+'</span><i class="pt'+(vivo?'':' sv')+'"></i></button>'})});
+      if(hd)h+='<div class="disc">'+d[1]+'</div>'+hd});
+    $('#arbol').innerHTML=h||'<div class="suave" style="padding:8px">Ningún modelo con ese nombre.</div>'}
+  $('#arbol').addEventListener('click',function(e){var s=e.target.closest('.secc');if(s){abiertas[s.dataset.k]=!abiertas[s.dataset.k];pintarArbol();return}
+    var m=e.target.closest('.mod');if(!m)return;if(MOD[m.dataset.m]){abrirModelo(m.dataset.m);V.classList.remove('ver-cat');marcarCel('modelo')}else estado(m.dataset.m+' corre en el studio; en esta maqueta se calculan IS-LM (m10), Solow (m26) y el TCL (e67).')});
+  $('#buscar').addEventListener('input',function(e){filtroTxt=e.target.value.trim().toLowerCase();pintarArbol()});
+  $$('#seg-disc button').forEach(function(b){b.onclick=function(){filtroDisc=b.dataset.d;$$('#seg-disc button').forEach(function(x){x.classList.toggle('on',x===b)});pintarArbol()}});
+
+  /* ===== los modelos: las ecuaciones de sus .py ===== */
+  function P(n,et,v,mi,ma,pa,g,u,def){return {n:n,et:et,v:v,min:mi,max:ma,paso:pa,g:g,u:u||'',def:def||''}}
+  function islm(p){var A=(1-p.c1)+p.b*p.k/p.h,B=p.c0-p.c1*p.T+p.I0+p.G+p.b*p.MP/p.h,Y=B/A,r=(p.k*Y-p.MP)/p.h;return {Y:Y,r:r,A:A,C:p.c0+p.c1*(Y-p.T),I:p.I0-p.b*r}}
+  var P0_10={G:200,MP:300,T:100,c1:0.6,b:20,k:0.5,h:10,c0:100,I0:150};
+  function solowE(p){var ks=Math.pow(p.s*p.A/(p.n+p.delta),1/(1-p.alpha)),ys=p.A*Math.pow(ks,p.alpha);return {k:ks,y:ys,c:(1-p.s)*ys,i:p.s*ys,koro:Math.pow(p.alpha*p.A/(p.n+p.delta),1/(1-p.alpha))}}
+  function solowCamino(pb,pe,T){var k=solowE(pb).k,out=[];for(var t=0;t<=T;t++){var p=t<5?pb:pe;out.push([t,p.A*Math.pow(k,p.alpha),k]);k=k+p.s*p.A*Math.pow(k,p.alpha)-(p.n+p.delta)*k}return out}
+  /* TCL: gamma de media 1 por Marsaglia y Tsang, con semilla fija */
+  function rng(sem){return function(){sem|=0;sem=sem+0x6D2B79F5|0;var t=Math.imul(sem^sem>>>15,1|sem);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+  function normal(u){var a=u(),b=u();return Math.sqrt(-2*Math.log(a||1e-12))*Math.cos(2*Math.PI*b)}
+  function gamma(k,u){if(k<1)return gamma(k+1,u)*Math.pow(u()||1e-12,1/k);var d=k-1/3,c=1/Math.sqrt(9*d);for(;;){var x=normal(u),v=1+c*x;if(v<=0)continue;v=v*v*v;var w=u();if(w<1-0.0331*x*x*x*x||Math.log(w)<0.5*x*x+d*(1-v+Math.log(v)))return d*v}}
+  function tclSim(p,reps){var u=rng(20261119),n=Math.round(p.n),k=p.k,R=reps||Math.round(p.reps),m=new Float64Array(R);for(var i=0;i<R;i++){var s=0;for(var j=0;j<n;j++)s+=gamma(k,u)/k;m[i]=s/n}
+    var mu=0;for(i=0;i<R;i++)mu+=m[i];mu/=R;var v2=0,v3=0;for(i=0;i<R;i++){var d=m[i]-mu;v2+=d*d;v3+=d*d*d}v2/=R;v3/=R;var sd=Math.sqrt(v2),fuera=0;for(i=0;i<R;i++)if(Math.abs((m[i]-1)/Math.sqrt(1/(k*n)))>1.96)fuera++;
+    return {m:m,media:mu,var:v2,asim:v3/(sd*sd*sd),fuera:fuera/R,vt:1/(k*n),at:2/Math.sqrt(k*n)}}
+  function lgam(z){var g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];if(z<0.5)return Math.log(Math.PI/Math.sin(Math.PI*z))-lgam(1-z);z-=1;var x=c[0];for(var i=1;i<g+2;i++)x+=c[i]/(z+i);var t=z+g+0.5;return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x)}
+
+  var MOD={
+   m10:{id:'m10',disc:'macro',ruta:'Macroeconomía › Mercado de bienes e IS-LM',titulo:'Modelo IS-LM',ejes:['Y (producto)','r (tasa de interés, %)'],
+    params:[P('G','Gasto público G',200,0,500,10,'política fiscal','u.m.','compras del gobierno; desplaza la IS'),P('T','Impuestos T',100,0,400,10,'política fiscal','u.m.','impuestos de suma fija'),P('MP','Oferta real de dinero M/P',300,100,600,10,'política monetaria','u.m.','saldos reales; desplaza la LM'),P('c0','Consumo autónomo c0',100,0,300,10,'mercado de bienes'),P('c1','Propensión a consumir c1',0.6,0.1,0.9,0.05,'mercado de bienes'),P('I0','Inversión autónoma I0',150,0,400,10,'mercado de bienes'),P('b','Sensibilidad de I a r (b)',20,5,50,1,'mercado de bienes'),P('k','Demanda de dinero por Y (k)',0.5,0.1,1,0.05,'mercado de dinero'),P('h','Demanda de dinero por r (h)',10,2,30,1,'mercado de dinero')],
+    esc:[['expansion_fiscal','el gasto público sube de 200 a 250',{G:250},'IS se desplaza a la derecha: Y y r suben; parte del impulso se pierde en inversión expulsada (crowding out, m11).','↑G|↑ demanda de bienes|IS a la derecha|↑Y (multiplicador)|↑ demanda de dinero k·Y|M/P fija: ↑r|↓I = −b·Δr|expulsión parcial'],
+      ['expansion_monetaria','la oferta real de dinero sube de 300 a 400',{MP:400},'LM se desplaza a la derecha: Y sube con r menor; estimula la inversión en vez de expulsarla.','↑M/P|exceso de liquidez|compra de bonos|↓r|LM a la derecha|↑I|↑Y'],
+      ['contraccion_monetaria','el banco central retira liquidez (M/P: 300 a 200)',{MP:200},'LM a la izquierda: r sube y el producto cae; la receta clásica contra el sobrecalentamiento.','↓M/P|escasez de liquidez|venta de bonos|↑r|↓I|↓Y'],
+      ['politica_mixta','expansión fiscal con acomodo monetario',{G:300,MP:400},'Las dos curvas a la derecha: el producto sube mucho y la tasa casi no se mueve; el banco central evita la expulsión.','↑G y ↑M/P|IS y LM a la derecha|↑Y|r casi igual|sin expulsión']],
+    calc:function(p){var e=islm(p);return {eq:[e.Y,e.r],res:[['Y* (producto)',e.Y,1],['r* (tasa de interés)',e.r,2],['consumo C*',e.C,1],['inversión I*',e.I,1],['multiplicador dY/dG',1/e.A,3],['comprobación C+I+G',e.C+e.I+p.G,1]],
+      curvas:function(x){return [['IS (bienes)',C1,(p.c0-p.c1*p.T+p.I0+p.G-(1-p.c1)*x)/p.b],['LM (dinero)',C2,(p.k*x-p.MP)/p.h]]},
+      avisos:(e.I<0?['La inversión de equilibrio es negativa: artefacto de la especificación lineal con un shock grande, no economía.']:[]).concat(e.r<0?['La tasa de equilibrio es negativa: el modelo lineal salió de su dominio (el piso cero es la trampa de liquidez, m12).']:[])}},
+    dom:function(a,b){var X=Math.max(1000,a.eq[0]*1.15,b.eq[0]*1.15),lo=Math.min(0,a.eq[1]-2,b.eq[1]-2),hi=Math.max(12,a.eq[1]*1.4,b.eq[1]*1.4);return {x:[0,X],y:[lo,hi]}},
+    equil:function(e,b){return 'Equilibrio: <b>Y* = '+f(e.eq[0],1)+'</b> · <b>r* = '+f(e.eq[1],2)+' %</b> <span class="suave">(base '+f(b.eq[0],1)+' · '+f(b.eq[1],2)+' %)</span>'},
+    fuente:'conocimiento macroeconómico general (manuales de macro intermedia); no verificado contra una edición específica',
+    verif:function(){var p=P0_10,e=islm(p),rIS=e.Y-(p.c0+p.c1*(e.Y-p.T)+p.I0-p.b*e.r+p.G),rLM=p.MP-(p.k*e.Y-p.h*e.r),e1=islm(Object.assign({},p,{G:250})),e2=islm(Object.assign({},p,{MP:400}));
+      return [[Math.abs(rIS)<1e-9&&Math.abs(rLM)<1e-9,'(Y*, r*) satisface IS y LM a la vez','residuos '+rIS.toExponential(1)+' y '+rLM.toExponential(1)],
+        [e1.Y>e.Y&&e1.r>e.r&&e1.I<e.I,'expansión fiscal: ↑Y, ↑r, ↓I (expulsión)','Y '+f(e.Y,0)+' a '+f(e1.Y,0)+'; r '+f(e.r,2)+' a '+f(e1.r,2)+'; I '+f(e.I,1)+' a '+f(e1.I,1)],
+        [e2.Y>e.Y&&e2.r<e.r,'expansión monetaria: ↑Y, ↓r','Y '+f(e.Y,0)+' a '+f(e2.Y,0)+'; r '+f(e.r,2)+' a '+f(e2.r,2)],
+        [1/e.A<1/(1-p.c1),'multiplicador IS-LM < multiplicador simple',f(1/e.A,2)+' < '+f(1/(1-p.c1),2)+': la tasa de interés amortigua (frente a m04)']]}},
+   m26:{id:'m26',disc:'macro',ruta:'Macroeconomía › Crecimiento económico',titulo:'Modelo de Solow',ejes:['k (capital por trabajador)','por trabajador'],evolucion:true,
+    params:[P('s','Tasa de ahorro s',0.2,0.05,0.6,0.01,'conducta','','fracción del ingreso que se invierte'),P('A','Productividad A',1,0.5,2,0.05,'tecnología'),P('alpha','Participación del capital α',0.33,0.2,0.5,0.01,'tecnología'),P('n','Crecimiento poblacional n',0.01,0,0.04,0.005,'filtraciones'),P('delta','Depreciación δ',0.05,0.02,0.1,0.005,'filtraciones')],
+    esc:[['mas_ahorro','la tasa de ahorro sube de 0,20 a 0,30',{s:0.3},'La inversión s·f(k) sube: el cruce se va a la derecha. Más capital e ingreso por trabajador, pero en el nuevo estado estacionario el crecimiento vuelve a cero: el ahorro compra nivel, no crecimiento.','↑s|↑ inversión s·f(k)|k crece|rendimientos decrecientes|nuevo k* mayor|crecimiento vuelve a 0'],
+      ['explosion_demografica','la población acelera (n: 0,01 a 0,03)',{n:0.03},'La recta de reposición se empina: hay que equipar a más trabajadores y el capital por trabajador cae.','↑n|↑ reposición (n+δ)k|k* menor|↓y*'],
+      ['salto_tecnologico','la productividad sube 20 % (A: 1,0 a 1,2)',{A:1.2},'Sube f(k) y con ella la inversión: más ingreso de inmediato y más capital después.','↑A|↑f(k) y s·f(k)|↑y al instante|k* mayor'],
+      ['pais_que_no_ahorra','economía con s = 0,08',{s:0.08},'Con poco ahorro el cruce queda a la izquierda: un país pobre en estado estacionario, sin trampa.','↓s|inversión baja|k* pequeño|y* bajo']],
+    calc:function(p){var e=solowE(p);return {eq:[e.k,e.y],res:[['k* (capital)',e.k,2],['y* (producto)',e.y,3],['c* (consumo)',e.c,3],['i* = s·y*',e.i,3],['k de la regla de oro',e.koro,2],['s de oro (= α)',p.alpha,2]],
+      curvas:function(x){return [['f(k) = A·k^α','var(--n5)',p.A*Math.pow(x,p.alpha)],['s·f(k) inversión',C1,p.s*p.A*Math.pow(x,p.alpha)],['(n+δ)·k reposición',C2,(p.n+p.delta)*x]]},avisos:[],eqY:e.s}},
+    dom:function(a,b){var X=Math.max(a.eq[0],b.eq[0])*1.7;return {x:[0,X],y:[0,Math.max(a.eq[1],b.eq[1])*1.35]}},
+    equil:function(e,b){return 'Estado estacionario: <b>k* = '+f(e.eq[0],2)+'</b> · <b>y* = '+f(e.eq[1],3)+'</b> <span class="suave">(base '+f(b.eq[0],2)+' · '+f(b.eq[1],3)+')</span>'},
+    fuente:'conocimiento macroeconómico general (manuales de macro intermedia); no verificado contra una edición específica',
+    verif:function(){var p={s:0.2,A:1,alpha:0.33,n:0.01,delta:0.05},e=solowE(p),dk=p.s*p.A*Math.pow(e.k,p.alpha)-(p.n+p.delta)*e.k,a=solowCamino(Object.assign({},p,{s:0.05}),p,400).pop()[2],b2=solowCamino(Object.assign({},p,{s:0.6}),p,400).pop()[2],e3=solowE(Object.assign({},p,{s:0.3}));
+      return [[Math.abs(dk)<1e-12,'Δk = 0 exacto en k* (fórmula = punto fijo)','Δk(k*) = '+dk.toExponential(1)],[Math.abs(a-e.k)/e.k<0.01&&Math.abs(b2-e.k)/e.k<0.01,'estabilidad global (converge desde ambos lados)','desde abajo '+f(a,2)+', desde arriba '+f(b2,2)+'; k* = '+f(e.k,2)],
+        [e3.y>e.y,'el ahorro compra nivel, no crecimiento','s 0,20 a 0,30: y* '+f(e.y,3)+' a '+f(e3.y,3)+'; crecimiento de largo plazo 0 % en ambos'],[e3.c>e.c,'la paradoja de m05 se invierte a largo plazo','con s < α, más ahorro da más consumo: c* '+f(e.c,3)+' a '+f(e3.c,3)]]}},
+   e67:{id:'e67',disc:'estadistica',ruta:'Estadística › V · Teoremas fundamentales',titulo:'El teorema central del límite',ejes:['x̄ (media de cada muestra)','densidad'],hist:true,
+    params:[P('n','Tamaño de cada muestra n',5,1,100,1,'muestreo','','cuántas observaciones promedia cada muestra'),P('k','Forma de la población k',1,0.2,10,0.1,'población','','gamma de media 1: k = 1 es la exponencial'),P('reps','Muestras simuladas',4000,500,8000,500,'simulación')],
+    esc:[['poblacion','n = 1: la media de una sola observación es la población',{n:1},'Con n = 1 no hay promedio: el histograma es la población misma, sesgada a la derecha.','n = 1|X̄ = X|forma de la población'],
+      ['n_30','n = 30: la «regla de 30» con una población exponencial',{n:30},'Con 30 observaciones la asimetría de X̄ cae a 2/√30 ≈ 0,37 y la normal ya describe bien el centro.','↑n|asimetría ÷ √n|X̄ casi normal'],
+      ['muy_sesgada','población muy sesgada (k = 0,2) con n = 30',{n:30,k:0.2},'Con una población muy sesgada, 30 no alcanzan: la asimetría de X̄ sigue cerca de 0,8. La regla de 30 es una regla, no un teorema.','k pequeño|población muy sesgada|n = 30 no basta'],
+      ['casi_simetrica','población casi simétrica (k = 10) con n = 5',{n:5,k:10},'Si la población ya es casi simétrica, cinco observaciones bastan.','k grande|población casi normal|n pequeño basta']],
+    calc:function(p){var s=tclSim(p),bw=3/40,cnt=new Array(40).fill(0);for(var i=0;i<s.m.length;i++){var bi=Math.floor(s.m[i]/bw);if(bi>=0&&bi<40)cnt[bi]++}var den=cnt.map(function(c){return c/(s.m.length*bw)}),sd=Math.sqrt(1/(p.k*Math.round(p.n)));return {sim:s,den:den,ymax:Math.max(Math.max.apply(null,den),1/(sd*Math.sqrt(2*Math.PI)))*1.12,eq:[s.media,s.var],res:[['media de X̄ (μ = 1)',s.media,3],['Var(X̄) simulada',s.var,4],['σ²/n teórica',s.vt,4],['asimetría de X̄',s.asim,3],['2/√(kn) teórica',s.at,3],['P(|Z| > 1,96)',s.fuera,3]],avisos:[]}},
+    dom:function(a,b){return {x:[0,3],y:[0,Math.max(a.ymax,b.ymax)]}},
+    equil:function(e,b){return 'X̄: media <b>'+f(e.sim.media,3)+'</b> · e.e. <b>'+f(Math.sqrt(e.sim.var),3)+'</b> · asimetría <b>'+f(e.sim.asim,2)+'</b> <span class="suave">(base '+f(b.sim.asim,2)+')</span>'},
+    fuente:'De Moivre (1733), Laplace (1810), Lyapunov (1901), Lindeberg (1922), menciones; conocimiento estadístico general',
+    verif:function(){var a=tclSim({n:5,k:1,reps:4000}),b=tclSim({n:30,k:1,reps:4000}),c=tclSim({n:30,k:0.2,reps:4000});
+      return [[Math.abs(a.media-1)<0.02,'E[X̄] = μ (la media muestral es insesgada)','media de 4000 medias: '+f(a.media,4)],[Math.abs(a.var/a.vt-1)<0.08,'Var(X̄) = σ²/n','simulada '+f(a.var,4)+'; teórica '+f(a.vt,4)],
+        [b.asim<a.asim,'la asimetría de X̄ decrece como 1/√n','n = 5: '+f(a.asim,2)+'; n = 30: '+f(b.asim,2)],[Math.abs(b.fuera-0.05)<0.015,'X̄ converge a la normal partiendo de una población no normal','P(|Z| > 1,96) = '+f(b.fuera,3)+' con n = 30 (normal: 0,050)'],
+        [c.asim>b.asim,'la velocidad depende de la forma de la población','n = 30: k = 1 da '+f(b.asim,2)+'; k = 0,2 da '+f(c.asim,2)]]}}};
+
+  /* ===== las fichas ===== */
+  var FICHA={m10:{preg:'¿Qué ocurre con el producto y la tasa de interés cuando el gobierno aumenta el gasto público, y quién termina financiándolo?',
+    ctx:'Un año después de la Teoría General, John Hicks («Mr. Keynes and the Classics», 1937) tradujo el libro a un sistema de dos ecuaciones y dos incógnitas (Y, r) que se volvió el lenguaje común de la macroeconomía de posguerra. Corrige la carencia central del nivel 1: la inversión ya no es exógena, depende de una tasa de interés que se determina en el mercado de dinero, a la vez que el ingreso.',
+    ecs:[['curva IS','<i>Y</i> = <i>c</i><sub>0</sub> + <i>c</i><sub>1</sub>(<i>Y</i> − <i>T</i>) + <i>I</i><sub>0</sub> − <i>b r</i> + <i>G</i>','equilibrio del mercado de bienes para cada r: hereda el consumo keynesiano (m03) y el multiplicador (m04), pero la inversión cae cuando r sube.'],['curva LM','<i>M</i>/<i>P</i> = <i>k Y</i> − <i>h r</i>','la demanda de saldos reales sube con las transacciones y baja con el costo de oportunidad de tener dinero.'],['equilibrio general','<i>Y</i>* = [<i>c</i><sub>0</sub> − <i>c</i><sub>1</sub><i>T</i> + <i>I</i><sub>0</sub> + <i>G</i> + (<i>b</i>/<i>h</i>)·<i>M</i>/<i>P</i>] ÷ [(1 − <i>c</i><sub>1</sub>) + <i>b k</i>/<i>h</i>]','el término bk/h del denominador es el freno de la tasa de interés: por eso el multiplicador IS-LM es menor que el simple.']],
+    intu:'Dos mercados se disciplinan mutuamente. Una expansión fiscal eleva el ingreso, pero el mayor ingreso eleva la demanda de dinero y con ella la tasa de interés, lo que expulsa inversión privada. La política monetaria opera al revés: más dinero baja r y estimula la inversión.',
+    sup:['Precios fijos: todo ajuste es por cantidades y tasa de interés.','Economía cerrada: sin tipo de cambio ni flujos de capital (los añade Mundell-Fleming, m49).','Oferta monetaria exógena (los bancos centrales modernos fijan r: IS-MP, m51).','Sin expectativas de inflación: r nominal = r real.'],
+    lim:['Sin nivel de precios: no habla de inflación (AD-AS, m20 a m23).','Vulnerable a la crítica de Lucas (1976).','Inútil para una economía abierta pequeña como el Perú sin Mundell-Fleming (m49).','Estático: describe equilibrios, no la trayectoria entre ellos.'],
+    evo:'Del IS-LM salen el efecto expulsión (m11) y la trampa de liquidez (m12) como casos límite; AD-AS (m20 a m25) al endogenizar precios; y Mundell-Fleming (m49) al abrir la economía.',
+    vars:[['Y','producto, endógena'],['r','tasa de interés, endógena'],['C, I','consumo e inversión, derivadas'],['G, T','instrumentos fiscales, exógenas'],['M/P','oferta real de dinero, exógena']],
+    ref:'Hicks, J. R. (1937). Mr. Keynes and the «Classics»; a suggested interpretation. <i>Econometrica, 5</i>(2), 147–159.',autores:'Hicks (1937); difundido por Hansen (síntesis neoclásica).'},
+   m26:{preg:'¿Puede una economía crecer para siempre acumulando capital, y por qué ahorrar más eleva el ingreso pero no su crecimiento?',ctx:'Solow (1956) y Swan (1956), de forma independiente, cerraron el debate sobre el crecimiento de Harrod-Domar con una función de producción de rendimientos decrecientes.',
+    ecs:[['producción por trabajador','<i>y</i> = <i>A k</i><sup>α</sup>',''],['acumulación','Δ<i>k</i> = <i>s A k</i><sup>α</sup> − (<i>n</i> + δ)<i>k</i>',''],['estado estacionario','<i>k</i>* = (<i>s A</i> / (<i>n</i> + δ))<sup>1/(1−α)</sup>','']],
+    intu:'La curva de inversión s·f(k) es cóncava y la de reposición (n+δ)k es una recta: tarde o temprano se cruzan, y en ese cruce el crecimiento por acumulación muere.',sup:['Rendimientos decrecientes del capital (α < 1).','Tasa de ahorro constante y exógena.','Pleno empleo y precios flexibles.'],lim:['El crecimiento de largo plazo es exógeno (el residuo de Solow).','Sin optimización del ahorro (Ramsey).'],evo:'Sigue con la transición (m27), la regla de oro (m28), el progreso tecnológico (m29) y la convergencia (m30).',
+    vars:[['k','capital por trabajador'],['y','producto por trabajador'],['s, n, δ, A, α','parámetros']],ref:'Solow, R. M. (1956). A contribution to the theory of economic growth. <i>The Quarterly Journal of Economics, 70</i>(1), 65–94.',autores:'Solow (1956) y Swan (1956).'},
+   e67:{preg:'Si la población no es normal, ¿por qué la media de una muestra sí termina pareciéndose a una normal, y cuán grande tiene que ser la muestra?',ctx:'De Moivre (1733) lo vio para la binomial; Laplace (1810) lo generalizó; Lyapunov (1901) y Lindeberg (1922) dieron las condiciones.',
+    ecs:[['momentos de la media','E[<i>X̄</i>] = μ,  Var(<i>X̄</i>) = σ²/<i>n</i>',''],['teorema central del límite','(<i>X̄</i> − μ) / (σ/√<i>n</i>) → N(0, 1)','']],
+    intu:'Al promediar, los valores extremos de un lado se compensan con los del otro: la asimetría de la población se divide por √n.',sup:['Observaciones independientes e idénticamente distribuidas.','Varianza finita (sin ella, Cauchy, no se cumple).','Resultado asintótico.'],lim:['No dice cuán grande es «grande»: depende de la forma.'],evo:'Prepara los intervalos de confianza y las pruebas de hipótesis.',
+    vars:[['X̄','media muestral'],['n','tamaño de muestra'],['k','forma de la población gamma']],ref:'Conocimiento estadístico general; sin cita de página.',autores:'De Moivre, Laplace, Lyapunov, Lindeberg (menciones).'}};
+
+  /* ===== estado ===== */
+  var act='m10',vista='simulacion',p={},escAct='expansion_fiscal',movidos={},demoFallo=false,corrida=null,base=null;
+  function M(){return MOD[act]}
+  function valoresBase(){var o={};M().params.forEach(function(q){o[q.n]=q.v});return o}
+  function aplicarEsc(nom){escAct=nom;p=valoresBase();movidos={};var e=M().esc.filter(function(x){return x[0]===nom})[0];if(e)Object.keys(e[2]).forEach(function(k){p[k]=e[2][k];movidos[k]=1});pintarParams();recalcular()}
+
+  /* ===== dibujo ===== */
+  function grafico(m,run,ref,W,H,dom){var L=48,R=14,T=14,B=38,iw=W-L-R,ih=H-T-B,s='';
+    function X(x){return L+(x-dom.x[0])/(dom.x[1]-dom.x[0])*iw}function Y(y){return T+(dom.y[1]-y)/(dom.y[1]-dom.y[0])*ih}
+    function tk(a,b){var r=(b-a)/5,pw=Math.pow(10,Math.floor(Math.log10(r))),st=[1,2,2.5,5,10].map(function(z){return z*pw}).filter(function(z){return z>=r})[0],o=[];for(var v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)o.push(+v.toFixed(6));return o}
+    tk(dom.y[0],dom.y[1]).forEach(function(v){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--rej)"/><text x="'+(L-6)+'" y="'+(Y(v)+3)+'" font-size="10" text-anchor="end" fill="var(--n5)">'+f(v,v%1?(Math.abs(v)<0.1?2:1):0)+'</text>'});
+    tk(dom.x[0],dom.x[1]).forEach(function(v){s+='<text x="'+X(v)+'" y="'+(H-B+15)+'" font-size="10" text-anchor="middle" fill="var(--n5)">'+f(v,v%1?(v<1?2:1):0)+'</text>'});
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(Math.max(0,dom.y[0]))+'" y2="'+Y(Math.max(0,dom.y[0]))+'" stroke="var(--n5)"/><line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(T+ih)+'" stroke="var(--n5)"/>';
+    s+='<text x="'+(W-R)+'" y="'+(H-6)+'" font-size="10.5" text-anchor="end" fill="var(--n6)">'+m.ejes[0]+'</text><text x="'+(L+4)+'" y="'+(T+10)+'" font-size="10.5" fill="var(--n6)">'+m.ejes[1]+'</text>';
+    var clip='<clipPath id="cl'+W+H+'"><rect x="'+L+'" y="'+T+'" width="'+iw+'" height="'+ih+'"/></clipPath>',cuerpo='';
+    function linea(fn,i,col,dash,w,et){var pts=[];for(var j=0;j<=120;j++){var x=dom.x[0]+(dom.x[1]-dom.x[0])*j/120,y=fn(x)[i][2];if(isFinite(y))pts.push(X(x).toFixed(1)+','+Y(Math.max(dom.y[0]-50,Math.min(dom.y[1]+50,y))).toFixed(1))}
+      var r='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="'+w+'"'+(dash?' stroke-dasharray="5 4" opacity=".75"':'')+'/>';
+      if(et){var fr2=[0.94,0.86,0.76,0.64,0.5,0.36].filter(function(a){var yy=fn(dom.x[0]+(dom.x[1]-dom.x[0])*a)[i][2],mg=(dom.y[1]-dom.y[0])*0.08;return yy>dom.y[0]+mg&&yy<dom.y[1]-mg})[0],x2=dom.x[0]+(dom.x[1]-dom.x[0])*(fr2||0.94),y2=fn(x2)[i][2];if(fr2)r+='<text x="'+(X(x2)-2)+'" y="'+(Y(y2)-6)+'" font-size="11" font-weight="600" text-anchor="end" fill="'+col+'">'+et+'</text>'}return r}
+    if(m.hist){var bw=3/40,den=run.den,q=run.par,sd=Math.sqrt(1/(q.k*Math.round(q.n))),npdf=function(x){return Math.exp(-0.5*Math.pow((x-1)/sd,2))/(sd*Math.sqrt(2*Math.PI))},ymax=dom.y[1];
+      var gp=function(x){var k=q.k;return x<=0?0:Math.exp(k*Math.log(k)+(k-1)*Math.log(x)-k*x-lgam(k))};
+      den.forEach(function(d,i){cuerpo+='<rect x="'+(X(i*bw)+0.5)+'" y="'+Y(d)+'" width="'+Math.max(0,X(bw)-X(0)-1)+'" height="'+(Y(0)-Y(d))+'" fill="color-mix(in oklab,'+C1+' 55%,transparent)"/>'});
+      var pp=[],pg=[];for(var j=0;j<=150;j++){var x=3*j/150;pp.push(X(x).toFixed(1)+','+Y(npdf(x)).toFixed(1));var g=gp(x);if(isFinite(g))pg.push(X(x).toFixed(1)+','+Y(Math.min(ymax*1.2,g)).toFixed(1))}
+      cuerpo+='<polyline points="'+pg.join(' ')+'" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-dasharray="5 4"/><polyline points="'+pp.join(' ')+'" fill="none" stroke="'+C2+'" stroke-width="2.4"/><line x1="'+X(1)+'" x2="'+X(1)+'" y1="'+T+'" y2="'+(T+ih)+'" stroke="var(--n6)" stroke-dasharray="2 3"/><text x="'+(X(1)+4)+'" y="'+(T+22)+'" font-size="10.5" fill="var(--n6)">μ = 1</text>';}
+    else{var fr=run.curvas,fb=ref?ref.curvas:null,n=fr(dom.x[0]+1e-6).length;
+      for(var c=0;c<n;c++){if(fb)cuerpo+=linea(fb,c,fb(1)[c][1],true,1.6);cuerpo+=linea(fr,c,fr(1)[c][1],false,2.4,fr(1)[c][0].split(' ')[0])}
+      var pt=function(e,cl,lab){var x=X(e[0]),y=Y(e[1]);return '<line x1="'+x+'" x2="'+x+'" y1="'+y+'" y2="'+Y(Math.max(0,dom.y[0]))+'" stroke="'+cl+'" stroke-dasharray="2 3"/><line x1="'+L+'" x2="'+x+'" y1="'+y+'" y2="'+y+'" stroke="'+cl+'" stroke-dasharray="2 3"/><circle cx="'+x+'" cy="'+y+'" r="5" fill="'+(lab?'var(--n7)':'var(--lienzo)')+'" stroke="var(--n7)" stroke-width="1.6"/>'+(lab?'<text x="'+(x+8)+'" y="'+(y-8)+'" font-size="11" font-weight="600" fill="var(--n7)">'+lab+'</text>':'')};
+      if(ref)cuerpo+=pt(ref.eq,'var(--n4)','');cuerpo+=pt(run.eq,'var(--n5)',m.id==='m26'?'k*':'E')}
+    return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(m.titulo)+'">'+clip+s+'<g clip-path="url(#cl'+W+H+')">'+cuerpo+'</g></svg>'}
+  function lienzo(html){return '<div class="lienzo">'+html+'<div class="marca"'+(demoFallo?'':' hidden')+'>NO VÁLIDO</div></div>'}
+  function evolucion(W,H){var pb=valoresBase(),cam=solowCamino(pb,p,100),yb=solowE(pb).y,ye=solowE(p).y,L=48,R=14,T=14,B=38,lo=Math.min(yb,ye)*0.9,hi=Math.max(yb,ye)*1.08,s='';
+    function X(t){return L+t/100*(W-L-R)}function Y(y){return T+(hi-y)/(hi-lo)*(H-T-B)}
+    for(var i=0;i<=4;i++){var v=lo+(hi-lo)*i/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--rej)"/><text x="'+(L-6)+'" y="'+(Y(v)+3)+'" font-size="10" text-anchor="end" fill="var(--n5)">'+f(v,2)+'</text>'}
+    [0,20,40,60,80,100].forEach(function(t){s+='<text x="'+X(t)+'" y="'+(H-B+15)+'" font-size="10" text-anchor="middle" fill="var(--n5)">'+t+'</text>'});
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(yb)+'" y2="'+Y(yb)+'" stroke="var(--n5)" stroke-dasharray="5 4"/><line x1="'+X(5)+'" x2="'+X(5)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--n4)"/><text x="'+(X(5)+4)+'" y="'+(T+10)+'" font-size="10" fill="var(--n5)">cambio en t = 5</text>';
+    s+='<polyline points="'+cam.map(function(c){return X(c[0]).toFixed(1)+','+Y(c[1]).toFixed(1)}).join(' ')+'" fill="none" stroke="'+C1+'" stroke-width="2.4"/><text x="'+(W-R)+'" y="'+(H-6)+'" font-size="10.5" text-anchor="end" fill="var(--n6)">t (períodos)</text><text x="'+(L+4)+'" y="'+(H-B-6)+'" font-size="10.5" fill="var(--n6)">y(t)</text>';
+    var mitad=cam.filter(function(c){return c[0]>5&&Math.abs(c[1]-ye)<=Math.abs(cam[5][1]-ye)/2})[0];
+    return {svg:'<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Evolución temporal del producto por trabajador">'+s+'</svg>',mitad:mitad?mitad[0]-5:null}}
+
+  /* ===== recálculo ===== */
+  var tPend=null;
+  function recalcular(){var t0=performance.now(),m=M();base=m.calc(valoresBase());base.par=valoresBase();corrida=m.calc(p);corrida.par=Object.assign({},p);var ms=performance.now()-t0;
+    $('#e-corr').textContent='corrida en '+f(ms,0)+' ms (en proceso)';pintarTodo()}
+  function programar(){if(!$('#b-vivo').classList.contains('on')){estado('En vivo apagado: F5 corre.');return}clearTimeout(tPend);tPend=setTimeout(recalcular,M().hist?150:0)}
+  function pintarTodo(){var m=M(),dom=m.dom(base,corrida),W=V.classList.contains('celular')?400:760,H=V.classList.contains('celular')?300:360;
+    $('#equil').innerHTML=m.equil(corrida,base);
+    var av=corrida.avisos||[],mot=$('#motivo');
+    if(demoFallo){mot.hidden=false;mot.style.setProperty('--c','var(--neg)');mot.innerHTML='<b>NO VÁLIDO.</b> La verificación «expansión fiscal: ↑Y, ↑r, ↓I» falla con el archivo actual del modelo (demostración: así se presenta un fallo). Los resultados se atenúan hasta que el modelo vuelva a pasar.'}
+    else if(av.length){mot.hidden=false;mot.style.setProperty('--c','var(--neu)');mot.innerHTML=av.join(' ')}else mot.hidden=true;
+    if(vista==='simulacion'){var caja=$('#g-sim-caja');
+      if(m.evolucion){if(!V.classList.contains('celular')){W=520;H=400}var ev=evolucion(W,H);caja.style.gridTemplateColumns=V.classList.contains('celular')?'1fr':'1fr 1fr';caja.innerHTML='<div><div class="suave">Diagrama fundamental</div>'+lienzo(grafico(m,corrida,base,W,H,dom))+'</div><div><div class="suave">Evolución temporal de y'+(ev.mitad!==null?' · la mitad del camino en '+ev.mitad+' períodos':'')+'</div>'+lienzo(ev.svg)+'</div>'}
+      else{caja.style.gridTemplateColumns='1fr';caja.innerHTML=lienzo(grafico(m,corrida,m.hist?null:base,W,H,dom))}
+      var ley=m.hist?[['X̄ simuladas (histograma)',C1,0],['normal N(μ, σ²/n)',C2,0],['población gamma',"var(--n5)",1]]:corrida.curvas(1).map(function(c){return [c[0]+' · escenario',c[1],0]}).concat([['base',"var(--n5)",1]]);
+      $('#leyenda').innerHTML=ley.map(function(l){return '<span><i style="--c:'+l[1]+'"'+(l[2]?' class="punt"':'')+'></i>'+l[0]+'</span>'}).join('');
+      $('#resultados').innerHTML=corrida.res.map(function(r,i){var b=base.res[i][1],d=r[1]-b,dd=Math.abs(d)<Math.pow(10,-r[2]);return '<div class="res'+(demoFallo?' tenue':'')+'"><div class="n">'+r[0]+'</div><div class="v">'+f(r[1],r[2])+'</div><div class="d '+(dd?'suave':d>0?'sube':'baja')+'">'+(dd?'igual a la base':(d>0?'▲ ':'▼ ')+f(Math.abs(d),r[2])+' frente a la base')+'</div></div>'}).join('')}
+    if(vista==='comparacion'){var e=m.esc.filter(function(x){return x[0]===escAct})[0];$('#comp-nom').textContent=e?'Escenario: '+e[0]+' · '+e[1]:'Escenario propio';
+      var Wc=420,Hc=290,dom2=m.dom(base,corrida);
+      $('#g-comp-base').innerHTML=grafico(m,base,null,Wc,Hc,JSON.parse(JSON.stringify(dom2)));$('#g-comp-esc').innerHTML=grafico(m,corrida,null,Wc,Hc,JSON.parse(JSON.stringify(dom2)));
+      $('#t-comp').innerHTML='<tr><th>resultado</th><th>base</th><th>escenario</th><th>Δ</th></tr>'+corrida.res.map(function(r,i){var b=base.res[i][1],d=r[1]-b;return '<tr><td>'+r[0]+'</td><td>'+f(b,r[2])+'</td><td>'+f(r[1],r[2])+'</td><td class="'+(Math.abs(d)<Math.pow(10,-r[2])?'':d>0?'sube':'baja')+'">'+(d>0?'+':'')+f(d,r[2])+'</td></tr>'}).join('');
+      $('#comp-lect').textContent=e?e[3]:'Un escenario propio: los parámetros movidos están marcados a la derecha.';$('#comp-cad').innerHTML=e?e[4].split('|').map(function(x){return '<span>'+esc(x)+'</span>'}).join('<span class="fl">→</span>'):''}
+    if(vista==='sensibilidad')pintarSens();
+    if(vista==='ficha')pintarFicha();
+    pintarVerif();
+    $$('.lienzo .marca').forEach(function(x){x.hidden=!demoFallo})}
+
+  /* ===== parámetros ===== */
+  function pintarParams(){var m=M();
+    $('#escen').innerHTML='<button data-e="base" class="'+(escAct==='base'?'on':'')+'">Base<small>los valores por defecto del modelo</small></button>'+m.esc.map(function(e){return '<button data-e="'+e[0]+'" class="'+(escAct===e[0]?'on':'')+'">'+e[0]+'<small>'+esc(e[1])+'</small></button>'}).join('')+(escAct==='propio'?'<button data-e="propio" class="on">Propio<small>sin guardar · Guardar escenario…</small></button>':'');
+    var g='',h='';m.params.forEach(function(q){if(q.g!==g){g=q.g;h+='<div class="grupo-p">'+g+'</div>'}var dec=(String(q.paso).split('.')[1]||'').length;
+      h+='<div class="par" title="'+esc(q.def)+'"><label for="r-'+q.n+'" class="'+(movidos[q.n]?'mov':'')+'">'+q.et+'</label><input type="number" data-n="'+q.n+'" value="'+(+p[q.n]).toFixed(dec)+'" step="'+q.paso+'" min="'+q.min+'" max="'+q.max+'" aria-label="'+q.et+'"><input type="range" id="r-'+q.n+'" data-n="'+q.n+'" min="'+q.min+'" max="'+q.max+'" step="'+q.paso+'" value="'+p[q.n]+'"><div class="rango"><span>'+f(q.min,dec)+'</span><span>base '+f(q.v,dec)+(q.u?' '+q.u:'')+'</span><span>'+f(q.max,dec)+'</span></div></div>'});
+    $('#deslizadores').innerHTML=h}
+  $('#escen').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.dataset.e==='propio')return;demoFallo=false;aplicarEsc(b.dataset.e)});
+  $('#deslizadores').addEventListener('input',function(e){var n=e.target.dataset.n;if(!n)return;var q=M().params.filter(function(x){return x.n===n})[0],v=Math.max(q.min,Math.min(q.max,+e.target.value));if(!isFinite(v))return;p[n]=v;movidos[n]=1;
+    var dec=(String(q.paso).split('.')[1]||'').length,par=e.target.closest('.par');if(e.target.type==='range')$('input[type=number]',par).value=v.toFixed(dec);else $('input[type=range]',par).value=v;$('label',par).classList.add('mov');
+    if(escAct!=='propio'){escAct='propio';var sc=$('#deslizadores').scrollTop;pintarParams();$('#deslizadores').scrollTop=sc}programar()});
+  function aBase(){demoFallo=false;aplicarEsc('base');estado('De vuelta a la base: los valores por defecto del modelo.')}
+  $('#b-base').onclick=aBase;$('#b-base2').onclick=aBase;
+  $('#b-vivo').onclick=function(){this.classList.toggle('on');estado(this.classList.contains('on')?'Recalcular en vivo: encendido.':'Recalcular en vivo: apagado; F5 corre.')};
+  $('#b-correr').onclick=function(){recalcular();estado('Corrida hecha con el escenario actual.')};
+
+  /* ===== sensibilidad ===== */
+  function pintarSens(){var m=M(),sp=$('#sens-p'),sr=$('#sens-r');
+    if(sp.dataset.m!==act){sp.innerHTML=m.params.filter(function(q){return q.n!=='reps'}).map(function(q){return '<option value="'+q.n+'">'+q.et+'</option>'}).join('');sr.innerHTML=corrida.res.map(function(r,i){return '<option value="'+i+'">'+r[0]+'</option>'}).join('');sp.dataset.m=act;sr.value=0}
+    var q=m.params.filter(function(x){return x.n===sp.value})[0],ri=+sr.value,pts=[],N=m.hist?16:60;
+    for(var i=0;i<=N;i++){var v=q.min+(q.max-q.min)*i/N,pp=Object.assign({},p);pp[q.n]=v;if(m.hist)pp.reps=600;var r=m.calc(pp).res[ri][1];if(isFinite(r))pts.push([v,r])}
+    var W=760,H=320,L=56,R=16,T=16,B=40,ys=pts.map(function(x){return x[1]}),lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys);if(hi-lo<1e-9){hi+=1;lo-=1}var pad=(hi-lo)*0.1;lo-=pad;hi+=pad;
+    function X(x){return L+(x-q.min)/(q.max-q.min)*(W-L-R)}function Y(y){return T+(hi-y)/(hi-lo)*(H-T-B)}var s='';
+    for(var k=0;k<=4;k++){var yv=lo+(hi-lo)*k/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(yv)+'" y2="'+Y(yv)+'" stroke="var(--rej)"/><text x="'+(L-6)+'" y="'+(Y(yv)+3)+'" font-size="10" text-anchor="end" fill="var(--n5)">'+f(yv,Math.abs(hi-lo)<1?3:1)+'</text>'}
+    for(k=0;k<=5;k++){var xv=q.min+(q.max-q.min)*k/5;s+='<text x="'+X(xv)+'" y="'+(H-B+15)+'" font-size="10" text-anchor="middle" fill="var(--n5)">'+f(xv,q.paso<1?2:0)+'</text>'}
+    s+='<polyline points="'+pts.map(function(x){return X(x[0]).toFixed(1)+','+Y(x[1]).toFixed(1)}).join(' ')+'" fill="none" stroke="'+C1+'" stroke-width="2.4"/>';
+    var vb=q.v,pb=Object.assign({},valoresBase());if(m.hist)pb.reps=600;var yb=m.calc(pb).res[ri][1],h2=(q.max-q.min)/200,pa=Object.assign({},pb),pc=Object.assign({},pb);pa[q.n]=vb+h2;pc[q.n]=vb-h2;var der=(m.calc(pa).res[ri][1]-m.calc(pc).res[ri][1])/(2*h2);
+    s+='<line x1="'+X(vb)+'" x2="'+X(vb)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--n5)" stroke-dasharray="3 3"/><circle cx="'+X(vb)+'" cy="'+Y(yb)+'" r="5" fill="var(--n7)"/><text x="'+(X(vb)+7)+'" y="'+(Y(yb)-8)+'" font-size="11" fill="var(--n7)">base</text>';
+    if(p[q.n]!==vb){var yc=m.calc(Object.assign({},p,m.hist?{reps:600}:{})).res[ri][1];if(isFinite(yc))s+='<circle cx="'+X(p[q.n])+'" cy="'+Y(yc)+'" r="5" fill="var(--lienzo)" stroke="'+C1+'" stroke-width="2"/>'}
+    s+='<text x="'+(W-R)+'" y="'+(H-6)+'" font-size="10.5" text-anchor="end" fill="var(--n6)">'+q.et+'</text>';
+    $('#g-sens').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Sensibilidad">'+s+'</svg>';
+    $('#sens-rango').textContent='rango declarado '+f(q.min,q.paso<1?2:0)+' a '+f(q.max,q.paso<1?2:0)+(m.hist?' · 600 muestras por punto':'');
+    $('#sens-lect').innerHTML='En la base ('+q.n+' = '+f(vb,q.paso<1?2:0)+'), la derivada es <b>d('+corrida.res[ri][0].split(' ')[0]+')/d'+q.n+' = '+f(der,4)+'</b>. '+(m.id==='m10'&&q.n==='G'&&ri===0?'Es el multiplicador IS-LM: menor que 1/(1 − c1) = 2,5 porque la tasa frena la inversión.':'El punto hueco es el escenario actual.')}
+  $('#sens-p').onchange=pintarSens;$('#sens-r').onchange=pintarSens;
+
+  /* ===== ficha ===== */
+  function pintarFicha(){var F=FICHA[act],m=M();
+    $('#ficha').innerHTML='<div class="texto"><p class="pregunta">'+F.preg+'</p><h3>Contexto</h3><p>'+F.ctx+'</p><h3>Ecuaciones</h3>'+F.ecs.map(function(e){return '<div class="ec"><span class="nom">'+e[0]+'</span>'+e[1]+'</div>'+(e[2]?'<p style="font-size:13px;color:var(--n6)">'+e[2]+'</p>':'')}).join('')+'<h3>Intuición</h3><p>'+F.intu+'</p><h3>Supuestos</h3><ul>'+F.sup.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><h3>Limitaciones</h3><ul>'+F.lim.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><h3>Evolución en el currículo</h3><p>'+F.evo+'</p></div>'+
+      '<div class="lado"><div class="caja"><h4>Variables</h4><table>'+F.vars.map(function(v){return '<tr><td><i style="font-family:var(--ser)">'+v[0]+'</i></td><td>'+v[1]+'</td></tr>'}).join('')+'</table></div><div class="caja"><h4>Parámetros</h4>'+m.params.length+' con su rango, paso y unidad; '+m.esc.length+' escenarios del modelo.</div><div class="caja"><h4>Autores</h4>'+F.autores+'</div><div class="caja"><h4>Referencia</h4><span style="font-family:var(--ser)">'+F.ref+'</span><div class="neu" style="margin-top:6px">Sin calibre_id: cita no comprobada contra la edición (procedencia: '+m.fuente.split(';')[0]+').</div></div><div class="caja"><h4>Archivo</h4><code style="font:11px var(--mono);overflow-wrap:anywhere">'+(m.disc==='macro'?'macro/modelos/nivel_'+(m.id==='m10'?'02/m10_islm':'05/m26_solow'):'estadistica/modelos/nivel_05/e67_teorema_central_limite')+'.py</code></div></div>'}
+
+  /* ===== verificaciones ===== */
+  var cacheV={};
+  function pintarVerif(){var m=M(),vs=cacheV[act]||(cacheV[act]=m.verif());if(demoFallo&&act==='m10'){vs=vs.slice();vs[1]=[false,vs[1][1],'esperado ↓I; el motor devolvió I 42,9 a 44,1 (demostración)']}
+    var ok=vs.filter(function(v){return v[0]}).length,todo=ok===vs.length,chip=$('#chip');chip.className='chip '+(todo?'ok':'mal');chip.textContent=(todo?'VERIFICADO ':'NO VÁLIDO ')+ok+'/'+vs.length;
+    $('#ban-res').innerHTML='<span class="'+(todo?'ok':'mal')+'">'+(todo?'✓':'✗')+' '+ok+' de '+vs.length+' verificaciones superadas</span> · hace un momento';$('#ban-fuente').textContent='contra: '+m.fuente;
+    var fila=function(v){return '<div class="vf"><i class="ti '+(v[0]?'ti-circle-check ok':'ti-circle-x mal')+'"></i><span>'+v[1]+'<small>'+v[2]+'</small></span></div>'};
+    $('#ban-filas').innerHTML=vs.map(fila).join('');$('#ver-list').innerHTML=vs.map(function(v,i){return '<div class="vf"><i class="ti '+(v[0]?'ti-circle-check ok':'ti-circle-x mal')+'"></i><span><b style="font-weight:500">'+(i+1)+'. '+v[1]+'</b><small>el motor devolvió: '+v[2]+'</small><code>base.verificar('+act+') · '+(v[0]?'pasa':'falla')+'</code></span></div>'}).join('');
+    $('#ver-fuente').textContent='Fuente de la verificación: '+m.fuente+'.';$('#b-fallo').textContent=demoFallo?'Volver al estado real':'Ver cómo se presenta un fallo';$('#b-fallo').hidden=act!=='m10'}
+  $('#b-fallo').onclick=function(){demoFallo=!demoFallo;pintarTodo()};
+  $('#b-verificar').onclick=function(){cacheV={};pintarTodo();estado(M().verif().length+' verificaciones corridas con el motor: escribe solo en la caché del studio.')};
+  $('#b-plegar').onclick=function(){$('#banda').classList.toggle('plegada')};
+
+  /* ===== laboratorio ===== */
+  var REG=['<span class="c"># registro de la corrida · 2026-11-19</span>','10:02:14  abrir macro/m10 · estado: verificado con el archivo actual','10:02:14  correr base · 1 ms','10:03:40  escenario expansion_fiscal · G = 250'];
+  function ops(){var m=M(),d=m.disc,mac=d==='macro';return [['Exportar el reporte y las figuras','python3 '+d+'/main.py reporte '+m.id,'escribe '+d+'/salidas/'+m.id+'/ (regenerable, fuera de git)'],['Exportar los datos del escenario','python3 '+d+'/main.py simular '+m.id+' --escenario '+escAct+' --csv','escribe '+d+'/salidas/'+m.id+'/'+escAct+'.csv'],['Guardar el escenario propio','(datos del studio) escenarios/'+m.id+'.yml','añade un escenario propio; el modelo no se toca'],['Regenerar catalogo.json','python3 main.py catalogo --aplicar','reescribe catalogo.json (lo leen docencia y los pubs)'],['Regenerar navegador.json','python3 main.py web --aplicar','reescribe navegador.json (la vitrina en el navegador, Pyodide)'],['Comprobar las citas','python3 '+d+'/main.py fuentes',mac?'':'lee Calibre; no escribe',mac]]}
+  function pintarOps(){$('#ops').innerHTML=ops().map(function(o,i){return '<div class="op"><b>'+o[0]+'</b><button class="btn" data-op="'+i+'"'+(o[3]?' disabled title="Solo en las disciplinas que tienen main.py fuentes"':'')+'>'+(o[3]?'No disponible':'Ejecutar…')+'</button><code>'+esc(o[1])+'</code></div>'}).join('');$('#reg').innerHTML=REG.join('\n');$('#reg').scrollTop=1e5}
+  var opAct=null;
+  $('#ops').addEventListener('click',function(e){var b=e.target.closest('[data-op]');if(!b||b.disabled)return;opAct=ops()[+b.dataset.op];$('#op-tit').textContent=opAct[0];$('#op-orden').textContent=opAct[1];$('#op-toca').textContent=opAct[2];abrir('dlg-op')});
+  $('#op-ok').onclick=function(){var h=new Date().toTimeString().slice(0,8);REG.push(h+'  '+opAct[1]+'  · hecho (la maqueta no escribe)');cerrar();pintarOps();estado(opAct[0]+': hecho.')};
+  $('#b-guardar').onclick=function(){opAct=ops()[2];$('#op-tit').textContent=opAct[0];$('#op-orden').textContent=opAct[1]+'\n'+Object.keys(movidos).map(function(k){return k+': '+p[k]}).join('\n');$('#op-toca').textContent=opAct[2];abrir('dlg-op')};
+
+  /* ===== recorrido guiado ===== */
+  var GUIA=[['Pregunta',function(){return FICHA[act].preg}],['Construcción',function(){return FICHA[act].ecs.map(function(e){return e[0]+': '+e[1]}).join('<br>')}],['Equilibrio',function(){return M().equil(corrida,base)}],['Experimentos',function(){return 'Elige un escenario a la derecha o mueve un deslizador: '+M().esc.map(function(e){return e[0]}).join(', ')+'.'}],['Interpretación',function(){return FICHA[act].intu}]],gi=0;
+  function pintarGuia(){$('#guia-mod').textContent=M().titulo;$('#guia-pasos').innerHTML=GUIA.map(function(g,i){return '<i class="'+(i<=gi?'on':'')+'"></i>'}).join('');$('#guia-tit').textContent=(gi+1)+'. '+GUIA[gi][0];$('#guia-txt').innerHTML=GUIA[gi][1]();$('#guia-sig').textContent=gi===GUIA.length-1?'Terminar':'Siguiente'}
+  $('#b-guia').onclick=function(){gi=0;pintarGuia();abrir('dlg-guia')};
+  $('#guia-sig').onclick=function(){if(gi===GUIA.length-1){cerrar();return}gi++;pintarGuia()};$('#guia-ant').onclick=function(){if(gi>0){gi--;pintarGuia()}};
+
+  /* ===== navegación ===== */
+  function abrir(id){$$('.capa').forEach(function(c){c.hidden=c.id!==id})}
+  function cerrar(){$$('.capa').forEach(function(c){c.hidden=true})}
+  $$('[data-cerrar]').forEach(function(b){b.onclick=cerrar});
+  function estado(t){$('#e-estado').textContent=t}
+  function ponerVista(v){vista=v;$$('#pestanas .pest').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});$$('.vista').forEach(function(s){s.hidden=s.dataset.v!==v});$('#pest-sim').firstChild.textContent=M().evolucion?'Simulación y evolución':'Simulación';if(v==='laboratorio')pintarOps();pintarTodo()}
+  function abrirModelo(id,esc0){act=id;var m=M();$('#t-ventana').textContent=m.titulo+' · '+m.disc+'/'+m.id+' · Simuladores Studio';$('#ruta').innerHTML=m.ruta+' › <b>'+m.id+'</b>';$('#m-titulo').textContent=m.titulo;demoFallo=false;pintarArbol();aplicarEsc(esc0||m.esc[0][0])}
+  var PANT={simulacion:['m10','simulacion'],comparacion:['m10','comparacion'],sensibilidad:['m10','sensibilidad'],ficha:['m10','ficha'],verificaciones:['m10','verificaciones'],laboratorio:['m10','laboratorio'],solow:['m26','simulacion'],tcl:['e67','simulacion']};
+  function pantalla(x){if(!PANT[x])return;$$('#g-pantalla button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.p===x)});cerrar();V.classList.remove('ver-cat');
+    var ps=PANT[x];vista=ps[1];if(act!==ps[0]||!corrida)abrirModelo(ps[0],x==='tcl'?'n_30':undefined);ponerVista(ps[1]);marcarCel(x==='ficha'?'ficha':x==='verificaciones'?'verif':'modelo');if(history.replaceState)history.replaceState(null,'','#'+x)}
+  $$('#g-pantalla button').forEach(function(b){b.onclick=function(){pantalla(b.dataset.p)}});
+  $$('#pestanas .pest').forEach(function(b){b.onclick=function(){ponerVista(b.dataset.v)}});
+  $$('[data-ir]').forEach(function(b){b.onclick=function(){ponerVista(b.dataset.ir)}});
+  $$('[data-cat]').forEach(function(b){b.onclick=function(){if(V.classList.contains('celular')){V.classList.toggle('ver-cat');return}var c=$('.catalogo');c.hidden=!c.hidden;$('.cuerpo').style.gridTemplateColumns=c.hidden?'minmax(0,1fr) 280px':''}});
+  function marcarCel(c){$$('.abajo-cel button').forEach(function(b){b.classList.toggle('on',b.dataset.c===c)})}
+  $$('.abajo-cel button').forEach(function(b){b.onclick=function(){var c=b.dataset.c;V.classList.toggle('ver-cat',c==='cat');marcarCel(c);if(c==='ficha')ponerVista('ficha');if(c==='verif')ponerVista('verificaciones');if(c==='modelo')ponerVista('simulacion')}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrar();if(e.key==='F5'){e.preventDefault();recalcular();estado('F5: corrida hecha.')}if(e.key==='F9'){e.preventDefault();$('[data-cat]').click()}
+    if(e.ctrlKey&&!e.shiftKey&&(e.key==='t'||e.key==='T')){e.preventDefault();$('#b-verificar').click()}if(e.ctrlKey&&e.shiftKey&&(e.key==='T'||e.key==='t')){e.preventDefault();$('#b-plegar').click()}
+    if(e.ctrlKey&&/^[1-6]$/.test(e.key)){e.preventDefault();ponerVista(['simulacion','comparacion','sensibilidad','ficha','verificaciones','laboratorio'][+e.key-1])}});
+  $$('#g-tema button').forEach(function(b){b.onclick=function(){raiz.setAttribute('data-theme',b.dataset.t);$$('#g-tema button').forEach(function(x){x.setAttribute('aria-pressed',x===b)})}});
+  function ancho(a){V.classList.toggle('celular',a==='celular');V.classList.remove('ver-cat');$$('#g-ancho button').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.a===a)});if(corrida)pintarTodo()}
+  $$('#g-ancho button').forEach(function(b){b.onclick=function(){ancho(b.dataset.a)}});
+  if(window.innerWidth<760)V.classList.add('celular'),$$('#g-ancho button').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.a==='celular')});
+  var h=(location.hash||'').slice(1);pantalla(PANT[h]?h:'simulacion');
+  window.addEventListener('hashchange',function(){var x=(location.hash||'').slice(1);if(PANT[x])pantalla(x)});
+})();
 </script>
 </body>
 </html>
