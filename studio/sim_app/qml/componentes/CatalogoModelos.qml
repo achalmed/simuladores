@@ -85,9 +85,9 @@ QQC2.Control {
                     readonly property bool actual: ref === raiz.m.ref
                     width: ListView.view.width
                     leftPadding: Kirigami.Units.largeSpacing
-                    // la elegida teñida con su marca (FondoFila), no el bloque lleno del acento: en Lliphi Oscuro el
+                    // la elegida teñida con su marca (FondoSeleccion de la base), no el bloque lleno del acento: en Lliphi Oscuro el
                     // acento es el rojo de los errores y el modelo elegido parecía uno con fallos
-                    background: FondoFila { control: fila; elegida: fila.actual }
+                    background: FondoSeleccion { elegida: fila.actual; sobre: fila.hovered; pulsada: fila.pressed; foco: fila.visualFocus }
                     onClicked: { lista.currentIndex = index; raiz.m.irA(ref) }
                     Keys.onReturnPressed: raiz.m.irA(ref)
                     Accessible.name: model.id + " " + model.titulo + ", " + model.estado + (actual ? ", elegido" : "")
