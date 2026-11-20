@@ -94,9 +94,13 @@ VentanaBase {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
-                BotonAccion { accion: ventana.accion("ver.catalogo"); conTexto: false }
+                BotonAccion { accion: ventana.accion("ver.catalogo"); conTexto: false; flat: true }
                 Kirigami.Icon {
-                    source: modelos.hayActual ? "office-chart-line" : "applications-science"
+                    // simbólico siempre: el matraz a todo color de «applications-science» desentonaba con las acciones
+                    source: "office-chart-line"
+                    isMask: true
+                    color: Kirigami.Theme.textColor
+                    opacity: modelos.hayActual ? 1 : 0.6
                     implicitWidth: Kirigami.Units.iconSizes.medium
                     implicitHeight: implicitWidth
                 }
@@ -122,7 +126,7 @@ VentanaBase {
                     id: chip
                     visible: modelos.hayActual && modelos.cargado
                     nivel: validez.valido === true ? "positivo" : (validez.nivel || "neutro")
-                    icono: nivel === "positivo" ? "data-success" : (nivel === "negativo" ? "data-error" : "data-warning")
+                    icono: nivel === "positivo" ? "checkmark" : (nivel === "negativo" ? "data-error" : "data-warning")
                     text: validez.valido === true ? "VÁLIDO · " + modelos.textoEstado.toLowerCase() : (validez.titulo || modelos.textoEstado || "sin corrida")
                     QQC2.ToolTip.text: (validez.texto || "") + (modelos.hayActual ? "\n" + modelos.resumenVerificacion : "")
                     QQC2.ToolTip.visible: zonaChip.hovered
@@ -136,22 +140,21 @@ VentanaBase {
                 BotonAccion { accion: ventana.accion("archivo.abrir"); conTexto: false }
                 BotonAccion { accion: ventana.accion("ventana.paleta"); conTexto: false }
             }
-            QQC2.TabBar {
+            // las vistas: un selector segmentado (gui-comun 4.2) en vez de pestañas de Kvantum con la elegida en gris;
+            // los iconos, todos simbólicos; los fallos de las verificaciones, como contador de su opción
+            SelectorSegmentado {
                 id: pestanas
-                Layout.fillWidth: true
-                currentIndex: ventana.vista
-                onCurrentIndexChanged: ventana.vista = currentIndex
-                Repeater {                  // las seis vistas son fijas: el modelo del Repeater es una lista constante de índices
-                    model: 6
-                    delegate: QQC2.TabButton {
-                        required property int index
-                        text: ventana.vistas[index] + (index === 4 && modelos.nFallos > 0 ? " (" + modelos.nFallos + " ✘)" : "")
-                        icon.name: ["office-chart-line", "view-split-left-right", "office-chart-line-stacked", "text-x-generic", "checkmark", "utilities-terminal"][index]
-                        width: implicitWidth
-                        QQC2.ToolTip.text: "Ctrl+" + (index + 1)
-                        QQC2.ToolTip.visible: hovered
-                    }
-                }
+                titulo: "Vistas"
+                opciones: ventana.vistas.map((t, i) => ({
+                    clave: String(i), texto: t,
+                    icono: ["office-chart-line", "view-split-left-right", "office-chart-line-stacked", "documentinfo", "checkmark", "utilities-terminal"][i],
+                    contador: i === 4 && modelos.nFallos > 0 ? modelos.nFallos : "",
+                    color: i === 4 && modelos.nFallos > 0 ? Kirigami.Theme.negativeTextColor : "transparent",
+                    descripcion: i === 4 && modelos.nFallos > 0 ? "Verificaciones: " + modelos.nFallos + " con fallos" : "",
+                    atajo: "Ctrl+" + (i + 1)
+                }))
+                actual: String(ventana.vista)
+                onElegida: clave => ventana.irAVista(Number(clave))
             }
         }
     }
@@ -231,6 +234,7 @@ VentanaBase {
         title: "Aplicar: " + ops.titulo + (modelos.hayActual && ops.sobreModelo ? " · " + modelos.id : "")
         subtitle: ops.textoConfirmacion
         standardButtons: Kirigami.Dialog.Cancel
+        showCloseButton: false     // los botones ya están al pie (la × de la cabecera es roja en algunos temas de iconos)
         customFooterActions: [Kirigami.Action { text: "Aplicar"; icon.name: "dialog-ok-apply"; enabled: ops.puedeAplicar; onTriggered: { ops.aplicar(); dialogoAplicar.close() } }]
         function abrir() {
             if (!ops.puedeAplicar) { ventana.pista(ops.motivoNoAplicar); irAVista(5); laboratorio.pestana = 0; return }
@@ -244,6 +248,9 @@ VentanaBase {
                                            : "No existe el .venv del repo: sin matplotlib no hay figura académica, fórmulas dibujadas, reportes ni CLI del laboratorio (correr y verificar un modelo sí funcionan).")
                   + "\n\nPara crearlo (sin sudo ni apt):\n" + studio.ajustes.ordenVenv
         standardButtons: Kirigami.Dialog.Close
+        showCloseButton: false     // los botones ya están al pie (la × de la cabecera es roja en algunos temas de iconos)
+        // «Cerrar» sin el círculo rojo de «dialog-close» (Colloid, Papirus): solo su texto
+        Component.onCompleted: { const c = standardButton(Kirigami.Dialog.Close); if (c) c.icon.name = "" }
         customFooterActions: [Kirigami.Action { text: "Copiar la orden"; icon.name: "edit-copy"; onTriggered: { espacio.copiar(studio.ajustes.ordenVenv); dialogoVenv.close() } }]
     }
     dialogoAjustes: DialogoAjustesStudio {}

@@ -17,7 +17,7 @@ ESTADOS = (("verificado", "Verificado"), ("diferencias", "Con diferencias"), ("s
 NIVEL_DE_ESTADO = {"verificado": "positivo", "diferencias": "negativo", "sin_verificar": "neutro"}
 TEXTO_DE_ESTADO = dict(ESTADOS)
 _LINEA_CLI = re.compile(r"^\s*([✔✘])\s+(\S+)\s+(.*?):\s*(.*)$")
-_FUENTES_NIVEL = {"verificada": "informacion", "aviso": "aviso", "falla": "error", "no_comprobable": "otro"}
+_FUENTES_NIVEL = {"verificada": "correcto", "aviso": "aviso", "falla": "error", "no_comprobable": "otro"}
 
 
 def huella(archivo: Path | None) -> str:
@@ -32,7 +32,7 @@ def verificar(base, modelo, archivo: Path | None, fuentes=None, procedencia: str
     """[{nivel, mensaje, detalle, archivo, linea, fuente, ok}] de `base.verificar` y de las citas de la ficha."""
     filas = []
     for nombre, ok, detalle in base.verificar(modelo):
-        filas.append({"nivel": "informacion" if ok else "error", "mensaje": str(nombre), "detalle": str(detalle), "ok": bool(ok),
+        filas.append({"nivel": "correcto" if ok else "error", "mensaje": str(nombre), "detalle": str(detalle), "ok": bool(ok),
                       "archivo": Path(archivo).name if archivo else "", "linea": 0, "fuente": procedencia})
     citas = list(getattr(getattr(modelo, "ficha", None), "fuentes", None) or [])
     for f in citas:

@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-18
+actualizado: 2026-11-19
 ---
 # estado.md — simuladores
 
@@ -9,6 +9,7 @@ actualizado: 2026-11-18
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-19 | **Studio: el acabado de la familia (gui-comun 4.2)**: las vistas, el laboratorio y las disciplinas en `SelectorSegmentado` (los fallos de las verificaciones, como contador con punto rojo); el modelo elegido del catálogo teñido con su marca (`FondoFila`) y los estados con palomita, aspa o círculo hueco (ni la «i» que en oscuro salía roja ni `data-success`, que parece una casilla); las verificaciones que pasan, en el nivel `correcto` de `ListaDiagnosticos`; «NO VÁLIDO» con `EtiquetaNivel`; «Aplicar» con `BotonPrincipal`; Laboratorio con su formulario a la izquierda sin texto cortado; títulos con `Heading` Primary; parámetros sin negrita monoespaciada; la tabla de resultados con sus filas enteras; diálogos sin la × roja | `docs/figuras/simuladores-studio-acabado-antes-despues.png`; `tests/run.sh` (50) |
 | 2026-11-18 | **Studio: la forma propia aprobada, el laboratorio**: las verificaciones contra la teoría con su fuente al pie (Ctrl+Mayús+T), el equilibrio dicho con sus cifras y las de la base, la validez con `EtiquetaNivel` y sin radios propios, las pistas a la barra de estado, el «NO VÁLIDO» como línea de estado, las fórmulas que siguen el cambio de claro a oscuro en vivo; `capturar.py --vivo` (aislado); figuras rehechas sobre la muestra | `docs/decisiones.md` (2026-11-18); `tests/studio/test_rediseno.py`; `docs/figuras/` |
 | 2026-11-03 | **gui-comun 3.1 adoptado**: el gráfico es `GraficoXY` de la base y los roles de color, `gui_comun.paleta`; las copias (`GraficoCientifico.qml`, `servicios/paleta.py`) se retiraron | `docs/reingenieria.md` (L2, L3) |
 | 2026-11-03 | **Studio**: la sensibilidad barre alrededor del escenario en edición (los demás parámetros fijos; sin cambios, la base); los 139 modelos del repo medidos con `studio/medir.py` (solo e26 pasa de 400 ms: ≈ 410 ms) y el recálculo en vivo de un modelo lento corre en un hilo aparte en vez de apagarse; arreglado que la ventana sin `.venv` rompiera al abrir un modelo (el matplotlib vacío de `navegador.py` hacía lanzar a `find_spec`) | `docs/decisiones.md` (2026-11-03); `tests/studio/` |

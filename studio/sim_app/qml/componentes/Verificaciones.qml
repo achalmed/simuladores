@@ -16,7 +16,7 @@ ColumnLayout {
         Layout.margins: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
         Kirigami.Icon {
-            source: pagina.m.estado === "verificado" ? "data-success" : (pagina.m.estado === "diferencias" ? "data-error" : "data-information")
+            source: pagina.m.estado === "verificado" ? "checkmark" : (pagina.m.estado === "diferencias" ? "data-error" : "data-warning")
             color: pagina.m.estado === "verificado" ? Kirigami.Theme.positiveTextColor : (pagina.m.estado === "diferencias" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor)
             implicitWidth: Kirigami.Units.iconSizes.smallMedium
             implicitHeight: implicitWidth

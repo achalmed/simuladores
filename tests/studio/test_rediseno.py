@@ -50,7 +50,8 @@ def test_la_forma_del_laboratorio():
     assert "function onTextColorChanged() { modelos.fijarColorTexto(" in main     # las fórmulas siguen el tema en vivo
     assert "EtiquetaNivel {" in main                                              # la validez, con la etiqueta de la base
     espacio = (QML / "componentes" / "EspacioSimulacion.qml").read_text(encoding="utf-8")
-    assert "Equilibrio E: " in espacio and "Kirigami.Theme.highlightColor" in espacio   # el mismo punto que marca GraficoXY
+    # el mismo punto que marca GraficoXY: desde gui-comun 4.2, del color del texto (neutro), no el del acento
+    assert "Equilibrio E: " in espacio and 'text: "●"; color: Kirigami.Theme.textColor' in espacio
     banda = (QML / "componentes" / "BandaVerificaciones.qml").read_text(encoding="utf-8")
     assert "fuenteVerificaciones" in banda and "verificacionesModelo" in banda
 

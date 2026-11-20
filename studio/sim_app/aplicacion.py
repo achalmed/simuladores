@@ -92,7 +92,7 @@ def construir(app: Aplicacion, cache: Path | None = None, datos: Path | None = N
     acciones.registrar("editar.buscar", "&Buscar un modelo", "edit-find", StandardKey.Find, "Editar", al_disparar=pedir("buscar"),
                        descripcion="El campo de búsqueda del catálogo")
     # --- Ver: el catálogo, las vistas del espacio de simulación, la disciplina y el estado
-    acciones.registrar("ver.catalogo", "Mostrar u ocultar el &catálogo", "sidebar-show-symbolic", "F9", "Ver", al_disparar=pedir("catalogo"))
+    acciones.registrar("ver.catalogo", "Mostrar u ocultar el &catálogo", "sidebar-expand-left", "F9", "Ver", al_disparar=pedir("catalogo"))
     acciones.registrar("ver.verificaciones", "Mostrar u ocultar las &verificaciones al pie", "checkmark", "Ctrl+Shift+T", "Ver", al_disparar=pedir("verificaciones"),
                        descripcion="Las verificaciones del modelo contra la teoría, con su fuente, bajo el gráfico y los parámetros")
     for i, (nombre, texto, icono) in enumerate(VISTAS):

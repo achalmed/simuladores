@@ -26,7 +26,7 @@ QQC2.Control {
             Layout.fillWidth: true
             Layout.margins: Kirigami.Units.largeSpacing
             spacing: Kirigami.Units.smallSpacing
-            Kirigami.Heading { level: 4; text: "Escenario" }
+            Kirigami.Heading { level: 4; type: Kirigami.Heading.Type.Primary; text: "Escenario" }
             QQC2.ComboBox {
                 id: selector
                 Layout.fillWidth: true
@@ -95,7 +95,8 @@ QQC2.Control {
                             Layout.leftMargin: -Kirigami.Units.largeSpacing
                             Layout.rightMargin: -Kirigami.Units.largeSpacing
                             visible: parametro.nuevoGrupo && parametro.modelData.grupo !== ""
-                            text: parametro.modelData.grupo
+                            // el grupo con mayúscula inicial, como los demás títulos del panel
+                            text: parametro.modelData.grupo.charAt(0).toUpperCase() + parametro.modelData.grupo.slice(1)
                         }
                         RowLayout {
                             Layout.fillWidth: true
@@ -113,8 +114,10 @@ QQC2.Control {
                                 id: campo
                                 Layout.preferredWidth: Kirigami.Units.gridUnit * 4.5
                                 horizontalAlignment: Text.AlignRight
-                                font.family: Kirigami.Theme.fixedWidthFont.family
-                                font.weight: parametro.cambiado ? Font.Bold : Font.Normal
+                                // la letra del tema con cifras tabulares (no monoespaciada en negrita, que pesaba más que
+                                // la etiqueta); el cambio lo dicen la etiqueta en DemiBold y la marca de la base
+                                font.features: { "tnum": 1 }
+                                font.weight: parametro.cambiado ? Font.DemiBold : Font.Normal
                                 text: raiz.texto(parametro.valor, parametro.modelData.paso)
                                 validator: DoubleValidator { bottom: parametro.modelData.minimo; top: parametro.modelData.maximo; locale: Qt.locale().name }
                                 onEditingFinished: {

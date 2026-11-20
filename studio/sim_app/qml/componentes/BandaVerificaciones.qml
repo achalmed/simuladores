@@ -24,7 +24,7 @@ QQC2.Control {
     function iconoDe(ok, nivel) {
         if (nivel === "aviso") return "data-warning"
         if (nivel === "otro") return "data-information"
-        return ok ? "data-success" : "data-error"
+        return ok ? "checkmark" : "data-error"
     }
 
     padding: 0
@@ -43,7 +43,7 @@ QQC2.Control {
             Layout.bottomMargin: Kirigami.Units.smallSpacing
             spacing: Kirigami.Units.smallSpacing
             Kirigami.Icon {
-                source: raiz.clave === "verificado" ? "data-success" : (raiz.clave === "diferencias" ? "data-error" : "data-warning")
+                source: raiz.clave === "verificado" ? "checkmark" : (raiz.clave === "diferencias" ? "data-error" : "data-warning")
                 color: raiz.clave === "verificado" ? Kirigami.Theme.positiveTextColor
                        : (raiz.clave === "diferencias" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor)
                 implicitWidth: Kirigami.Units.iconSizes.small

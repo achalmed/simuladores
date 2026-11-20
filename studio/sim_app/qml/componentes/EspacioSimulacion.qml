@@ -27,6 +27,8 @@ ColumnLayout {
         return Number(x).toLocaleString(Qt.locale(), "f", a >= 1000 ? 0 : (a >= 10 ? 1 : (a >= 1 ? 2 : 3)))
     }
 
+    // el motivo, como línea de estado con el color del tema (decisiones 2026-11-18: es un estado, no un aviso; el gráfico
+    // lleva además su etiqueta de esquina, gui-comun 4.2)
     RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: Kirigami.Units.largeSpacing
@@ -34,17 +36,15 @@ ColumnLayout {
         Layout.topMargin: Kirigami.Units.smallSpacing
         visible: raiz.m.hayCorrida && !raiz.valido && (raiz.v.titulo || "") !== ""
         spacing: Kirigami.Units.smallSpacing
-        Kirigami.Icon {
-            source: raiz.v.nivel === "negativo" ? "data-error" : "data-warning"
-            color: raiz.colorNivel
-            implicitWidth: Kirigami.Units.iconSizes.small
-            implicitHeight: implicitWidth
+        EtiquetaNivel {
             Layout.alignment: Qt.AlignTop
+            nivel: raiz.v.nivel === "negativo" ? "negativo" : "neutro"
+            icono: raiz.v.nivel === "negativo" ? "data-error" : "data-warning"
+            text: raiz.v.titulo || ""
         }
         QQC2.Label {
             Layout.fillWidth: true
-            text: "<b>" + (raiz.v.titulo || "") + "</b> · " + (raiz.v.texto || "")
-            textFormat: Text.StyledText
+            text: raiz.v.texto || ""
             color: raiz.colorNivel
             wrapMode: Text.WordWrap
         }
@@ -65,6 +65,7 @@ ColumnLayout {
                 Layout.topMargin: Kirigami.Units.smallSpacing
                 Kirigami.Heading {
                     level: 4
+                    type: Kirigami.Heading.Type.Primary
                     text: raiz.m.temporal ? "Evolución temporal" : "Simulación"
                 }
                 QQC2.Label {
@@ -75,14 +76,14 @@ ColumnLayout {
                     elide: Text.ElideRight
                 }
             }
-            // el equilibrio con sus cifras: el mismo punto que marca el gráfico (el acento del tema), y el de la base
+            // el equilibrio con sus cifras: el mismo punto que marca el gráfico, y el de la base
             RowLayout {
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.largeSpacing
                 Layout.rightMargin: Kirigami.Units.largeSpacing
                 visible: raiz.eq !== null && !raiz.figura
                 spacing: Kirigami.Units.smallSpacing
-                QQC2.Label { text: "●"; color: Kirigami.Theme.highlightColor; Accessible.ignored: true }
+                QQC2.Label { text: "●"; color: Kirigami.Theme.textColor; Accessible.ignored: true }     // el punto del gráfico (gui-comun 4.2: neutro)
                 QQC2.Label {
                     text: raiz.eq ? "Equilibrio E: " + (raiz.m.grafico.etiquetaX || "x") + " = " + raiz.cifra(raiz.eq.x)
                                     + " · " + (raiz.m.grafico.etiquetaY || "y") + " = " + raiz.cifra(raiz.eq.y) : ""
@@ -125,7 +126,8 @@ ColumnLayout {
             }
         }
         ColumnLayout {
-            QQC2.SplitView.preferredHeight: Kirigami.Units.gridUnit * 8
+            // la tabla con sus filas enteras (hasta seis): antes se cortaba a media fila
+            QQC2.SplitView.preferredHeight: Kirigami.Units.gridUnit * (3.5 + 1.75 * Math.min(6, Math.max(3, raiz.m.resultadosModelo ? raiz.m.resultadosModelo.filas : 3)))
             QQC2.SplitView.minimumHeight: Kirigami.Units.gridUnit * 4
             spacing: 0
             Kirigami.Separator { Layout.fillWidth: true }
@@ -133,17 +135,18 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.margins: Kirigami.Units.smallSpacing
                 Kirigami.Icon {
-                    source: raiz.valido ? "data-success" : (raiz.v.nivel === "negativo" ? "data-error" : "data-warning")
+                    source: raiz.valido ? "checkmark" : (raiz.v.nivel === "negativo" ? "data-error" : "data-warning")
                     color: raiz.valido ? Kirigami.Theme.positiveTextColor : (raiz.v.nivel === "negativo" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor)
                     implicitWidth: Kirigami.Units.iconSizes.small
                     implicitHeight: implicitWidth
                     visible: raiz.m.hayCorrida
                 }
-                QQC2.Label {
+                Kirigami.Heading {
                     Layout.fillWidth: true
+                    level: 5
+                    type: Kirigami.Heading.Type.Primary
                     text: !raiz.m.hayCorrida ? "Resultados" : (raiz.valido ? "Resultados frente a la base · verificados"
                                                                           : "Resultados " + (raiz.v.titulo || "").toLowerCase() + ": no se dan por buenos")
-                    font.bold: true
                     elide: Text.ElideRight
                 }
                 QQC2.Label {

@@ -10,7 +10,7 @@ import GuiComun
 ColumnLayout {
     id: raiz
     readonly property var ops: studio.operaciones
-    property alias pestana: pestanas.currentIndex
+    property int pestana: 0
     spacing: 0
 
     QQC2.ToolBar {
@@ -18,17 +18,20 @@ ColumnLayout {
         RowLayout {
             anchors.fill: parent
             spacing: Kirigami.Units.smallSpacing
-            QQC2.TabBar {
+            SelectorSegmentado {
                 id: pestanas
-                QQC2.TabButton { text: "Operación"; width: implicitWidth }
-                QQC2.TabButton { text: "Registro de la corrida"; width: implicitWidth }
-                QQC2.TabButton { text: "Salida del motor"; width: implicitWidth }
+                titulo: "Laboratorio"
+                opciones: [{ clave: "0", texto: "Operación", icono: "system-run" },
+                           { clave: "1", texto: "Registro de la corrida", icono: "view-history" },
+                           { clave: "2", texto: "Salida del motor", icono: "utilities-terminal" }]
+                actual: String(raiz.pestana)
+                onElegida: clave => raiz.pestana = Number(clave)
             }
             Item { Layout.fillWidth: true }
-            QQC2.Label { text: "Operación:"; visible: pestanas.currentIndex === 0 }
+            QQC2.Label { text: "Operación:"; visible: raiz.pestana === 0 }
             QQC2.ComboBox {
                 id: selector
-                visible: pestanas.currentIndex === 0
+                visible: raiz.pestana === 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 15
                 model: raiz.ops.lista
                 textRole: "titulo"
@@ -42,7 +45,7 @@ ColumnLayout {
     StackLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        currentIndex: pestanas.currentIndex
+        currentIndex: raiz.pestana
         Operacion {}
         Registro {}
         PanelInferior { consola: studio.consola }

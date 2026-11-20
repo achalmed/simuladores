@@ -81,6 +81,8 @@ ColumnLayout {
         QQC2.Label {
             Kirigami.FormData.label: raiz.s.escenario ? "Valor del escenario:" : "Valor base:"
             text: (raiz.s.parametro || "") + " = " + raiz.numero(raiz.s.valorActual) + (raiz.s.unidad ? " " + raiz.s.unidad : "") + "  →  " + (raiz.s.magnitud || "") + " = " + raiz.numero(raiz.s.actual)
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
         QQC2.Label {
             Kirigami.FormData.label: "Fijos del escenario:"

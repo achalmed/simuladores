@@ -25,7 +25,7 @@ ColumnLayout {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Kirigami.Heading { level: 4; text: "Base"; Layout.leftMargin: Kirigami.Units.smallSpacing }
+            Kirigami.Heading { level: 4; type: Kirigami.Heading.Type.Primary; text: "Base"; Layout.leftMargin: Kirigami.Units.smallSpacing }
             GraficoXY {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -41,7 +41,7 @@ ColumnLayout {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Kirigami.Heading { level: 4; text: "Escenario «" + raiz.m.escenario + "»"; Layout.leftMargin: Kirigami.Units.smallSpacing }
+            Kirigami.Heading { level: 4; type: Kirigami.Heading.Type.Primary; text: "Escenario «" + raiz.m.escenario + "»"; Layout.leftMargin: Kirigami.Units.smallSpacing }
             GraficoXY {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -81,8 +81,9 @@ ColumnLayout {
             umbralEstrecho: 0
             mensajeVacio: raiz.m.hayCorrida ? "Este modelo no declara resultados" : "Sin corrida"
             iconoVacio: "view-list-details"
-            columnas: [{ ancho: 0, minimo: 6 }, { ancho: 4, alinear: "derecha", mono: true }, { ancho: 4, alinear: "derecha", mono: true },
-                       { ancho: 4, alinear: "derecha", mono: true, semantica: true }, { ancho: 4, alinear: "derecha", secundaria: true }]
+            // las cifras con su ancho («+100.0 %» entero): antes «Δ %» y «+65.2…» salían cortados
+            columnas: [{ ancho: 0, minimo: 6 }, { ancho: 5, minimo: 4, alinear: "derecha", mono: true }, { ancho: 5, minimo: 4, alinear: "derecha", mono: true },
+                       { ancho: 5, minimo: 4, alinear: "derecha", mono: true, semantica: true }, { ancho: 5, minimo: 4.5, alinear: "derecha", secundaria: true }]
         }
     }
 }

@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 QQC2.Control {
     id: raiz
@@ -33,28 +34,16 @@ QQC2.Control {
                 Keys.onDownPressed: lista.forceActiveFocus()
                 Accessible.name: "Buscar un modelo"
             }
-            Flow {
-                Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
-                QQC2.Button {
-                    text: "Todas"
-                    checkable: true
-                    checked: raiz.e.disciplina === ""
-                    flat: !checked
-                    onClicked: raiz.e.fijarDisciplina("")
-                }
-                Repeater {
-                    model: raiz.m.disciplinas
-                    delegate: QQC2.Button {
-                        required property var modelData
-                        text: modelData.texto
-                        icon.name: modelData.icono
-                        checkable: true
-                        checked: raiz.e.disciplina === modelData.nombre
-                        flat: !checked
-                        onClicked: raiz.e.fijarDisciplina(checked ? modelData.nombre : "")
-                    }
-                }
+            // las disciplinas: un selector segmentado (gui-comun 4.2), «Todas» primero; el acento sale del tema
+            SelectorSegmentado {
+                id: disciplinas
+                Layout.maximumWidth: parent.width
+                titulo: "Disciplina"
+                compacto: raiz.m.disciplinas.length > 2
+                opciones: [{ clave: "", texto: "Todas", descripcion: "Los modelos de todas las disciplinas" }].concat(
+                              raiz.m.disciplinas.map(d => ({ clave: d.nombre, texto: d.texto, descripcion: "Solo " + d.texto })))
+                actual: raiz.e.disciplina
+                onElegida: clave => raiz.e.fijarDisciplina(clave)
             }
             QQC2.ComboBox {
                 id: estados
@@ -95,20 +84,35 @@ QQC2.Control {
                     readonly property string clave: model.clave
                     readonly property bool actual: ref === raiz.m.ref
                     width: ListView.view.width
-                    highlighted: actual
+                    leftPadding: Kirigami.Units.largeSpacing
+                    // la elegida teñida con su marca (FondoFila), no el bloque lleno del acento: en Lliphi Oscuro el
+                    // acento es el rojo de los errores y el modelo elegido parecía uno con fallos
+                    background: FondoFila { control: fila; elegida: fila.actual }
                     onClicked: { lista.currentIndex = index; raiz.m.irA(ref) }
                     Keys.onReturnPressed: raiz.m.irA(ref)
-                    Accessible.name: model.id + " " + model.titulo + ", " + model.estado
+                    Accessible.name: model.id + " " + model.titulo + ", " + model.estado + (actual ? ", elegido" : "")
                     contentItem: RowLayout {
-                        spacing: Kirigami.Units.smallSpacing
-                        Kirigami.Icon {
-                            source: fila.clave === "verificado" ? "data-success" : (fila.clave === "diferencias" ? "data-error" : "data-information")
-                            color: fila.clave === "verificado" ? Kirigami.Theme.positiveTextColor
-                                   : (fila.clave === "diferencias" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor)
-                            implicitWidth: Kirigami.Units.iconSizes.small
-                            implicitHeight: implicitWidth
+                        spacing: Kirigami.Units.smallSpacing + Kirigami.Units.smallSpacing / 2
+                        // el estado: una palomita verde, un aspa roja o, sin verificar, un círculo hueco neutro (no la «i»
+                        // del tema, que en oscuro sale del color del acento y se confunde con un error)
+                        Item {
                             Layout.alignment: Qt.AlignTop
                             Layout.topMargin: Kirigami.Units.smallSpacing / 2
+                            implicitWidth: Kirigami.Units.iconSizes.small
+                            implicitHeight: implicitWidth
+                            Kirigami.Icon {
+                                anchors.fill: parent
+                                visible: fila.clave !== "sin_verificar"
+                                source: fila.clave === "verificado" ? "checkmark" : "data-error"
+                                color: fila.clave === "verificado" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
+                            }
+                            QQC2.Label {
+                                visible: fila.clave === "sin_verificar"
+                                anchors.centerIn: parent
+                                text: "○"
+                                color: Kirigami.Theme.disabledTextColor
+                                Accessible.ignored: true
+                            }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -118,14 +122,13 @@ QQC2.Control {
                                 text: "<b>" + fila.model.id + "</b> · " + fila.model.titulo
                                 textFormat: Text.StyledText
                                 elide: Text.ElideRight
-                                color: fila.highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
                             }
                             QQC2.Label {
                                 Layout.fillWidth: true
                                 text: (fila.model.seccion ? fila.model.seccion + " · " : "") + "nivel " + fila.model.nivelCurricular + " · " + fila.model.estado
                                 font: Kirigami.Theme.smallFont
                                 elide: Text.ElideRight
-                                color: fila.highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.disabledTextColor
+                                color: Kirigami.Theme.disabledTextColor
                             }
                         }
                     }
