@@ -111,7 +111,7 @@ prueba `test_el_fundamento_se_comprueba_contra_calibre` comprueba cada pasaje en
 | Eberly Center (s. f.), 10516 | s. p. (1) | «The updated version by Anderson and Krathwohl (2001)» | el nivel de Bloom del ítem (el mismo apoyo que usa docencia §10.2) |
 
 **Pendientes** (no están en Calibre, o están sin archivo; se ingresan por `biblioteca-studio`, `lib/ingresar.py`). Los
-DOI se escribieron de memoria y se cotejan al ingresar.
+DOI se cotejaron en Crossref el 2026-11-24 (título, revista, año, volumen y páginas).
 
 - White, R. T. y Gunstone, R. F. (1992). *Probing understanding*. Falmer Press. Motivo: el ciclo predecir, observar,
   explicar (cap. «Prediction-observation-explanation»); no está en Calibre.
