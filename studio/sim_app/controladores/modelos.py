@@ -391,7 +391,13 @@ class Modelos(QObject):
             por_defecto = getattr(self.lab.config(), "PROCEDENCIA_POR_DEFECTO", "")
         except KeyError:
             por_defecto = ""
-        return fichas.markdown(self._m, f, por_defecto, imagenes, f.get("archivo", ""))
+        ped = ""
+        if self._m is not None and self._m.ficha is not None and getattr(self._m.ficha, "pedagogia", None) is not None:
+            try:
+                ped = self.lab.pedagogia().markdown(self._m, docente=True, completo=False)
+            except Exception as exc:                # noqa: BLE001 — la ficha se muestra igual, sin su parte del aula
+                ped = f"## Resultados de aprendizaje\n\nNo se pudo leer la ficha pedagógica: {exc}"
+        return fichas.markdown(self._m, f, por_defecto, imagenes, f.get("archivo", ""), pedagogia=ped)
 
     @Slot(str)
     def fijarColorTexto(self, color: str) -> None:

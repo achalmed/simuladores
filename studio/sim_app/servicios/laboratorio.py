@@ -18,7 +18,8 @@ from pathlib import Path
 
 from sim_app.servicios import rutas
 
-AJENOS = ("config", "base", "graficos", "laboratorio", "reporte", "fuentes", "app", "navegador", "modelos")
+AJENOS = ("config", "base", "graficos", "laboratorio", "reporte", "fuentes", "app", "navegador", "modelos",
+          "pedagogia")
 NOMBRES = {"macro": "Macroeconomía", "estadistica": "Estadística", "econometria": "Econometría",
            "micro": "Microeconomía", "mate": "Matemáticas", "demo": "Demostración"}
 ICONOS = {"macro": "office-chart-line", "estadistica": "office-chart-bar", "econometria": "office-chart-scatter",
@@ -113,3 +114,7 @@ class Laboratorio:
 
     def fuentes(self):
         return importlib.import_module("fuentes")
+
+    def pedagogia(self):
+        """El validador y las vistas de la ficha pedagógica (`pedagogia.py` del motor)."""
+        return importlib.import_module("pedagogia")

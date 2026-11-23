@@ -14,6 +14,9 @@ Uso:
   python3 main.py web                      # qué modelos corren en el navegador (simula: no escribe nada)
   python3 main.py web --aplicar            # escribe navegador.json (archivos .py mínimos, metadatos y vista inicial)
   python3 main.py web --verificar          # 0 si navegador.json está al día · 1 si está desfasado o falta
+  python3 main.py pedagogia                # las fichas pedagógicas: resultados, ejercicios, errores y avisos
+  python3 main.py pedagogia --verificar    # 1 si alguna ficha pedagógica tiene errores
+  python3 main.py pedagogia macro/m04 --formato alumno|docente|banco   # la hoja del alumno, la guía o los ítems
 Límite: el catálogo describe los modelos, no los ejecuta; las cifras de un escenario se calculan con el modelo.
   navegador.json no duplica ecuaciones: lista los .py que el navegador ejecuta con Pyodide (navegador.py).
 """
@@ -33,9 +36,11 @@ os.environ.setdefault("MPLBACKEND", "Agg")      # las disciplinas importan matpl
 
 RAIZ = Path(__file__).resolve().parent
 CATALOGO = RAIZ / "catalogo.json"
-ESQUEMA = 1                                       # versión del contrato de catalogo.json (sube si cambia un campo)
+ESQUEMA = 2                                       # versión del contrato de catalogo.json (sube si cambia un campo)
+                                                  # 2 (2026-11-24): ficha.pedagogia, solo si está verificada
 NAVEGADOR = RAIZ / "navegador.json"
-ESQUEMA_WEB = 1                                   # versión del contrato de navegador.json (sube si cambia un campo)
+ESQUEMA_WEB = 2                                   # versión del contrato de navegador.json (sube si cambia un campo)
+                                                  # 2 (2026-11-24): ficha.pedagogia, solo si está verificada
 MOTOR_WEB = ("base.py", "navegador.py")           # el motor que el navegador necesita (sin graficos/app: matplotlib)
 # Lo que un modelo puede importar para correr en Pyodide: biblioteca estándar sin archivos ni procesos, numpy y el
 # motor. Cualquier otra cosa (pathlib, json, glob, importlib, sys…) delata que el modelo lee datos de disco (datafw).
@@ -44,7 +49,7 @@ _IMPORTS_WEB = {"__future__", "math", "cmath", "itertools", "functools", "collec
 PUNTOS_INICIAL = 300                              # puntos por línea en la vista inicial guardada (la figura sin Pyodide)
 LENTO_WEB = 0.3                                   # segundos en CPython por cálculo: más que esto no va al navegador
                                                   # (Pyodide es 2-4 veces más lento; el más lento admitido mide 0,15 s)
-_AJENOS = ("config", "base", "graficos", "laboratorio", "reporte", "fuentes", "app", "modelos")
+_AJENOS = ("config", "base", "graficos", "laboratorio", "reporte", "fuentes", "app", "modelos", "pedagogia")
 
 
 def disciplinas() -> list[Path]:
@@ -92,6 +97,15 @@ def _cursos(disc: Path) -> dict[str, list[dict]]:
             for sec in datos.get("secciones", []) for tema in sec.get("temas", []) if tema.get("cursos")}
 
 
+def _pedagogia(m) -> dict:
+    """{"pedagogia": …} si el modelo trae ficha pedagógica verificada; si no, nada (el JSON no cambia)."""
+    if m.ficha is None or getattr(m.ficha, "pedagogia", None) is None:
+        return {}
+    import pedagogia
+    datos = pedagogia.para_contrato(m)
+    return {"pedagogia": datos} if datos else {}
+
+
 def _ficha(m, por_defecto: str) -> dict:
     f = m.ficha
     if f is None:
@@ -104,7 +118,7 @@ def _ficha(m, por_defecto: str) -> dict:
         "ecuaciones": [{"nombre": e.nombre, "latex": e.latex} for e in f.ecuaciones],
         "procedencia": f.procedencia or por_defecto,
         "fuentes": [{"calibre_id": x.calibre_id, "pagina": x.pagina} for x in f.fuentes],
-    }
+    } | _pedagogia(m)
 
 
 def catalogo() -> dict:
@@ -237,7 +251,7 @@ def _ficha_web(m, por_defecto: str) -> dict:
         "intuicion": f.intuicion, "limitaciones": list(f.limitaciones), "evolucion": f.evolucion,
         "procedencia": f.procedencia or por_defecto,
         "fuentes": [{"calibre_id": x.calibre_id, "pagina": x.pagina, "afirma": x.afirma} for x in f.fuentes],
-    }
+    } | _pedagogia(m)
 
 
 def navegador() -> tuple[dict, list[dict]]:
@@ -345,6 +359,54 @@ def cmd_web(a) -> int:
     return 0
 
 
+# ── pedagogia: la ficha pedagógica de cada simulador (pedagogia.py) ──────────────────────────────────────────────
+
+def _con_pedagogia(ref: str | None, hacer) -> list:
+    """[hacer(disciplina, modelo)] de los modelos con ficha pedagógica (o del pedido por `ref`, «macro/m04»), dentro
+    del espacio de nombres de su disciplina: los ejercicios se comprueban corriendo el modelo."""
+    salida = []
+    for disc in disciplinas():
+        if ref and disc.name != ref.split("/")[0]:
+            continue
+        def dentro(config, lista, disc=disc):
+            for m, _ in lista:
+                if ref and f"{disc.name}/{m.id}" != ref:
+                    continue
+                if ref or (m.ficha is not None and getattr(m.ficha, "pedagogia", None) is not None):
+                    salida.append(hacer(disc.name, m))
+        _cargar(disc, dentro)
+    return salida
+
+
+def cmd_pedagogia(a) -> int:
+    import pedagogia
+    if a.ref:
+        textos = _con_pedagogia(a.ref, lambda d, m: (
+            pedagogia.banco(m) if a.formato == "banco" else
+            pedagogia.markdown(m, docente=a.formato == "docente") if a.formato in ("alumno", "docente") else
+            "\n".join([f"{d}/{m.id} · {m.nombre}: {pedagogia.resumen(m)}"] +
+                       [f"  ✘ {e}" for e in pedagogia.problemas(m)[0]] + [f"  · {x}" for x in pedagogia.problemas(m)[1]])))
+        if not textos:
+            print(f"no hay modelo «{a.ref}» (se escribe disciplina/id, p. ej. macro/m04)", file=sys.stderr)
+            return 1
+        if not textos[0].strip():
+            print(f"{a.ref} no trae ficha pedagógica (Ficha.pedagogia)", file=sys.stderr)
+            return 1
+        sys.stdout.write(textos[0] if textos[0].endswith("\n") else textos[0] + "\n")
+        return 0
+    filas = _con_pedagogia(None, lambda d, m: (f"{d}/{m.id}", m.nombre, pedagogia.resumen(m), *pedagogia.problemas(m)))
+    errores = 0
+    for ref, nombre, resumen, err, av in filas:
+        print(f"{'✘' if err else '✔'} {ref:<16} {nombre}: {resumen}")
+        for e in err:
+            print(f"    ✘ {e}")
+        for x in av:
+            print(f"    · {x}")
+        errores += len(err)
+    print(f"\n{len(filas)} simuladores con ficha pedagógica; {errores} errores")
+    return 1 if (a.verificar and errores) else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="orden", required=True)
@@ -357,8 +419,14 @@ def main() -> int:
     g = p.add_mutually_exclusive_group()
     g.add_argument("--aplicar", action="store_true", help="escribe navegador.json")
     g.add_argument("--verificar", action="store_true", help="0 si navegador.json está al día")
+    p = sub.add_parser("pedagogia", help="fichas pedagógicas: resultados, ejercicios y su comprobación contra el modelo")
+    p.add_argument("ref", nargs="?", help="disciplina/id del modelo (p. ej. macro/m04); sin él, todos los que la traen")
+    p.add_argument("--formato", choices=("resumen", "alumno", "docente", "banco"), default="resumen",
+                   help="con REF: resumen (por omisión), hoja del alumno, guía del docente o ítems del banco de docencia")
+    p.add_argument("--verificar", action="store_true", help="salida 1 si alguna ficha pedagógica tiene errores")
     a = ap.parse_args()
-    return {"catalogo": cmd_catalogo, "verificar": cmd_verificar, "web": cmd_web}[a.orden](a)
+    return {"catalogo": cmd_catalogo, "verificar": cmd_verificar, "web": cmd_web,
+            "pedagogia": cmd_pedagogia}[a.orden](a)
 
 
 if __name__ == "__main__":

@@ -23,7 +23,8 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 REPO = AQUI.parent
-MOTOR = ("base.py", "navegador.py", "graficos.py", "laboratorio.py", "reporte.py", "fuentes.py", "app.py", "main.py")
+MOTOR = ("base.py", "navegador.py", "graficos.py", "laboratorio.py", "reporte.py", "fuentes.py", "app.py", "main.py",
+         "pedagogia.py")
 
 CONFIG = '''"""demo/config.py — la disciplina de muestra de Simuladores Studio (sin matplotlib: correr y verificar bastan)."""
 from pathlib import Path

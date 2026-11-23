@@ -12,7 +12,7 @@ conocimiento macroeconómico general, no verificado contra edición.
 
 import numpy as np
 
-from base import Ecuacion, Escenario, Ficha, Modelo, Parametro, Verificacion
+from base import Ecuacion, Ejercicio, Escenario, Ficha, Modelo, Parametro, Pedagogia, Resultado, Verificacion
 from modelos.nivel_04 import _adas
 import config
 
@@ -146,6 +146,116 @@ MODELO = Modelo(
         evolucion=("Con la AD derivada, m21 (SRAS) y m22 (LRAS) completan las piezas y "
                    "m23 arma el modelo AD-AS completo — el aparato gráfico dominante "
                    "de la macro de manual hasta hoy."),
+        pedagogia=Pedagogia(
+            resultados=[
+                Resultado("r1", "relacional",
+                          "Explica por qué la demanda agregada tiene pendiente negativa a partir del equilibrio IS-LM: "
+                          "un nivel de precios mayor reduce los saldos reales, sube la tasa de interés y deprime la "
+                          "inversión (efecto Keynes), y por qué no es la demanda de un bien."),
+                Resultado("r2", "relacional",
+                          "Distingue un movimiento a lo largo de la AD (cambia P) de un desplazamiento de la AD (cambian "
+                          "G o M), y explica por qué el desplazamiento fiscal es igual a todo nivel de precios y el "
+                          "monetario no."),
+            ],
+            ejercicios=[
+                Ejercicio(
+                    "e1", "r1", cambios={"M": 800.0}, bloom="analizar",
+                    predecir=("Con M = 600, anota cuánto producto da la AD en P = 2 y en P = 1,5. Si el dinero "
+                              "nominal sube a 800 y P se queda en 2, ¿qué producto dará la AD en P = 2?"),
+                    item={"tipo": "opcion", "bloom": "analizar", "dificultad": "discriminante",
+                          "enunciado": ("Con M = 600 la AD da Y ≈ 707 en P = 2 y Y = 850 en P = 1,5. Si M sube a 800 y "
+                                        "P sigue en 2, ¿qué Y da la AD en P = 2?"),
+                          "opciones": ["Y = 850, el que antes daba P = 1,5: en ambos casos M/P = 400",
+                                       "Y ≈ 707, el de antes, porque P no cambió",
+                                       "Menos de 707, porque con más dinero sube la tasa de interés"],
+                          "respuesta": "Y = 850, el que antes daba P = 1,5: en ambos casos M/P = 400",
+                          "errores": [
+                              {"opcion": "Y ≈ 707, el de antes, porque P no cambió",
+                               "error": ("cree que la AD depende del nivel de precios por sí mismo; lo que mueve el "
+                                         "IS-LM subyacente son los saldos reales M/P")},
+                              {"opcion": "Menos de 707, porque con más dinero sube la tasa de interés",
+                               "error": "invierte el mercado de dinero: más saldos reales bajan la tasa"},
+                          ]},
+                    observar=("las cifras «Y sobre la AD en P=2» y «r implícita en P=2 (del LM)», y compáralas con lo "
+                              "que anotaste para P = 1,5 antes de mover."),
+                    explicar=("¿Por qué subir M con P fijo lleva al mismo producto que bajar P con M fijo? Usa esa "
+                              "equivalencia para explicar por qué la AD tiene pendiente negativa."),
+                    respuesta=("Detrás de cada punto de la AD hay un IS-LM con saldos reales M/P. Con M = 800 y P = 2, "
+                               "M/P = 400, igual que con M = 600 y P = 1,5: la LM es la misma, la tasa implícita baja "
+                               "de 5,36 a 2,5, la inversión sube de 42,9 a 100 y el producto, de 707 a 850, en ambos "
+                               "casos. Bajar P es una expansión monetaria hecha por los precios (efecto Keynes), y "
+                               "subirlo, una contracción; por eso la AD baja hacia la derecha, y no por la ley de "
+                               "demanda de un bien, que compara precios relativos."),
+                    error_comun=("Explicar la pendiente de la AD como la de la demanda de un bien («si todo es más "
+                                 "caro, se compra menos»), sin pasar por el mercado de dinero."),
+                    espera={"Y sobre la AD en P=2": "↑", "r implícita en P=2 (del LM)": "↓"},
+                    valores={"Y sobre la AD en P=2": 850.0, "r implícita en P=2 (del LM)": 2.5}),
+                Ejercicio(
+                    "e2", "r2", escenario="expansion_fiscal", bloom="aplicar",
+                    predecir=("Al abrir el simulador la curva roja ya lleva un choque fiscal dG = 50. Si dG sube a 100, "
+                              "¿cuánto se correrá la AD a la derecha a cada nivel de precios?"),
+                    item={"tipo": "numerica", "bloom": "aplicar", "dificultad": "media",
+                          "enunciado": ("Con c1 = 0,6, b = 20, k = 0,5 y h = 10, ¿cuánto se corre la AD a la derecha, a "
+                                        "un P dado, con un choque fiscal dG = 100?"),
+                          "respuesta": "dG/Ac = 100/[(1 − 0,6) + 20 × 0,5/10] = 100/1,4 ≈ 71,4",
+                          "valor": 71.43, "tolerancia": 0.5,
+                          "errores": [{"error": "responder 100: confunde el impulso con el desplazamiento"},
+                                      {"error": ("responder 250 con el multiplicador simple 1/(1 − c1): olvida que en "
+                                                 "cada punto la tasa sube y expulsa inversión (el denominador del IS-LM)")}]},
+                    observar=("la distancia horizontal entre la AD base (azul) y la AD con el choque (roja) arriba y "
+                              "abajo del gráfico, y la cifra «desplazamiento fiscal dY|P (dG/Ac)»."),
+                    explicar=("¿Por qué el desplazamiento es menor que el impulso? ¿Por qué es el mismo en P = 1,5 que "
+                              "en P = 3?"),
+                    respuesta=("A cada P, el IS-LM subyacente recibe más gasto autónomo, y su multiplicador es "
+                               "1/Ac = 1/1,4 ≈ 0,71: la AD se corre 71,4 (antes, con dG = 50, 35,7). Es menor que el "
+                               "impulso porque la tasa de interés sube y expulsa inversión (como en m10). Es igual a "
+                               "todo P porque dG entra en el numerador sin dividirse por P: el desplazamiento es "
+                               "paralelo en el eje del producto."),
+                    error_comun="Usar el multiplicador simple del nivel 1 para desplazar la AD.",
+                    espera={"desplazamiento fiscal dY|P (dG/Ac)": "↑"},
+                    valores={"desplazamiento fiscal dY|P (dG/Ac)": 71.43}),
+                Ejercicio(
+                    "e3", "r2", escenario="expansion_monetaria", bloom="analizar",
+                    predecir=("Ahora el choque es monetario (dM = 100, dG = 0). ¿La AD se corre lo mismo a todos los "
+                              "niveles de precios?"),
+                    item={"tipo": "opcion", "bloom": "comprender", "dificultad": "media",
+                          "enunciado": "Con un aumento del dinero nominal dM = 100, ¿dónde se corre más la AD?",
+                          "opciones": ["En los niveles de precios bajos", "Igual a todo nivel de precios",
+                                       "En los niveles de precios altos"],
+                          "respuesta": "En los niveles de precios bajos",
+                          "errores": [
+                              {"opcion": "Igual a todo nivel de precios",
+                               "error": ("traslada el desplazamiento fiscal (dG/Ac, igual a todo P) al dinero; lo que "
+                                         "mueve la AD son los saldos reales, y dM/P es mayor cuando P es bajo")},
+                              {"opcion": "En los niveles de precios altos",
+                               "error": "invierte la relación: un mismo dM pesa menos en saldos reales cuando P es alto"},
+                          ]},
+                    observar=("la distancia entre la AD base y la roja en la parte baja del gráfico (P bajo) y en la "
+                              "alta (P alto), y la cifra «desplazamiento monetario dY|P=2»."),
+                    explicar=("¿Por qué la curva roja ya no es paralela a la azul? Calcula el desplazamiento en P = 1,5 "
+                              "y en P = 3 con la ecuación y compáralo con el de P = 2."),
+                    respuesta=("El desplazamiento es (b/h)·dM/(P·Ac): en P = 2 es 2 × 100/(2 × 1,4) ≈ 71,4; en P = 1,5, "
+                               "≈ 95,2; en P = 3, ≈ 47,6. Un mismo aumento del dinero nominal sube más los saldos "
+                               "reales cuando los precios son bajos, y es M/P lo que baja la tasa y estimula la "
+                               "inversión. El choque fiscal, en cambio, entra sin dividirse por P."),
+                    error_comun="Suponer que todo choque de demanda corre la AD en paralelo.",
+                    espera={"desplazamiento monetario dY|P=2": "↑", "desplazamiento fiscal dY|P (dG/Ac)": "↓"},
+                    valores={"desplazamiento monetario dY|P=2": 71.43, "desplazamiento fiscal dY|P (dG/Ac)": 0.0}),
+            ],
+            origen={"autor": "llm", "herramienta": "Claude Code (Claude Opus 5.5)", "fecha": "2026-11-24",
+                    "verificacion": "pendiente"},
+            pendientes=[
+                "confirmar el nivel SOLO de r1 y r2 y llevarlos a los raN de macroeconomia-i (tema 3.1 «Demanda "
+                "Agregada»); el curso aún no declara `alineamiento:`",
+                "el valor por omisión dG = 50 hace que la AD roja ya aparezca desplazada al abrir el simulador; e2 lo "
+                "advierte, pero quizá convenga que el modelo abra con dG = 0 (decisión del autor: cambiaría los "
+                "resultados base y navegador.json)",
+                "«Y sobre la AD en P=…» de resultados() es la AD base (sin dG ni dM): el alumno debe leer los "
+                "desplazamientos en sus propias cifras, como piden e2 y e3",
+                "en los P altos la AD del modelo arrastra un artefacto lineal: en P = 3 (M/P = 200) la inversión "
+                "implícita del IS-LM es negativa (≈ −14); por eso e1 usa la equivalencia por el lado expansivo "
+                "(M/P = 400); conviene decirlo si el alumno explora P altos",
+            ]),
     ),
     escenarios=[
         Escenario("expansion_fiscal", "dG = +100 (desplaza AD a la derecha)",

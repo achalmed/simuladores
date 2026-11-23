@@ -120,6 +120,9 @@ def render(modelo, dir_salidas=None):
             md += [f"- {l}" for l in F.limitaciones] + [""]
         if F.evolucion:
             md += ["## Evolución: hacia el siguiente modelo", "", F.evolucion, ""]
+        if getattr(F, "pedagogia", None) is not None:      # para el aula: resultados y ejercicios, con sus claves
+            import pedagogia
+            md += [pedagogia.markdown(modelo, docente=True, completo=False), ""]
 
     # --- verificaciones (validación del principio rector) ---
     checks = base.verificar(modelo)

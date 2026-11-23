@@ -12,6 +12,35 @@ no se borra: se marca «Superada por …». Lo que se hizo en una sesión va al 
 diseño (`macro/docs/laboratorio-macro.md`, `estadistica/docs/laboratorio-estadistica.md`); aquí, las del repo y las
 de la ventana.
 
+## El motor
+
+- **2026-11-24 · La ficha pedagógica: resultados de aprendizaje y ejercicios del alumno, dentro de la ficha y
+  comprobados contra el modelo** (fase 3.3 del plan «aprender y enseñar»; diseño completo y sustento en
+  [`pedagogia.md`](pedagogia.md)).
+  1. **Vive en el modelo** (`Ficha.pedagogia`, `base.Pedagogia` con `Resultado` y `Ejercicio`), no en un YAML al lado
+     ni en docencia. Así hay una sola fuente por simulador, viaja con él a divulgacion y al navegador, y su clave se
+     comprueba en la misma corrida que sus verificaciones. Alternativa descartada: un `pedagogia.yml` por modelo, que
+     el autor o `05/03` podrían escribir sin Python, pero que se desfasaría del modelo sin que nada lo notara. El
+     campo es opcional y `None` por omisión: los 136 modelos sin ficha pedagógica no cambian, y la interfaz que lee
+     divulgacion tampoco.
+  2. **El vocabulario es el de docencia**: el nivel del resultado, de la taxonomía SOLO (§10.1); la predicción
+     cerrada, un ítem del banco §10.2 tal cual (`tipo`, `opciones`, `respuesta`, `errores` por distractor, `bloom`…).
+     Como el motor no lee otros repos, `pedagogia.py` copia la regla del ítem; una prueba la compara con la de
+     `docencia/scripts/alineamiento.py` cuando ese repo está, y pasa los ítems por su `quiz_aula`.
+  3. **Un ejercicio, dos ítems**: la predicción cerrada (el aula la corrige sola y retroalimenta por distractor) y la
+     explicación abierta (la puesta en común). Elegir una opción o mover un control solo es activo; predecir y
+     explicar por escrito es constructivo (Chi y Wylie, 2014, pp. 222 y 224).
+  4. **La clave es una aserción**: `espera` y `valores` dicen la respuesta esperada en direcciones y cifras de
+     `resultados()`, y `base.verificar` suma «ficha pedagógica (resultados y ejercicios)», que falla si el modelo dice
+     otra cosa. Como con las citas de `fuentes.py`, la afirmación del docente se vuelve comprobable.
+  5. **Lo propuesto por la IA no sale al alumno** (C3.3): `catalogo.json` y `navegador.json` llevan
+     `ficha.pedagogia` solo si `origen.verificacion` es `verificada`, y nunca las claves del docente (como la vitrina
+     del aula deja fuera `respuesta` y `explicacion` del banco). Los dos contratos suben a `esquema` 2 aunque hoy su
+     contenido no cambie.
+  6. **El resultado es del simulador** («r1»): un mismo simulador sirve a varios cursos, y cada curso lo traduce a su
+     `raN` al pegar los ítems en su banco (`main.py pedagogia REF --formato banco`). El simulador no escribe en
+     docencia.
+
 ## La ventana
 
 - **2026-11-18 · Simuladores Studio toma su forma propia, el laboratorio, con los colores del tema y los avisos en

@@ -123,6 +123,25 @@ def test_ficha_markdown(laboratorio, muestra_sesion):
     assert corridas.sin_mathtext("Producto ($Y$)") == "Producto (Y)" and corridas.sin_mathtext(r"$\bar X$ y $\sigma$") == "X y σ"
 
 
+def test_ficha_markdown_con_su_parte_pedagogica(laboratorio, muestra_sesion):
+    """La ficha del studio muestra los resultados y los ejercicios, con las claves del docente, tras la interpretación."""
+    import copy
+    m = copy.deepcopy(laboratorio.modelo("demo", "d01"))
+    b = laboratorio.base()
+    m.ficha.pedagogia = b.Pedagogia(
+        resultados=[b.Resultado("r1", "relacional", "Explica qué mueve el cruce de la oferta y la demanda.")],
+        ejercicios=[b.Ejercicio("e1", "r1", predecir="Si a sube, ¿Q* sube o baja?", explicar="¿Por qué?",
+                                respuesta="Sube: la demanda se corre a la derecha.", error_comun="Mover la oferta.",
+                                cambios={"a": 130.0}, espera={"Q* (cantidad)": "↑"})])
+    ped = laboratorio.pedagogia()
+    assert ped.problemas(m)[0] == []                                              # la clave coincide con el modelo
+    parte = ped.markdown(m, docente=True, completo=False)
+    md = fichas.markdown(m, {}, "", {}, "", pedagogia=parte)
+    assert md.index("## Interpretación de los resultados") < md.index("## Resultados de aprendizaje")
+    assert "**r1** (relacional)" in md and "Respuesta esperada: Sube" in md and "Comprobado contra el modelo: Q* (cantidad) ↑" in md
+    assert "## Resultados de aprendizaje" not in fichas.markdown(m, {}, "", {}, "")   # sin la parte, como antes
+
+
 def test_formulas(tmp_path):
     assert formulas.preparar(r"\text{con media} \tfrac{a}{b}") == r"\mathrm{con\ media} \frac{a}{b}"
     ruta = formulas.imagen("Y = C + I", "#000000", tmp_path / "f")

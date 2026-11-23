@@ -1,6 +1,6 @@
 {
 "_generado":"GENERADO por simuladores/main.py web --aplicar; no editar",
-"esquema":1,
+"esquema":2,
 "motor":["base.py","navegador.py"],
 "requiere":["numpy"],
 "total":120,

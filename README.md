@@ -53,7 +53,7 @@ disciplina) vive en la raíz, con la aplicación (`app.py`); cada disciplina es 
 cd ~/Documents/simuladores
 /usr/bin/python3 studio/main.py            # Simuladores Studio (QML + Kirigami): los modelos con su estado, su escenario, su corrida y sus verificaciones (studio/README.md)
 ./install.sh                               # su acceso directo en el menú de aplicaciones (-n simula)
-tests/run.sh                               # las pruebas del studio sobre el laboratorio de muestra
+tests/run.sh                               # las pruebas del studio (laboratorio de muestra) y de la ficha pedagógica
 python3 main.py verificar                  # verificar de todas las disciplinas (salida 0 solo si todas pasan)
 python3 main.py catalogo                   # el catálogo de modelos por stdout (simula: no escribe)
 python3 main.py catalogo --aplicar         # escribe catalogo.json, el contrato que leen los pubs
@@ -102,7 +102,7 @@ simuladores/
 ├── studio/ · tests/ · install.sh   Simuladores Studio (la ventana QML + Kirigami), sus pruebas y su acceso directo del menú
 ├── docs/           rediseno.md (la ventana), decisiones.md y las capturas
 ├── main.py         el laboratorio entero: catalogo (catalogo.json) y verificar de todas las disciplinas
-├── base.py         MOTOR: dataclasses (Modelo/Ficha/Escenario/Verificacion), cálculo y verificación
+├── base.py · pedagogia.py   MOTOR: dataclasses, cálculo, verificación; ficha pedagógica (`main.py pedagogia`, docs/pedagogia.md)
 ├── graficos.py     render matplotlib con anti-solape y dibujo progresivo
 ├── laboratorio.py  láminas de experimento
 ├── reporte.py      informe MD por modelo
@@ -126,9 +126,9 @@ copiar el motor**: se importa de la raíz. `main.py catalogo` la descubre sola.
 
 | quién | qué usa | qué no puede cambiar sin avisar |
 |---|---|---|
-| `docencia` | `scripts/enlazar.py simuladores` y `verificar` (recursos `{tipo: simulador}` de `curso.yml`) | rutas `<disciplina>/modelos/nivel_NN/<id>_slug.py`; `id` y `nombre` de cada modelo |
+| `docencia` | `scripts/enlazar.py simuladores` y `verificar` (recursos `{tipo: simulador}` de `curso.yml`); los ítems de la ficha pedagógica (`main.py pedagogia REF --formato banco`, esquema del banco §10.2) | rutas `<disciplina>/modelos/nivel_NN/<id>_slug.py`; `id` y `nombre` de cada modelo; el esquema del ítem (es el de docencia) |
 | `divulgacion` | `divulgacion/lib/simuladores.py` importa el modelo (`simuladores: [macro/m04]`) | `Modelo.curvas/parametros/escenarios/verificaciones/ecuaciones_calibradas/ficha` |
-| los pubs (fase 4 de la plataforma educativa) | `catalogo.json` | sus campos (sube `esquema` si cambian) |
+| los pubs (fase 4 de la plataforma educativa) | `catalogo.json` (`esquema` 2: `ficha.pedagogia`, solo verificada y sin claves) | sus campos (sube `esquema` si cambian) |
 | la vitrina de los pubs en el navegador (`web/_aula`) | `navegador.json`, `navegador.py` y los `.py` que lista | sus campos (sube `ESQUEMA_WEB`); `navegador.calcular_json` |
 
 ## Límite honesto

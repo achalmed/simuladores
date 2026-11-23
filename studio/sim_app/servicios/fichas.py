@@ -2,7 +2,7 @@
 en el orden del encargo (reingeniería L9): objetivo (la pregunta), fundamento teórico (contexto, autores, intuición),
 ecuaciones (su LaTeX dibujado con mathtext si se le pasa la imagen, y su significado), derivación, variables,
 parámetros (rango, unidad y definición), supuestos, limitaciones, interpretación de los resultados (equilibrio y la
-lectura de cada escenario), evolución, procedencia, referencias y fuentes. La ficha es lo que el modelo declara (`base.Ficha`): aquí no se corrige ni se completa nada."""
+lectura de cada escenario), resultados de aprendizaje y ejercicios del alumno (si el modelo los trae), evolución, procedencia, referencias y fuentes. La ficha es lo que el modelo declara (`base.Ficha`): aquí no se corrige ni se completa nada."""
 from __future__ import annotations
 
 import re
@@ -27,8 +27,10 @@ def _latex(texto: str, imagen: Path | None) -> str:
 
 
 def markdown(modelo, fila: dict | None = None, procedencia_por_defecto: str = "", imagenes: dict | None = None,
-             archivo: str = "") -> str:
-    """El Markdown de la ficha del modelo. `imagenes` = {latex: ruta del PNG} para las ecuaciones ya dibujadas."""
+             archivo: str = "", pedagogia: str = "") -> str:
+    """El Markdown de la ficha del modelo. `imagenes` = {latex: ruta del PNG} para las ecuaciones ya dibujadas;
+    `pedagogia`, los resultados de aprendizaje y los ejercicios con sus claves (`pedagogia.markdown` del motor, que
+    el controlador pide al laboratorio activo), tras la interpretación de los resultados."""
     imagenes = imagenes or {}
     F = getattr(modelo, "ficha", None)
     fila = fila or {}
@@ -81,6 +83,8 @@ def markdown(modelo, fila: dict | None = None, procedencia_por_defecto: str = ""
             interpretacion.append(f"- **{e.descripcion}**: {e.lectura}" + (f" ({' → '.join(e.cadena)})" if e.cadena else ""))
     if interpretacion:
         partes.append("## Interpretación de los resultados\n\n" + "\n".join(interpretacion))
+    if pedagogia.strip():
+        partes.append(pedagogia.strip())
     if F.evolucion:
         partes.append(f"## Lo que viene después\n\n{F.evolucion}")
     procedencia = F.procedencia or procedencia_por_defecto

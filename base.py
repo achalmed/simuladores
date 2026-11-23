@@ -11,7 +11,9 @@ sin duplicar ecuaciones.
 Un modelo une tres capas (diseño: docs/laboratorio-macro.md):
   1. FICHA PEDAGÓGICA (Ficha): pregunta económica, contexto histórico,
      autores, supuestos, variables, ecuaciones explicadas, derivación,
-     intuición, limitaciones y evolución.
+     intuición, limitaciones y evolución; y, desde 2026-11-24, su parte para
+     el aula (Pedagogia: resultados de aprendizaje y ejercicios predecir,
+     observar, explicar; se valida en pedagogia.py).
   2. MOTOR NUMÉRICO: curvas(params) -> dict graficable, y
      resultados(params) -> dict de magnitudes de equilibrio.
   3. CONTRATOS DE CALIDAD: escenarios (experimentos con mecanismo de
@@ -67,6 +69,57 @@ class Ficha:
     procedencia: str = ""            # vacío = la de la disciplina (config.PROCEDENCIA_POR_DEFECTO)
     referencias: list = field(default_factory=list)    # list[str] — menciones libres (heredado de macro)
     fuentes: list = field(default_factory=list)        # list[Fuente] — citas verificables (fuentes.py)
+    pedagogia: object = None         # Pedagogia — resultados de aprendizaje y ejercicios del alumno (pedagogia.py)
+
+
+@dataclass
+class Resultado:
+    """Un resultado de aprendizaje del simulador, con el vocabulario de docencia (estándar §10.1).
+
+    `nivel` es de la taxonomía SOLO (uniestructural, multiestructural, relacional, abstracto_ampliado). El `id` es
+    local al modelo («r1»); un curso lo traduce a su propio `raN` al llevar los ejercicios a su banco."""
+    id: str
+    nivel: str
+    enunciado: str
+
+
+@dataclass
+class Ejercicio:
+    """Un ejercicio para el alumno en el ciclo predecir, observar, explicar (y comparar con lo predicho).
+
+    El alumno predice ANTES de mover el control; mueve (`cambios` sobre la base, o el `escenario` del modelo); observa
+    lo que se le indica; explica lo que pasó y lo compara con su predicción. `respuesta` y `error_comun` son para el
+    docente. `espera` ({magnitud de resultados(): '↑' | '↓' | '='}) y `valores` ({magnitud: cifra}) son la respuesta
+    esperada dicha como aserción: `pedagogia.py` la comprueba contra el modelo, como una verificación más.
+    `item`, si la predicción es una pregunta cerrada, es un ítem del banco de docencia (§10.2: `tipo`, `enunciado`,
+    `opciones`, `respuesta`, `errores`, `bloom`…) sin `id` ni `resultado`, que se toman del ejercicio."""
+    id: str                          # «e1», único en el modelo
+    resultado: str                   # id de un Resultado de la misma ficha
+    predecir: str                    # la pregunta que el alumno responde antes de mover nada
+    explicar: str                    # la pregunta que responde después: por qué pasó lo que pasó
+    respuesta: str                   # la respuesta esperada, para el docente (la puesta en común)
+    error_comun: str                 # el error que el ejercicio anticipa
+    cambios: dict = field(default_factory=dict)   # {parametro: valor} que el alumno fija
+    escenario: str = ""              # o el nombre de un escenario del modelo (excluyente con cambios)
+    observar: str = ""               # qué mirar en el gráfico o en los resultados («Observa …» + esto)
+    comparar: str = ""               # la consigna de contraste con lo predicho (si falta, una genérica)
+    espera: dict = field(default_factory=dict)    # {magnitud: '↑' | '↓' | '='} frente a la base
+    valores: dict = field(default_factory=dict)   # {magnitud: cifra esperada tras mover}
+    bloom: str = ""                  # nivel de Bloom de la explicación (taxonomía revisada)
+    item: object = None              # dict: la predicción como ítem cerrado del banco de docencia
+
+
+@dataclass
+class Pedagogia:
+    """La parte pedagógica de la ficha: lo que el alumno debe lograr y los ejercicios con que lo practica.
+
+    `origen` tiene la forma de `core/py-common/ia_externa.py` ({autor, herramienta, fecha, verificacion}); lo que
+    propuso una IA y sigue `verificacion: pendiente` no sale en catalogo.json ni en navegador.json (C3.3).
+    `pendientes` dice lo que el autor tiene que confirmar."""
+    resultados: list                                  # list[Resultado]
+    ejercicios: list                                  # list[Ejercicio]
+    origen: dict = None
+    pendientes: list = field(default_factory=list)    # list[str]
 
 
 @dataclass
@@ -236,4 +289,9 @@ def verificar(modelo):
         except Exception as exc:            # una verificación que revienta = fallo
             ok, detalle = False, f"excepción: {exc}"
         salida.append((v.nombre, bool(ok), detalle))
+    if modelo.ficha is not None and getattr(modelo.ficha, "pedagogia", None) is not None:
+        import pedagogia                    # el validador de la ficha pedagógica (motor, sin matplotlib)
+        errores, _ = pedagogia.problemas(modelo)
+        salida.append(("ficha pedagógica (resultados y ejercicios)", not errores,
+                       "; ".join(errores) if errores else pedagogia.resumen(modelo)))
     return salida

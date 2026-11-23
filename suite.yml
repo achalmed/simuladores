@@ -12,6 +12,7 @@ comandos:
   - main.py catalogo [--aplicar | --verificar]
   - main.py verificar
   - main.py web [--aplicar | --verificar]
+  - main.py pedagogia [REF] [--formato resumen|alumno|docente|banco] [--verificar]
   - macro/main.py [app | listar | ficha <m> | simular <m> | comparar <m> | sensibilidad <m> <p> | reporte <m> | verificar]
   - estadistica/main.py [app | listar | fuentes | ficha <e> | simular <e> | reporte <e> | verificar]
 interfaz: cli+gui

@@ -8,10 +8,11 @@ estado: activo
 | documento | tipo | estado | qué es |
 |---|---|---|---|
 | [decisiones.md](decisiones.md) | `decision` | `activo` | Decisiones de simuladores |
+| [pedagogia.md](pedagogia.md) | `doc` | `activo` | La ficha pedagógica de un simulador: resultados de aprendizaje y ejercicios predecir, observar, explicar |
 | [rediseno.md](rediseno.md) | `doc` | `hecho` | Rediseño de Simuladores Studio como espacio de trabajo: auditoría de la GUI de Widgets, arquitectura de información, distribución de la ventana, componentes y decisiones |
 | [reingenieria.md](reingenieria.md) | `doc` | `activo` | Reingeniería de Simuladores Studio (2026-11-02): de una tabla de modelos a un laboratorio de simulación |
 
-<sub>Bloque generado por `core/docs.py indice` desde el frontmatter de docs/ (2026-11-19); no se edita a mano.</sub>
+<sub>Bloque generado por `core/docs.py indice` desde el frontmatter de docs/ (2026-11-23); no se edita a mano.</sub>
 <!-- docs:fin -->
 
 

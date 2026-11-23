@@ -47,7 +47,7 @@ descubrimiento).
 Un modelo = un archivo `modelos/nivel_NN/<id>_slug.py` con `Ficha` pedagógica completa (contexto histórico, autores,
 supuestos, ecuaciones explicadas, intuición, limitaciones, evolución; derivación LaTeX en estadística), `escenarios`
 con lectura y `verificaciones` numéricas (identidades exactas, convergencias con tolerancia; en estadística, los
-TEOREMAS: $E[\bar X]=\mu$, TCL…). Plantilla académica de 20 puntos en §2 del diseño de macro: modelos nuevos traen
+TEOREMAS: $E[\bar X]=\mu$, TCL…; si un curso lo usa, `Ficha.pedagogia`, `docs/pedagogia.md`). Plantilla académica de 20 puntos en §2 del diseño de macro: modelos nuevos traen
 `pregunta`, `cadena` de transmisión por escenario y, cuando aplique, `derivacion`/`variables`/`ecuaciones_calibradas`/`grupo`. Reglas duras: procedencia declarada (sin citas de página no
 verificadas; regla 00a de datafw): en estadística, `Ficha.fuentes` con `base.Fuente(calibre_id, pagina, pagina_pdf,
 pasaje)` que `fuentes.py` comprueba contra la hoja del PDF (`main.py fuentes`); la procedencia por defecto es de cada

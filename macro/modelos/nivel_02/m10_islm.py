@@ -12,7 +12,7 @@ macro intermedia). Procedencia: conocimiento macroeconómico general.
 
 import numpy as np
 
-from base import Ecuacion, Escenario, Ficha, Modelo, Parametro, Verificacion
+from base import Ecuacion, Ejercicio, Escenario, Ficha, Modelo, Parametro, Pedagogia, Resultado, Verificacion
 import config
 
 
@@ -176,6 +176,115 @@ MODELO = Modelo(
                    "endogenizar precios; y Mundell-Fleming (m49) al abrir la economía. "
                    "Su versión moderna con regla de tasa de interés es IS-MP (m51) y el "
                    "modelo nuevo keynesiano (m53-m56)."),
+        pedagogia=Pedagogia(
+            resultados=[
+                Resultado("r1", "relacional",
+                          "Explica, con el equilibrio simultáneo del mercado de bienes y del de dinero, por qué una "
+                          "expansión fiscal eleva la tasa de interés y desplaza inversión privada (efecto expulsión)."),
+                Resultado("r2", "relacional",
+                          "Compara los efectos de una expansión fiscal y de una monetaria sobre el producto, la tasa "
+                          "de interés y la inversión, y relaciona el tamaño del multiplicador fiscal con la "
+                          "sensibilidad de la demanda de dinero a la tasa de interés (h)."),
+            ],
+            ejercicios=[
+                Ejercicio(
+                    "e1", "r1", escenario="expansion_fiscal", bloom="analizar",
+                    predecir=("El gobierno sube el gasto de 200 a 250 sin cambiar la oferta de dinero. ¿Qué pasa con "
+                              "el producto, la tasa de interés y la inversión privada?"),
+                    item={"tipo": "opcion", "bloom": "comprender", "dificultad": "media",
+                          "enunciado": ("Si el gasto público sube de 200 a 250 con M/P fija, ¿qué le pasa a la "
+                                        "inversión privada I*?"),
+                          "opciones": ["Sube, porque sube el producto", "Baja, porque sube la tasa de interés",
+                                       "No cambia, porque la inversión autónoma I0 no cambió"],
+                          "respuesta": "Baja, porque sube la tasa de interés",
+                          "errores": [
+                              {"opcion": "Sube, porque sube el producto",
+                               "error": ("traslada la intuición del nivel 1; aquí la inversión depende solo de la "
+                                         "tasa (I = I0 − b·r), y la tasa sube con el ingreso")},
+                              {"opcion": "No cambia, porque la inversión autónoma I0 no cambió",
+                               "error": "olvida que la tasa de interés es endógena: se determina junto con el producto"},
+                          ]},
+                    observar=("cómo se corre la IS, el nuevo cruce con la LM y las cifras «Y* (producto)», «r* (tasa de "
+                              "interés)» e «inversión I*»."),
+                    explicar=("¿Por qué sube la tasa de interés si el banco central no hizo nada? ¿Por qué el "
+                              "producto sube menos que los 50 del gasto?"),
+                    respuesta=("La IS se corre a la derecha y el producto sube de 707 a 743. El mayor ingreso eleva la "
+                               "demanda de dinero (k·Y); con M/P fija, la tasa sube de 5,36 a 7,14 para que el público "
+                               "se conforme con los mismos saldos reales. La inversión (I = I0 − b·r) cae de 42,9 a "
+                               "7,1. El producto sube 35,7: menos que el impulso y muy por debajo de los 125 del "
+                               "multiplicador simple 1/(1 − c1) = 2,5, porque la tasa expulsa inversión privada."),
+                    error_comun=("Creer que la tasa de interés solo la mueve el banco central, o que todo gasto público "
+                                 "adicional se suma al producto sin tocar la inversión."),
+                    espera={"Y* (producto)": "↑", "r* (tasa de interés)": "↑", "inversión I*": "↓"},
+                    valores={"Y* (producto)": 742.86, "r* (tasa de interés)": 7.143, "inversión I*": 7.143}),
+                Ejercicio(
+                    "e2", "r2", escenario="expansion_monetaria", bloom="analizar",
+                    predecir=("Ahora el gasto vuelve a 200 y el banco central sube la oferta real de dinero de 300 a "
+                              "400. ¿En qué se parece y en qué se diferencia del resultado de la expansión fiscal?"),
+                    item={"tipo": "opcion", "bloom": "comprender", "dificultad": "baja",
+                          "enunciado": "Si la oferta real de dinero sube de 300 a 400, ¿cómo cambian Y* y r*?",
+                          "opciones": ["Y sube y r sube", "Y sube y r baja", "Y no cambia y r baja", "Y baja y r baja"],
+                          "respuesta": "Y sube y r baja",
+                          "errores": [
+                              {"opcion": "Y sube y r sube",
+                               "error": "traslada la firma de la política fiscal a la monetaria"},
+                              {"opcion": "Y no cambia y r baja",
+                               "error": ("mira solo el mercado de dinero y olvida que la tasa menor estimula la "
+                                         "inversión y, por el multiplicador, el producto")},
+                              {"opcion": "Y baja y r baja",
+                               "error": "confunde el desplazamiento de la LM a la derecha con una contracción"},
+                          ]},
+                    observar="cómo se corre la LM y las cifras «Y* (producto)», «r* (tasa de interés)» e «inversión I*».",
+                    explicar=("Compara con el ejercicio anterior: ¿por qué las dos políticas suben el producto pero "
+                              "mueven la tasa de interés y la inversión en sentidos opuestos?"),
+                    respuesta=("La LM se corre a la derecha: con más saldos reales, la tasa debe bajar (de 5,36 a 2,5) "
+                               "para que el público quiera tenerlos; la inversión sube de 42,9 a 100 y, por el "
+                               "multiplicador, el producto sube de 707 a 850. La política fiscal empuja la demanda de "
+                               "bienes y la tasa sube como consecuencia; la monetaria baja la tasa y la demanda sube "
+                               "como consecuencia: la primera expulsa inversión, la segunda la atrae."),
+                    error_comun="Pensar que toda política expansiva tiene la misma firma sobre la tasa de interés.",
+                    espera={"Y* (producto)": "↑", "r* (tasa de interés)": "↓", "inversión I*": "↑"},
+                    valores={"Y* (producto)": 850.0, "r* (tasa de interés)": 2.5, "inversión I*": 100.0}),
+                Ejercicio(
+                    "e3", "r2", cambios={"h": 30.0}, bloom="evaluar",
+                    predecir=("Si la demanda de dinero se vuelve más sensible a la tasa de interés (h sube de 10 a 30), "
+                              "¿el multiplicador fiscal dY/dG sube o baja?"),
+                    item={"tipo": "opcion", "bloom": "analizar", "dificultad": "discriminante",
+                          "enunciado": ("Si h, la sensibilidad de la demanda de dinero a la tasa, sube de 10 a 30, "
+                                        "¿qué le pasa al multiplicador fiscal dY/dG?"),
+                          "opciones": ["Sube, y se acerca al multiplicador simple 1/(1 − c1)",
+                                       "Baja, porque el dinero pierde eficacia",
+                                       "No cambia: h es del mercado de dinero y el multiplicador, del de bienes"],
+                          "respuesta": "Sube, y se acerca al multiplicador simple 1/(1 − c1)",
+                          "errores": [
+                              {"opcion": "Baja, porque el dinero pierde eficacia",
+                               "error": ("mezcla la eficacia de la política monetaria (que sí baja con h alto) con la "
+                                         "de la fiscal")},
+                              {"opcion": "No cambia: h es del mercado de dinero y el multiplicador, del de bienes",
+                               "error": ("no ve que el equilibrio es simultáneo: el denominador del multiplicador, "
+                                         "(1 − c1) + b·k/h, lleva h")},
+                          ]},
+                    observar="la pendiente de la LM y la cifra «multiplicador fiscal dY/dG».",
+                    explicar=("¿Por qué una LM más plana hace más eficaz la política fiscal? ¿Qué pasaría en el límite, "
+                              "si h fuera enorme?"),
+                    respuesta=("El multiplicador es 1/[(1 − c1) + b·k/h]: con h = 30 pasa de 0,71 a 1,36. Si la demanda "
+                               "de dinero responde mucho a la tasa, basta un alza pequeña de r para liberar los saldos "
+                               "que pide el mayor ingreso: la LM es más plana, la tasa sube poco y expulsa poca "
+                               "inversión. En el límite (h muy grande, la trampa de liquidez de m12) la tasa no sube y "
+                               "el multiplicador tiende al simple, 1/(1 − c1) = 2,5."),
+                    error_comun=("Tratar los dos mercados por separado, como si un parámetro del mercado de dinero no "
+                                 "pudiera cambiar el efecto de la política fiscal."),
+                    espera={"multiplicador fiscal dY/dG": "↑"},
+                    valores={"multiplicador fiscal dY/dG": 1.364}),
+            ],
+            origen={"autor": "llm", "herramienta": "Claude Code (Claude Opus 5.5)", "fecha": "2026-11-24",
+                    "verificacion": "pendiente"},
+            pendientes=[
+                "confirmar el nivel SOLO de r1 y r2 y llevarlos a los raN de macroeconomia-i (tema 3.4 «Modelo "
+                "IS-LM»); el curso aún no declara `alineamiento:`",
+                "con la calibración del modelo, G por encima de 260 (con M/P = 300) deja la inversión I* bajo cero, "
+                "un artefacto de la especificación lineal; advertir al alumno si explora más allá de e1",
+            ]),
     ),
     escenarios=[
         Escenario("expansion_fiscal", "el gasto público sube de 200 a 250",
